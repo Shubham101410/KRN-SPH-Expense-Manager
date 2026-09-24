@@ -346,8 +346,8 @@ async function onlineLogin(){
   const {data,error}=await cloud.auth.signInWithPassword({email:u,password:p});
   if(error){document.getElementById('loginError').textContent=error.message;return}
   cloudUser=data.user;
-  const {data:prof,error:pe}=await cloud.rpc('get_my_profile');
-  if(pe || !prof){await cloud.auth.signOut();document.getElementById('loginError').textContent='User profile could not be loaded. Please refresh and try again.';return}
+  const {data:prof,error:pe}=await cloud.from('profiles').select('role,full_name').eq('id',data.user.id).maybeSingle();
+  if(pe || !prof){console.error('Profile load error:',pe);await cloud.auth.signOut();document.getElementById('loginError').textContent='User profile could not be loaded. Please refresh and try again.';return}
   cloudRole=prof.role||'viewer';
   try{await loadCloudState();showLoggedIn();applyRoleUI();document.getElementById('loginError').textContent='';cloudMsg('');}catch(e){console.error(e);document.getElementById('loginError').textContent='Could not load cloud data: '+e.message;await cloud.auth.signOut();}
 }
@@ -357,7 +357,7 @@ async function initCloud(){
   if(!cloudConfigured()){showLogin();document.getElementById('loginError').textContent='Online version needs Supabase setup. See the setup guide.';return}
   cloud=window.supabase.createClient(CLOUD_CONFIG.url,CLOUD_CONFIG.anonKey);
   const {data:{session}}=await cloud.auth.getSession();
-  if(session){cloudUser=session.user;const {data:prof}=await cloud.rpc('get_my_profile');cloudRole=prof?.role||'viewer';try{await loadCloudState();showLoggedIn();}catch(e){document.getElementById('loginError').textContent='Cloud data error: '+e.message;await onlineLogout();return}}
+  if(session){cloudUser=session.user;const {data:prof}=await cloud.from('profiles').select('role,full_name').eq('id',session.user.id).maybeSingle();cloudRole=prof?.role||'viewer';try{await loadCloudState();showLoggedIn();}catch(e){document.getElementById('loginError').textContent='Cloud data error: '+e.message;await onlineLogout();return}}
   else showLogin();
   cloud.auth.onAuthStateChange(async(_event,session)=>{if(!session){cloudUser=null;cloudRole=null;cloudReady=false;showLogin()} });
   // Lightweight polling keeps all viewers up to date without requiring realtime configuration.
