@@ -355,7 +355,7 @@ async function onlineLogout(){if(cloud)await cloud.auth.signOut();cloudUser=null
 async function initCloud(){
   setCloudLoginText();
   if(!cloudConfigured()){showLogin();document.getElementById('loginError').textContent='Online version needs Supabase setup. See the setup guide.';return}
-  cloud=createClient(CLOUD_CONFIG.url,CLOUD_CONFIG.anonKey);
+  cloud=window.supabase.createClient(CLOUD_CONFIG.url,CLOUD_CONFIG.anonKey);
   const {data:{session}}=await cloud.auth.getSession();
   if(session){cloudUser=session.user;const {data:prof}=await cloud.from('profiles').select('role').eq('id',cloudUser.id).single();cloudRole=prof?.role||'viewer';try{await loadCloudState();showLoggedIn();}catch(e){document.getElementById('loginError').textContent='Cloud data error: '+e.message;await onlineLogout();return}}
   else showLogin();
