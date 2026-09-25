@@ -270,10 +270,12 @@ const refreshOptions=()=>{const q=search.value.trim().toLowerCase();const curren
 const filtered=db.employees.filter(e=>!q||String(e.name||'').toLowerCase().includes(q)||String(e.id||'').toLowerCase().includes(q));
 select.innerHTML='<option value="">Select Employee</option>'+filtered.map(e=>`<option value="${esc(e.id)}">${esc(e.id)} - ${esc(e.name)}</option>`).join('');
 if(current&&filtered.some(e=>e.id===current)){select.value=current}
-if(q.length>=2&&filtered.length){let hit=filtered.find(e=>String(e.id||'').toLowerCase()===q||String(e.name||'').toLowerCase()===q)||filtered.find(e=>String(e.name||'').toLowerCase().startsWith(q)||String(e.id||'').toLowerCase().startsWith(q))||filtered[0];
-selectedEmp=hit.id;select.value=hit.id;search.value=hit.name||'';drawLedger()}
-else if(!q){if(current){const ee=emp(current);if(ee){select.value=current;search.value=ee.name||'';drawLedger()}}}
-else if(!filtered.length){selectedEmp='';$('ledgerArea').innerHTML='<div class="empty">No employee found. Try employee name or ID.</div>'}};
+if(!q){if(current){const ee=emp(current);if(ee){select.value=current;drawLedger()}}}
+else if(!filtered.length){selectedEmp='';$('ledgerArea').innerHTML='<div class="empty">No employee found. Try employee name or ID.</div>'}
+else {
+  const exact=filtered.find(e=>String(e.id||'').toLowerCase()===q || String(e.name||'').toLowerCase()===q);
+  if(exact){selectedEmp=exact.id;select.value=exact.id;drawLedger()}
+}};
 search.oninput=refreshOptions;
 select.onchange=e=>{selectedEmp=e.target.value;const ee=emp(selectedEmp);search.value=ee?ee.name:'';drawLedger()};
 $('printLedger').onclick=()=>window.print();
