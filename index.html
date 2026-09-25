@@ -404,7 +404,12 @@ async function initCloud(){
   else showLogin();
   cloud.auth.onAuthStateChange(async(_event,session)=>{if(!session){cloudUser=null;cloudRole=null;cloudReady=false;showLogin()} });
   // Lightweight polling keeps all viewers up to date without requiring realtime configuration.
-  clearInterval(cloudSyncTimer); cloudSyncTimer=setInterval(async()=>{if(cloudReady&&cloudUser){try{const {data}=await cloud.from('app_state').select('data').eq('id',1).single();if(data?.data){db=data.data;render()}}catch(e){console.warn(e)}}},15000);
+  clearInterval(cloudSyncTimer); cloudSyncTimer=setInterval(async()=>{if(cloudReady&&cloudUser){try{const {data}=await cloud.from('app_state').select('data').eq('id',1).single();if(data?.data){
+            const currentScrollY=window.scrollY;
+            db=data.data;
+            render();
+            requestAnimationFrame(()=>window.scrollTo(0,currentScrollY));
+          }}catch(e){console.warn(e)}}},15000);
 }
 // Replace local security/login controls with cloud account controls.
 window.addEventListener('load',()=>{
