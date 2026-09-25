@@ -53,6 +53,8 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;background:rad
 .print-footer{display:none}
 @media(max-width:800px){.employee-lookup{grid-template-columns:1fr}.print-ledger-hero{flex-direction:column}.print-ledger-hero .plh-right{text-align:left}}
 .pending-summary{margin:0 0 16px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;overflow:hidden}.pending-head{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:14px 16px;background:#f8fafc;border-bottom:1px solid #e5e7eb}.pending-title{font-size:16px;font-weight:800}.pending-sub{font-size:12px;color:#64748b;margin-top:3px}.pending-total{font-size:13px;color:#475569;white-space:nowrap}.pending-total b{color:#111827}.pending-summary .tablewrap{margin:0;border:0}.pending-summary .tablewrap table{margin:0}.pending-summary .empty{color:#64748b}.pending-summary + .tablewrap{margin-top:0}.pending-summary td,.pending-summary th{padding:10px 12px}
+
+.bill-tabs .bill-tab{border:1px solid #d7dee8;background:#fff;color:#334155;padding:8px 14px;border-radius:10px;font-weight:700;cursor:pointer;transition:.15s}.bill-tabs .bill-tab:hover{background:#f8fafc}.bill-tabs .bill-tab.active{background:#0f172a;color:#fff;border-color:#0f172a}.bill-tabs .bill-tab span{display:inline-flex;min-width:22px;height:20px;align-items:center;justify-content:center;margin-left:5px;padding:0 6px;border-radius:999px;background:#eef2f7;color:#334155;font-size:11px}.bill-tabs .bill-tab.active span{background:rgba(255,255,255,.18);color:#fff}
 </style>
 <style>
 .dashboard-filter-summary{margin:12px 0 14px}.filter-summary-card{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:14px 18px;border:1px solid #dbe7f5;border-radius:16px;background:linear-gradient(135deg,#f8fbff,#eef6ff);box-shadow:0 8px 22px rgba(30,80,140,.08)}.filter-summary-card>div:first-child{display:flex;align-items:baseline;gap:10px}.filter-summary-card .fs-label{font-size:12px;text-transform:uppercase;letter-spacing:.08em;font-weight:800;color:#64748b}.filter-summary-card strong{font-size:25px;color:#10233f}.filter-summary-card small{color:#64748b;font-weight:700}.fs-total{display:flex;align-items:center;gap:12px}.fs-total span{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#64748b;font-weight:800}.fs-total b{font-size:18px;color:#0f3d75}@media(max-width:900px){.filter-summary-card{flex-direction:column;align-items:flex-start}.fs-total{width:100%;justify-content:space-between}}
@@ -212,27 +214,53 @@ function filter(id){const q=$(id)?.value.toLowerCase()||'';document.querySelecto
 function advances(){
 $('page').innerHTML=`<div class="panel"><div class="toolbar"><input class="search" id="advSearch" placeholder="Search advance..."><button class="btn primary" id="addAdv">+ Add Advance</button></div><div class="tablewrap"><table><thead><tr><th>Advance ID</th><th>Employee</th><th>Date</th><th>Amount</th><th>Remarks</th><th>Action</th></tr></thead><tbody>${db.advances.map((x,i)=>`<tr><td>${esc(x.id)}</td><td>${esc(emp(x.empId)?.name||x.empId)}</td><td>${fmt(x.date)}</td><td>${money(x.amount)}</td><td>${esc(x.remarks)}</td><td><button class="btn editAdv" data-i="${i}">Edit</button></td></tr>`).join('')}</tbody></table></div></div>`;$('addAdv').onclick=()=>openModal('advance');$('advSearch').oninput=()=>filter('advSearch');document.querySelectorAll('.editAdv').forEach(b=>b.onclick=()=>openModal('advance',Number(b.dataset.i)))}
 function bills(){
+let billTab='all';
 const renderBillPendingSummary=()=>{
  const q=($('billSearch')?.value||'').trim().toLowerCase();
  const groups={};
  db.bills.filter(x=>String(x.status||'Pending').toLowerCase()==='pending').forEach(x=>{
   const e=emp(x.empId)||{}; const name=e.name||x.empId; const id=e.id||x.empId;
-  if(q && !(String(name).toLowerCase().includes(q)||String(id).toLowerCase().includes(q))) return;
-  if(!groups[x.empId]) groups[x.empId]={id,name,count:0,total:0};
+  if(q && !(String(name).toLowerCase().includes(q)||String(id).toLowerCase().includes(q)||String(x.id||'').toLowerCase().includes(q))) return;
+  if(!groups[x.empId])groups[x.empId]={id,name,count:0,total:0};
   groups[x.empId].count++; groups[x.empId].total+=Number(x.amount||0);
  });
  const rows=Object.values(groups).sort((a,b)=>a.name.localeCompare(b.name));
- const totalCount=rows.reduce((s,x)=>s+x.count,0), totalAmount=rows.reduce((s,x)=>s+x.total,0);
+ const totalCount=rows.reduce((s,x)=>s+x.count,0),totalAmount=rows.reduce((s,x)=>s+x.total,0);
  const box=$('billPendingSummary');
- if(box) box.innerHTML=`<div class="pending-head"><div><div class="pending-title">Pending Bill Summary</div><div class="pending-sub">Search employee name or ID to see how much is pending</div></div><div class="pending-total"><b>${totalCount}</b> Bills &nbsp;•&nbsp; <b>${money(totalAmount)}</b></div></div>${rows.length?`<div class="tablewrap"><table><thead><tr><th>Employee ID</th><th>Employee</th><th>Pending Bills</th><th>Pending Amount</th></tr></thead><tbody>${rows.map(x=>`<tr><td>${esc(x.id)}</td><td><strong>${esc(x.name)}</strong></td><td>${x.count}</td><td><strong>${money(x.total)}</strong></td></tr>`).join('')}</tbody></table></div>`:`<div class="empty" style="padding:18px">No pending bills found for this search.</div>`}`;
+ if(box)box.innerHTML=`<div class="pending-head"><div><div class="pending-title">Pending Bill Summary</div><div class="pending-sub">Search employee name or ID to see how much is pending</div></div><div class="pending-total"><b>${totalCount}</b> Bills &nbsp;•&nbsp; <b>${money(totalAmount)}</b></div></div>${rows.length?`<div class="tablewrap"><table><thead><tr><th>Employee ID</th><th>Employee</th><th>Pending Bills</th><th>Pending Amount</th></tr></thead><tbody>${rows.map(x=>`<tr><td>${esc(x.id)}</td><td><strong>${esc(x.name)}</strong></td><td>${x.count}</td><td><strong>${money(x.total)}</strong></td></tr>`).join('')}</tbody></table></div>`:`<div class="empty" style="padding:18px">No pending bills found for this search.</div>`}`;
 };
-$('page').innerHTML=`<div class="panel"><div class="toolbar"><input class="search" id="billSearch" placeholder="Search employee / ID / bill..."><button class="btn primary" id="addBill">+ Submit Bill</button></div><div id="billPendingSummary" class="pending-summary"></div><div class="tablewrap"><table><thead><tr><th>Bill ID</th><th>Employee</th><th>Date</th><th>Category</th><th>Vendor</th><th>Amount</th><th>Status</th><th>Action</th></tr></thead><tbody>${db.bills.map((x,i)=>{const st=String(x.status||'Pending');const cls=st==='Approved'?'ok':st==='Rejected'?'due':'wait';return `<tr><td>${esc(x.id)}</td><td>${esc(emp(x.empId)?.name||x.empId)}</td><td>${fmt(x.date)}</td><td>${esc(x.category)}</td><td>${esc(x.vendor)}</td><td>${money(x.amount)}</td><td><span class="status ${cls}">${esc(st)}${st!=='Approved'?' — NOT COUNTING':''}</span></td><td>${st!=='Approved'?`<button class="btn approve" data-i="${i}">Approve</button> `:''}${st!=='Rejected'?`<button class="btn reject" data-i="${i}">Reject</button> `:''}<button class="btn editBill" data-i="${i}">Edit</button></td></tr>`}).join('')}</tbody></table></div></div>`;
+const tabCounts=()=>({all:db.bills.length,pending:db.bills.filter(x=>String(x.status||'Pending').toLowerCase()==='pending').length,approved:db.bills.filter(x=>String(x.status||'Pending').toLowerCase()==='approved').length,rejected:db.bills.filter(x=>String(x.status||'Pending').toLowerCase()==='rejected').length});
+const renderBillTable=()=>{
+ const q=($('billSearch')?.value||'').trim().toLowerCase();
+ const rows=db.bills.map((x,i)=>({x,i})).filter(({x})=>{
+  const st=String(x.status||'Pending').toLowerCase();
+  if(billTab!=='all'&&st!==billTab)return false;
+  if(!q)return true;
+  const e=emp(x.empId)||{};
+  return [x.id,x.empId,e.name,x.date,x.category,x.vendor,x.invoice,x.description,x.status].some(v=>String(v||'').toLowerCase().includes(q));
+ });
+ const counts=tabCounts();
+ const tab=(key,label)=>`<button type="button" class="bill-tab ${billTab===key?'active':''}" data-bill-tab="${key}">${label} <span>${counts[key]}</span></button>`;
+ const body=rows.length?rows.map(({x,i})=>{
+  const st=String(x.status||'Pending');
+  const cls=st==='Approved'?'ok':st==='Rejected'?'due':'wait';
+  let actions='';
+  if(st==='Pending') actions=`<button class="btn approve" data-i="${i}">Approve</button> <button class="btn reject" data-i="${i}">Reject</button> `;
+  // Approved and Rejected entries only show Edit; an Approved bill can no longer be rejected from the list.
+  actions+=`<button class="btn editBill" data-i="${i}">Edit</button>`;
+  return `<tr><td>${esc(x.id)}</td><td>${esc(emp(x.empId)?.name||x.empId)}</td><td>${fmt(x.date)}</td><td>${esc(x.category)}</td><td>${esc(x.vendor)}</td><td>${money(x.amount)}</td><td><span class="status ${cls}">${esc(st)}${st!=='Approved'?' — NOT COUNTING':''}</span></td><td>${actions}</td></tr>`;
+ }).join(''):`<tr><td colspan="8"><div class="empty" style="padding:28px">No ${billTab==='all'?'':billTab+' '}bills found.</div></td></tr>`;
+ $('billTabs').innerHTML=[tab('all','All'),tab('pending','Pending'),tab('approved','Approved'),tab('rejected','Rejected')].join('');
+ $('billTableBody').innerHTML=body;
+ document.querySelectorAll('[data-bill-tab]').forEach(b=>b.onclick=()=>{billTab=b.dataset.billTab;renderBillTable();renderBillPendingSummary()});
+ document.querySelectorAll('.approve').forEach(b=>b.onclick=()=>{db.bills[Number(b.dataset.i)].status='Approved';save()});
+ document.querySelectorAll('.reject').forEach(b=>b.onclick=()=>{if(confirm('Reject this bill? It will remain visible in the ledger but will NOT be counted.')){db.bills[Number(b.dataset.i)].status='Rejected';save()}});
+ document.querySelectorAll('.editBill').forEach(b=>b.onclick=()=>openModal('bill',Number(b.dataset.i)));
+};
+$('page').innerHTML=`<div class="panel"><div class="toolbar"><input class="search" id="billSearch" placeholder="Search employee / ID / bill..."><button class="btn primary" id="addBill">+ Submit Bill</button></div><div id="billTabs" class="bill-tabs" style="display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 12px"></div><div id="billPendingSummary" class="pending-summary"></div><div class="tablewrap"><table><thead><tr><th>Bill ID</th><th>Employee</th><th>Date</th><th>Category</th><th>Vendor</th><th>Amount</th><th>Status</th><th>Action</th></tr></thead><tbody id="billTableBody"></tbody></table></div></div>`;
 $('addBill').onclick=()=>openModal('bill');
-$('billSearch').oninput=()=>{filter('billSearch');renderBillPendingSummary()};
-renderBillPendingSummary();
-document.querySelectorAll('.approve').forEach(b=>b.onclick=()=>{db.bills[Number(b.dataset.i)].status='Approved';save()});
-document.querySelectorAll('.reject').forEach(b=>b.onclick=()=>{if(confirm('Reject this bill? It will remain visible in the ledger but will NOT be counted.')){db.bills[Number(b.dataset.i)].status='Rejected';save()}});
-document.querySelectorAll('.editBill').forEach(b=>b.onclick=()=>openModal('bill',Number(b.dataset.i)))
+$('billSearch').oninput=()=>{renderBillTable();renderBillPendingSummary()};
+renderBillTable();renderBillPendingSummary();
 }
 function settlement(){$('page').innerHTML=`<div class="panel"><h2>Settlement Summary</h2><div class="note">Paid Amount offsets the Opening Balance: a negative opening balance is reduced toward ₹0 by payment, while a positive opening balance is reduced by payment.</div><div class="tablewrap"><table><thead><tr><th>Employee</th><th>Opening Balance</th><th>Paid Amount</th><th>Advance</th><th>Approved Bills</th><th>Net Balance</th><th>Status</th><th>Action</th></tr></thead><tbody>${db.employees.map(e=>{const t=totals(e.id);return `<tr><td>${esc(e.name)}</td><td>${money(t.opening)}</td><td>${money(t.paid)}</td><td>${money(t.adv)}</td><td>${money(t.bills)}</td><td class="net-cell ${Math.abs(t.balance)<.005?'net-zero':t.balance>0?'net-positive':'net-negative'}"><div class="net-amount">${money(t.balance)}</div><small class="net-help ${Math.abs(t.balance)<.005?'net-settled':t.balance>0?'net-receive':'net-pay'}">${Math.abs(t.balance)<.005?'Settled / No Amount Due':t.balance>0?'Amount to Receive from Employee':'Amount to Pay to Employee'}</small></td><td>${status(t)}</td><td><button class="btn pay" data-id="${esc(e.id)}">Paid Amount</button></td></tr>`}).join('')}</tbody></table></div></div>`;document.querySelectorAll('.pay').forEach(b=>b.onclick=()=>payOpening(b.dataset.id))}
 function payOpening(id){const e=emp(id);const v=prompt(`Opening Balance: ${money(e.opening)}\nCurrent Paid Amount: ${money(e.openingPaid)}\nEnter total Paid Amount:`);if(v!==null&&v.trim()!==''&&!isNaN(v)){e.openingPaid=Number(v);save()}}
