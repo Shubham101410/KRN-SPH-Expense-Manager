@@ -148,6 +148,82 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;background:rad
 .auth-btn{width:100%;height:48px;border:0;border-radius:13px;background:linear-gradient(135deg,#1769e0,#0b4ca8);color:#fff;font-weight:900;font-size:14px;cursor:pointer;box-shadow:0 10px 24px rgba(23,105,224,.25);margin-top:8px}.auth-error{min-height:18px;text-align:center;color:#c2410c;font-size:12px;font-weight:800;margin:10px 0 0}.auth-default{font-size:11px;color:#94a3b8;text-align:center;margin-top:15px}
 #securityFab{position:fixed;right:22px;bottom:22px;z-index:9990;display:none;border:0;border-radius:999px;padding:12px 17px;background:#102a4a;color:#fff;font-weight:800;box-shadow:0 12px 28px rgba(2,20,45,.28);cursor:pointer}#securityFab:hover{transform:translateY(-2px)}
 #securityModal{position:fixed;inset:0;z-index:99998;display:none;align-items:center;justify-content:center;background:rgba(4,17,32,.56);backdrop-filter:blur(5px)}#securityModal.show{display:flex}.security-card{width:min(460px,calc(100% - 32px));background:#fff;border-radius:22px;padding:26px;box-shadow:0 30px 80px rgba(0,0,0,.35)}.security-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}.security-head h3{margin:0;color:#102746}.security-close{border:0;background:#eef2f7;border-radius:9px;padding:8px 11px;cursor:pointer}.security-actions{display:flex;gap:10px;margin-top:15px}.security-actions button{flex:1}
+
+/* ================= PREMIUM KRN SPH UI V2 ================= */
+:root{
+  --krn-navy:#07152b;--krn-navy2:#0b2345;--krn-blue:#1677f0;--krn-blue2:#0b5bd3;
+  --krn-cyan:#08b9f4;--krn-orange:#f47b20;--krn-green:#0d9488;--krn-ink:#13233f;
+  --krn-muted:#718096;--krn-border:rgba(148,163,184,.22);--krn-shadow:0 18px 45px rgba(24,55,94,.10)
+}
+html{scroll-behavior:smooth}
+body{font-family:Inter,"Segoe UI",Arial,sans-serif!important;background:
+ radial-gradient(900px 500px at 92% -8%,rgba(8,185,244,.14),transparent 58%),
+ radial-gradient(700px 450px at 10% 0%,rgba(22,119,240,.09),transparent 60%),
+ linear-gradient(135deg,#eef5ff 0%,#f8fbff 48%,#eef5fb 100%)!important}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;background-image:linear-gradient(rgba(15,23,42,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(15,23,42,.018) 1px,transparent 1px);background-size:34px 34px;mask-image:linear-gradient(to bottom,rgba(0,0,0,.7),transparent 85%);z-index:-1}
+/* Sidebar */
+.side{width:258px!important;background:linear-gradient(180deg,#061225 0%,#0a1d38 48%,#06101f 100%)!important;box-shadow:16px 0 45px rgba(3,18,43,.25)!important;border-right:1px solid rgba(255,255,255,.09)!important}
+.main{margin-left:258px!important;width:calc(100% - 258px)!important;padding:26px 28px 34px!important}
+.brand-pro .logo-wrap{border:1px solid rgba(255,255,255,.13)!important;box-shadow:0 14px 34px rgba(0,0,0,.20),inset 0 1px rgba(255,255,255,.16)!important;background:linear-gradient(145deg,rgba(255,255,255,.14),rgba(255,255,255,.035))!important;backdrop-filter:blur(10px)}
+.side .nav button{border:1px solid transparent!important;transition:all .2s ease!important;position:relative;overflow:hidden}
+.side .nav button:after{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:0 5px 5px 0;background:transparent;transition:.2s}
+.side .nav button:hover{transform:translateX(3px);background:rgba(255,255,255,.065)!important;border-color:rgba(255,255,255,.07)!important;color:#fff!important}
+.side .nav button.active{background:linear-gradient(90deg,rgba(22,119,240,.34),rgba(8,185,244,.10))!important;border-color:rgba(80,157,255,.30)!important;box-shadow:inset 0 1px rgba(255,255,255,.07),0 8px 22px rgba(0,0,0,.12)!important;color:#fff!important}
+.side .nav button.active:after{background:linear-gradient(#08b9f4,#1677f0)}
+/* Page header */
+.top{padding:18px 20px!important;border:1px solid rgba(203,218,235,.78)!important;border-radius:20px!important;background:linear-gradient(135deg,rgba(255,255,255,.92),rgba(242,248,255,.82))!important;box-shadow:var(--krn-shadow),inset 0 1px rgba(255,255,255,.9)!important;backdrop-filter:blur(14px);position:relative;overflow:hidden}
+.top:before{content:"";position:absolute;right:-70px;top:-100px;width:260px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(8,185,244,.14),transparent 68%);pointer-events:none}
+.top h1{font-size:27px!important;font-weight:900!important;letter-spacing:-.7px!important;color:#102746!important}
+.actions{position:relative;z-index:1}
+/* Buttons */
+.btn{border-radius:11px!important;border:1px solid #d8e3ef!important;background:rgba(255,255,255,.88)!important;box-shadow:0 5px 13px rgba(24,55,94,.07)!important;font-weight:750!important;transition:all .18s ease!important}
+.btn:hover{transform:translateY(-2px);box-shadow:0 9px 20px rgba(24,55,94,.13)!important;border-color:#b9cce1!important}
+.btn.primary,.primary{background:linear-gradient(135deg,#1677f0,#0b5bd3)!important;border-color:#1677f0!important;box-shadow:0 9px 20px rgba(22,119,240,.23)!important}
+.btn.green,.green{background:linear-gradient(135deg,#0f9f92,#08786e)!important;border-color:#0f9f92!important;box-shadow:0 9px 20px rgba(13,148,136,.20)!important}
+/* Cards and panels */
+.card,.panel{border:1px solid rgba(203,218,235,.78)!important;border-radius:18px!important;background:linear-gradient(145deg,rgba(255,255,255,.96),rgba(247,251,255,.90))!important;box-shadow:var(--krn-shadow),inset 0 1px rgba(255,255,255,.95)!important;backdrop-filter:blur(10px)!important}
+.card{position:relative;overflow:hidden;transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}
+.card:after{content:"";position:absolute;right:-35px;top:-45px;width:110px;height:110px;border-radius:50%;background:radial-gradient(circle,rgba(22,119,240,.09),transparent 70%);pointer-events:none}
+.card:hover{transform:translateY(-3px);box-shadow:0 20px 40px rgba(24,55,94,.13),inset 0 1px rgba(255,255,255,.95)!important;border-color:rgba(117,164,218,.48)!important}
+.card .label{font-weight:750!important;letter-spacing:.035em!important;text-transform:uppercase!important;color:#728198!important}
+.card .num{font-size:25px!important;letter-spacing:-.6px!important;color:#112b4b!important}
+.panel{overflow:hidden}
+/* Forms */
+input,select,textarea,.search{border:1px solid #cfdae8!important;background:rgba(255,255,255,.94)!important;border-radius:11px!important;box-shadow:inset 0 1px 2px rgba(15,23,42,.025)!important;transition:border-color .16s,box-shadow .16s,transform .16s}
+input:focus,select:focus,textarea:focus,.search:focus{outline:none!important;border-color:#4a91f2!important;box-shadow:0 0 0 4px rgba(22,119,240,.10),0 8px 18px rgba(22,119,240,.06)!important}
+.field label{font-weight:800!important;color:#53647b!important;letter-spacing:.01em}
+/* Tables */
+.tablewrap{border:1px solid #d8e3ef!important;border-radius:14px!important;box-shadow:0 10px 25px rgba(24,55,94,.06)!important;background:#fff}
+table{font-size:13px!important}
+th{background:linear-gradient(180deg,#f4f8fd,#eaf1f8)!important;color:#274563!important;text-transform:uppercase;letter-spacing:.035em;font-size:11px!important;font-weight:850!important;border-bottom:1px solid #d5e1ed!important}
+td{border-bottom:1px solid #edf1f5!important;color:#31445d!important}
+tbody tr{transition:background .14s,transform .14s}
+tbody tr:hover{background:linear-gradient(90deg,#f4f9ff,#fbfdff)!important}
+/* Ledger search */
+.ledger-lookup{min-width:360px!important}
+.ledger-search{height:46px!important;border-radius:13px!important;box-shadow:0 8px 18px rgba(22,119,240,.06)!important}
+.ledger-dropdown{top:51px!important;border-radius:14px!important;border:1px solid #d3e0ed!important;box-shadow:0 22px 50px rgba(15,35,65,.20)!important;backdrop-filter:blur(12px);overflow:hidden}
+.ledger-employee-option{padding:12px 15px!important;transition:background .15s,transform .15s}
+.ledger-employee-option:hover{background:linear-gradient(90deg,#eef6ff,#f9fcff)!important;transform:translateX(2px)}
+/* Status pills */
+.status{border:1px solid rgba(0,0,0,.04);box-shadow:0 3px 8px rgba(15,23,42,.05)}
+/* Modals */
+.modal{background:rgba(5,18,37,.58)!important;backdrop-filter:blur(8px)!important}
+.modalbox{border:1px solid rgba(255,255,255,.75)!important;border-radius:22px!important;box-shadow:0 35px 100px rgba(0,0,0,.30)!important;background:linear-gradient(145deg,#fff,#f7fbff)!important;padding:22px!important}
+.modalhead{padding-bottom:13px;border-bottom:1px solid #e5edf5}
+.modalhead h2,.modalhead h3{font-weight:900!important;color:#102746!important}
+/* Scrollbars */
+*{scrollbar-width:thin;scrollbar-color:#a9bfd8 transparent}
+*::-webkit-scrollbar{width:9px;height:9px}*::-webkit-scrollbar-track{background:transparent}*::-webkit-scrollbar-thumb{background:linear-gradient(#a8bfd8,#7899bc);border-radius:99px;border:2px solid transparent;background-clip:padding-box}
+/* Dashboard filter chips */
+.quick-filter button{border:1px solid #d6e2ef!important;background:linear-gradient(#fff,#f7faff)!important;box-shadow:0 4px 10px rgba(24,55,94,.05)!important;transition:.16s!important}
+.quick-filter button:hover{transform:translateY(-1px);border-color:#9bbbe0!important}
+.quick-filter button.active{background:linear-gradient(135deg,#eaf3ff,#dcecff)!important;border-color:#83b0e8!important;color:#1458b8!important;box-shadow:0 7px 16px rgba(22,119,240,.12)!important}
+/* Floating security */
+#securityFab{background:linear-gradient(135deg,#112d50,#071a31)!important;border:1px solid rgba(255,255,255,.10)!important;box-shadow:0 15px 35px rgba(2,20,45,.30)!important}
+/* Mobile */
+@media(max-width:950px){.main{margin-left:190px!important;width:calc(100% - 190px)!important;padding:18px!important}.side{width:190px!important}.top{border-radius:16px!important}.ledger-lookup{min-width:280px!important}}
+@media(max-width:700px){.main{margin-left:0!important;width:100%!important;padding:12px!important}.side{position:relative;width:100%!important;inset:auto;min-height:auto}.app{display:block}.top{padding:15px!important}.top h1{font-size:22px!important}.ledger-lookup{min-width:100%!important}.cards{grid-template-columns:1fr!important}}
 </style>
 </head><body>
 <div id="authOverlay">
@@ -252,14 +328,14 @@ const renderBillTable=()=>{
  }).join(''):`<tr><td colspan="8"><div class="empty" style="padding:28px">No ${billTab==='all'?'':billTab+' '}bills found.</div></td></tr>`;
  $('billTabs').innerHTML=[tab('all','All'),tab('pending','Pending'),tab('approved','Approved'),tab('rejected','Rejected')].join('');
  $('billTableBody').innerHTML=body;
- document.querySelectorAll('[data-bill-tab]').forEach(b=>b.onclick=()=>{billTab=b.dataset.billTab;renderBillTable();renderBillPendingSummary()});
+ document.querySelectorAll('[data-bill-tab]').forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();const sy=window.scrollY;billTab=b.dataset.billTab;renderBillTable();renderBillPendingSummary();b.blur();requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo({top:sy,left:0,behavior:'instant'})))});
  document.querySelectorAll('.approve').forEach(b=>b.onclick=()=>{db.bills[Number(b.dataset.i)].status='Approved';save()});
  document.querySelectorAll('.reject').forEach(b=>b.onclick=()=>{if(confirm('Reject this bill? It will remain visible in the ledger but will NOT be counted.')){db.bills[Number(b.dataset.i)].status='Rejected';save()}});
  document.querySelectorAll('.editBill').forEach(b=>b.onclick=()=>openModal('bill',Number(b.dataset.i)));
 };
 $('page').innerHTML=`<div class="panel"><div class="toolbar"><input class="search" id="billSearch" placeholder="Search employee / ID / bill..."><button class="btn primary" id="addBill">+ Submit Bill</button></div><div id="billTabs" class="bill-tabs" style="display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 12px"></div><div id="billPendingSummary" class="pending-summary"></div><div class="tablewrap"><table><thead><tr><th>Bill ID</th><th>Employee</th><th>Bill Date</th><th>Submission Date</th><th>Category</th><th>Vendor</th><th>Amount</th><th>Status</th><th>Action</th></tr></thead><tbody id="billTableBody"></tbody></table></div></div>`;
 $('addBill').onclick=()=>openModal('bill');
-$('billSearch').oninput=()=>{renderBillTable();renderBillPendingSummary()};
+$('billSearch').oninput=()=>{const sy=window.scrollY;renderBillTable();renderBillPendingSummary();requestAnimationFrame(()=>window.scrollTo({top:sy,left:0,behavior:'instant'}))};
 renderBillTable();renderBillPendingSummary();
 }
 function settlement(){$('page').innerHTML=`<div class="panel"><h2>Settlement Summary</h2><div class="note">Paid Amount offsets the Opening Balance: a negative opening balance is reduced toward ₹0 by payment, while a positive opening balance is reduced by payment.</div><div class="tablewrap"><table><thead><tr><th>Employee</th><th>Opening Balance</th><th>Paid Amount</th><th>Advance</th><th>Approved Bills</th><th>Net Balance</th><th>Status</th><th>Action</th></tr></thead><tbody>${db.employees.map(e=>{const t=totals(e.id);return `<tr><td>${esc(e.name)}</td><td>${money(t.opening)}</td><td>${money(t.paid)}</td><td>${money(t.adv)}</td><td>${money(t.bills)}</td><td class="net-cell ${Math.abs(t.balance)<.005?'net-zero':t.balance>0?'net-positive':'net-negative'}"><div class="net-amount">${money(t.balance)}</div><small class="net-help ${Math.abs(t.balance)<.005?'net-settled':t.balance>0?'net-receive':'net-pay'}">${Math.abs(t.balance)<.005?'Settled / No Amount Due':t.balance>0?'Amount to Receive from Employee':'Amount to Pay to Employee'}</small></td><td>${status(t)}</td><td><button class="btn pay" data-id="${esc(e.id)}">Paid Amount</button></td></tr>`}).join('')}</tbody></table></div></div>`;document.querySelectorAll('.pay').forEach(b=>b.onclick=()=>payOpening(b.dataset.id))}
@@ -377,7 +453,11 @@ async function cloudSaveState(silent=false){
   if(cloudRole!=='admin'){if(!silent)alert('Viewer access: editing is not allowed.');return false;}
   const {error}=await cloud.from('app_state').upsert({id:1,data:db,updated_at:new Date().toISOString()});
   if(error){console.error(error);if(!silent)alert('Cloud save failed: '+error.message);return false}
-  if(!silent) render();
+  if(!silent){
+    const sy=window.scrollY;
+    render();
+    requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo({top:sy,left:0,behavior:'instant'})));
+  }
   return true;
 }
 save=async function(){return cloudSaveState(false)};
