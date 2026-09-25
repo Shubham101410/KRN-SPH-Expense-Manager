@@ -289,8 +289,8 @@ function employees(){$('page').innerHTML=`<div class="panel"><div class="section
 function filter(id){const q=$(id)?.value.toLowerCase()||'';document.querySelectorAll('tbody tr').forEach(r=>r.style.display=r.innerText.toLowerCase().includes(q)?'':'none')}
 function advances(){
 $('page').innerHTML=`<div class="panel"><div class="toolbar"><input class="search" id="advSearch" placeholder="Search advance..."><button class="btn primary" id="addAdv">+ Add Advance</button></div><div class="tablewrap"><table><thead><tr><th>Advance ID</th><th>Employee</th><th>Date</th><th>Amount</th><th>Remarks</th><th>Action</th></tr></thead><tbody>${db.advances.map((x,i)=>`<tr><td>${esc(x.id)}</td><td>${esc(emp(x.empId)?.name||x.empId)}</td><td>${fmt(x.date)}</td><td>${money(x.amount)}</td><td>${esc(x.remarks)}</td><td><button class="btn editAdv" data-i="${i}">Edit</button></td></tr>`).join('')}</tbody></table></div></div>`;$('addAdv').onclick=()=>openModal('advance');$('advSearch').oninput=()=>filter('advSearch');document.querySelectorAll('.editAdv').forEach(b=>b.onclick=()=>openModal('advance',Number(b.dataset.i)))}
-function bills(){
 let billTab='all';
+function bills(){
 const renderBillPendingSummary=()=>{
  const q=($('billSearch')?.value||'').trim().toLowerCase();
  const groups={};
@@ -455,8 +455,12 @@ async function cloudSaveState(silent=false){
   if(error){console.error(error);if(!silent)alert('Cloud save failed: '+error.message);return false}
   if(!silent){
     const sy=window.scrollY;
+    const tableScroll=page==='bills' ? Array.from(document.querySelectorAll('.tablewrap')).map(x=>x.scrollTop) : [];
     render();
-    requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo({top:sy,left:0,behavior:'instant'})));
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      window.scrollTo({top:sy,left:0,behavior:'instant'});
+      if(page==='bills') document.querySelectorAll('.tablewrap').forEach((x,i)=>{if(tableScroll[i]!=null)x.scrollTop=tableScroll[i]});
+    }));
   }
   return true;
 }
@@ -484,11 +488,20 @@ async function initCloud(){
   else showLogin();
   cloud.auth.onAuthStateChange(async(_event,session)=>{if(!session){cloudUser=null;cloudRole=null;cloudReady=false;showLogin()} });
   // Lightweight polling keeps all viewers up to date without requiring realtime configuration.
-  clearInterval(cloudSyncTimer); cloudSyncTimer=setInterval(async()=>{if(cloudReady&&cloudUser){try{const {data}=await cloud.from('app_state').select('data').eq('id',1).single();if(data?.data){
-            const currentScrollY=window.scrollY;
-            db=data.data;
-            render();
-            requestAnimationFrame(()=>window.scrollTo(0,currentScrollY));
+  clearInterval(cloudSyncTimer); cloudSyncTimer=setInterval(async()=>{if(cloudReady&&cloudUser){try{const {data}=await cloud.from('app_state').select('data,updated_at').eq('id',1).single();if(data?.data){
+            // Do not re-render on every polling cycle. Re-render only when cloud data actually changed.
+            const incoming=JSON.stringify(data.data);
+            const current=JSON.stringify(db);
+            if(incoming!==current){
+              const currentScrollY=window.scrollY;
+              const tableScroll=page==='bills' ? Array.from(document.querySelectorAll('.tablewrap')).map(x=>x.scrollTop) : [];
+              db=data.data;
+              render();
+              requestAnimationFrame(()=>requestAnimationFrame(()=>{
+                window.scrollTo(0,currentScrollY);
+                if(page==='bills') document.querySelectorAll('.tablewrap').forEach((x,i)=>{if(tableScroll[i]!=null)x.scrollTop=tableScroll[i]});
+              }));
+            }
           }}catch(e){console.warn(e)}}},15000);
 }
 // Replace local security/login controls with cloud account controls.
