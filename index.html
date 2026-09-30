@@ -418,6 +418,397 @@ body{background:radial-gradient(circle at 88% 4%,rgba(23,182,217,.10),transparen
 @media(max-width:620px){.smart-auto-panel{top:68px}.smart-auto-grid{grid-template-columns:1fr}.smart-auto-actions{grid-template-columns:1fr 1fr}}
 </style>
 
+
+<style id="mobile-compatibility-only">
+/* MOBILE COMPATIBILITY ONLY — no desktop styling/functionality changes */
+@media (max-width:700px){
+  html,body{width:100%;max-width:100%;overflow-x:hidden}
+  body{font-size:14px}
+  .app{display:block!important;min-height:100vh;width:100%!important}
+
+  /* Mobile navigation */
+  .side{
+    position:relative!important;
+    inset:auto!important;
+    width:100%!important;
+    height:auto!important;
+    min-height:0!important;
+    padding:10px 10px 8px!important;
+    overflow:hidden!important;
+    box-shadow:0 6px 22px rgba(3,18,43,.18)!important;
+    z-index:100!important;
+  }
+  .side:after{display:none!important}
+  .brand{padding:4px 6px 9px!important}
+  .brand-pro{padding:2px 4px 8px!important}
+  .logo-wrap{max-width:190px!important;margin:0 auto 7px!important;padding:7px!important}
+  .brand-logo{max-height:42px!important;object-fit:contain}
+  .brand-name{font-size:14px!important}
+  .brand-pro small{font-size:9px!important;margin-top:2px!important}
+  .nav{
+    display:flex!important;
+    gap:6px!important;
+    overflow-x:auto!important;
+    overflow-y:hidden!important;
+    padding:2px 1px 4px!important;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  .nav::-webkit-scrollbar{display:none}
+  .nav button{
+    flex:0 0 auto!important;
+    width:auto!important;
+    min-width:max-content!important;
+    margin:0!important;
+    padding:9px 11px!important;
+    border-radius:10px!important;
+    white-space:nowrap!important;
+    font-size:12px!important;
+  }
+  .nav-label{gap:5px!important}
+  .nav-badge{min-width:19px!important;height:18px!important;font-size:10px!important}
+
+  /* Main content */
+  .main{
+    margin-left:0!important;
+    width:100%!important;
+    max-width:100%!important;
+    padding:10px!important;
+    overflow-x:hidden!important;
+  }
+  .top{
+    width:100%!important;
+    min-width:0!important;
+    padding:11px!important;
+    border-radius:14px!important;
+    gap:8px!important;
+    flex-wrap:wrap!important;
+  }
+  .top h1{
+    font-size:19px!important;
+    min-width:0!important;
+    flex:1 1 100%!important;
+    line-height:1.2!important;
+  }
+  .top .actions{
+    width:100%!important;
+    height:auto!important;
+    min-width:0!important;
+    flex-wrap:wrap!important;
+    justify-content:flex-start!important;
+    gap:6px!important;
+    margin-left:0!important;
+  }
+  .top .actions .btn{
+    flex:1 1 auto!important;
+    min-width:0!important;
+    padding:8px 9px!important;
+    font-size:11px!important;
+  }
+  .top .actions #securityFab{
+    flex:0 0 42px!important;
+    width:42px!important;
+    min-width:42px!important;
+    max-width:42px!important;
+    padding:5px!important;
+  }
+
+  /* Dashboard cards */
+  .cards{
+    grid-template-columns:1fr 1fr!important;
+    gap:8px!important;
+  }
+  .card{
+    min-width:0!important;
+    padding:12px!important;
+    border-radius:13px!important;
+    min-height:100px!important;
+  }
+  .card .label{font-size:9px!important;line-height:1.25!important}
+  .card .num{font-size:19px!important;margin-top:5px!important}
+  .card .sub{font-size:8px!important;line-height:1.25!important}
+
+  .panel{
+    width:100%!important;
+    min-width:0!important;
+    padding:12px!important;
+    margin-top:10px!important;
+    border-radius:14px!important;
+  }
+  .section-head{gap:8px!important}
+  .section-head h2{font-size:17px!important}
+  .section-head p{font-size:10px!important}
+
+  /* Toolbars/search */
+  .toolbar,.ledger-toolbar,.dashboard-search,.employee-master-toolbar{
+    width:100%!important;
+    min-width:0!important;
+    flex-direction:column!important;
+    align-items:stretch!important;
+    gap:7px!important;
+  }
+  .toolbar>*,
+  .ledger-toolbar>*,
+  .dashboard-search>*,
+  .employee-master-toolbar>*{
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+  }
+  .dashboard-search{display:flex!important;padding:9px!important;margin:10px 0!important}
+  .dashboard-search .searchbox{min-width:0!important;width:100%!important}
+  .dashboard-search .search-hint{white-space:normal!important}
+  .dashboard-search .quick-filter{height:auto!important;width:100%!important}
+  .quick-filter{width:100%!important}
+  .quick-filter button{flex:1 1 auto!important}
+  .ledger-lookup{min-width:0!important;width:100%!important}
+  .ledger-search{min-width:0!important;width:100%!important}
+  .ledger-toolbar select{min-width:0!important;width:100%!important}
+  .search,.status-filter,select,input,textarea{
+    max-width:100%!important;
+  }
+
+  /* Tables remain fully usable via horizontal swipe */
+  .tablewrap{
+    width:100%!important;
+    max-width:100%!important;
+    overflow-x:auto!important;
+    overflow-y:auto!important;
+    -webkit-overflow-scrolling:touch!important;
+  }
+  table{
+    min-width:max-content!important;
+    width:max-content!important;
+    max-width:none!important;
+    font-size:11px!important;
+  }
+  th,td{
+    padding:8px!important;
+    white-space:nowrap!important;
+  }
+
+  /* Forms */
+  .formgrid{grid-template-columns:1fr!important;gap:9px!important}
+  .wide{grid-column:auto!important}
+  .employee-lookup{grid-template-columns:1fr!important;gap:8px!important}
+  .minirow{grid-template-columns:1fr 1fr!important;gap:7px!important}
+  .mini{padding:9px!important}
+  .pending-head{align-items:flex-start!important;flex-direction:column!important;gap:5px!important}
+  .pending-total{white-space:normal!important}
+
+  /* Search/filter summary */
+  .filter-summary-card{
+    padding:11px!important;
+    gap:8px!important;
+    flex-direction:column!important;
+    align-items:flex-start!important;
+  }
+  .filter-summary-card>div:first-child{
+    flex-wrap:wrap!important;
+    gap:5px!important;
+  }
+  .filter-summary-card strong{font-size:21px!important}
+  .fs-total{width:100%!important;justify-content:space-between!important}
+
+  /* Modals */
+  .modal{
+    padding:10px!important;
+    align-items:flex-start!important;
+    overflow-y:auto!important;
+  }
+  .modalbox{
+    width:100%!important;
+    max-width:100%!important;
+    max-height:calc(100vh - 20px)!important;
+    padding:14px!important;
+    border-radius:16px!important;
+    margin:0!important;
+  }
+  .modalhead{gap:8px!important}
+  .modalhead h2,.modalhead h3{font-size:17px!important}
+
+  /* Account/security popup */
+  #accountMenu{
+    top:64px!important;
+    right:8px!important;
+    left:8px!important;
+    width:auto!important;
+    max-width:none!important;
+  }
+  .security-card{
+    width:100%!important;
+    max-width:100%!important;
+    padding:18px!important;
+  }
+  .auth-card{
+    width:calc(100% - 20px)!important;
+    padding:22px!important;
+  }
+
+  /* Prevent long content from forcing page width */
+  img,video,canvas,iframe{max-width:100%!important}
+  .print-ledger-hero{max-width:100%!important}
+  .print-ledger-hero .plh-right{text-align:left!important}
+}
+@media (max-width:390px){
+  .cards{grid-template-columns:1fr!important}
+  .top .actions .btn{font-size:10px!important;padding:8px!important}
+  .card{min-height:92px!important}
+  .minirow{grid-template-columns:1fr!important}
+}
+</style>
+
+<style id="pending-ledger-projection">
+.pending-projection{background:linear-gradient(145deg,#fff9ed,#fff)!important;border-color:#f3d39a!important}.pending-projection-help{display:block;margin-top:4px;font-size:9px;color:#8a6a2d;font-weight:700;line-height:1.25}.mini.plh-receive{background:linear-gradient(145deg,#fff7ed,#fff)!important}.mini.plh-pay{background:linear-gradient(145deg,#f5f0ff,#fff)!important}.mini.plh-settled{background:linear-gradient(145deg,#effcf5,#fff)!important}@media(max-width:700px){.pending-projection-help{font-size:8.5px}}
+@media print{.pending-projection-help{font-size:7px!important}}
+</style>
+
+<style id="ledger-print-one-page-fix">
+@media print{
+  @page{size:A4 landscape;margin:6mm 7mm 7mm}
+  .print-ledger-hero{margin-bottom:7px!important;padding:10px 13px!important;grid-template-columns:1fr 220px!important}
+  .print-ledger-hero .plh-name{font-size:18px!important}
+  .print-ledger-hero .plh-net{font-size:19px!important}
+  .minirow{grid-template-columns:repeat(7,minmax(0,1fr))!important;gap:5px!important;margin-bottom:7px!important}
+  .mini{min-height:45px!important;padding:6px 5px!important;border-radius:7px!important}
+  .mini small{font-size:6.5px!important;margin-bottom:3px!important;letter-spacing:.25px!important}
+  .mini b{font-size:11px!important}
+  .pending-projection-help{font-size:6.3px!important;margin-top:2px!important}
+  .tablewrap{margin-top:0!important}
+  table{font-size:7.7px!important}
+  th{font-size:6.7px!important;padding:5px 4px!important}
+  td{padding:4px!important}
+  .print-footer{margin-top:7px!important;padding-top:5px!important;font-size:6.5px!important}
+}
+</style>
+
+<style id="ledger-print-full-width-fix">
+@media print{
+  @page{size:A4 landscape;margin:0!important}
+  html,body{width:100%!important;min-width:0!important;margin:0!important;padding:0!important;overflow:visible!important}
+  .app{display:block!important;width:100%!important;min-width:0!important;margin:0!important;padding:0!important}
+  .side,.top{display:none!important}
+  .main{display:block!important;position:static!important;margin:0!important;padding:0!important;width:100%!important;max-width:none!important;min-width:0!important;left:auto!important;right:auto!important}
+  #page{display:block!important;width:100%!important;max-width:none!important;min-width:0!important;margin:0!important;padding:0!important}
+  #page>.panel{display:block!important;width:100%!important;max-width:none!important;min-width:0!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;box-shadow:none!important}
+  #ledgerArea{display:block!important;width:100%!important;max-width:none!important;min-width:0!important;margin:0!important;padding:0!important}
+  .print-only-title{margin:0 0 10px!important;padding:0!important}
+  .print-ledger-hero,.minirow,.tablewrap,.print-footer{width:100%!important;max-width:none!important;box-sizing:border-box!important}
+}
+</style>
+
+<style id="a4-print-margin-final">
+@media print{
+  @page{size:A4 landscape; margin:10mm 12mm 10mm 12mm!important;}
+  html,body{width:auto!important;min-width:0!important;margin:0!important;padding:0!important;overflow:visible!important;}
+  body{box-sizing:border-box!important;}
+  .app{display:block!important;width:100%!important;max-width:none!important;min-width:0!important;margin:0!important;padding:0!important;}
+  .main{display:block!important;position:static!important;width:100%!important;max-width:none!important;min-width:0!important;margin:0!important;padding:0!important;box-sizing:border-box!important;}
+  #page{display:block!important;width:100%!important;max-width:none!important;min-width:0!important;margin:0!important;padding:0!important;box-sizing:border-box!important;}
+  #page>.panel{display:block!important;width:100%!important;max-width:none!important;min-width:0!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;box-sizing:border-box!important;}
+  #ledgerArea{display:block!important;width:100%!important;max-width:none!important;min-width:0!important;margin:0!important;padding:0!important;box-sizing:border-box!important;}
+  .print-only-title,.print-ledger-hero,.minirow,.tablewrap,.print-footer{box-sizing:border-box!important;width:100%!important;max-width:none!important;}
+  .print-ledger-hero{margin-left:0!important;margin-right:0!important;}
+  .minirow{margin-left:0!important;margin-right:0!important;}
+  .tablewrap{margin-left:0!important;margin-right:0!important;}
+}
+</style>
+
+<style id="a4-proper-print-final">
+@media print {
+  /* Let Chrome use A4 landscape, while the explicit inner sheet guarantees safe margins. */
+  @page {
+    size: A4 landscape;
+    margin: 0;
+  }
+
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+
+  .app {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .side, .top {
+    display: none !important;
+  }
+
+  /* A4 landscape = 297mm × 210mm.
+     Keep a real 12mm left/right and 10mm top/bottom safe area inside the sheet,
+     independent of Chrome's print-margin dropdown. */
+  .main {
+    display: block !important;
+    position: static !important;
+    width: calc(100% - 24mm) !important;
+    max-width: calc(100% - 24mm) !important;
+    min-width: 0 !important;
+    margin: 10mm auto !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  #page,
+  #page > .panel,
+  #ledgerArea {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  #page > .panel {
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .print-only-title,
+  .print-ledger-hero,
+  .minirow,
+  .tablewrap,
+  .print-footer {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .print-ledger-hero,
+  .minirow,
+  .tablewrap {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  /* Prevent any element from creating horizontal overflow/cropping. */
+  table {
+    width: 100% !important;
+    max-width: 100% !important;
+    table-layout: fixed !important;
+  }
+
+  /* Keep the whole ledger together where possible. */
+  .print-ledger-hero,
+  .minirow,
+  .tablewrap,
+  .print-footer {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+}
+</style>
 </head><body>
 <div id="authOverlay">
   <div class="auth-card">
@@ -583,7 +974,7 @@ search.onfocus=renderEmployeeDropdown;search.oninput=()=>{selectedEmp='';$('ledg
 document.addEventListener('click',function ledgerOutside(e){if(!e.target.closest('.ledger-lookup'))dropdown.classList.remove('show')},{once:false});
 $('printLedger').onclick=()=>window.print();
 if(selectedEmp){const ee=emp(selectedEmp);if(ee)search.value=`${ee.name} (${ee.id})`;drawLedger()}}
-function drawLedger(){const area=$('ledgerArea');if(!area||!selectedEmp)return;const e=emp(selectedEmp),t=totals(selectedEmp);if($('printEmployeeName'))$('printEmployeeName').textContent=`Employee: ${e.name} | ID: ${e.id} | Designation: ${e.designation||'—'}`;const due=Math.abs(t.balance)<.005?'Settled / No Amount Due':t.balance>0?'Amount to Receive from Employee':'Amount to Pay to Employee';const dueCls=Math.abs(t.balance)<.005?'plh-settled':t.balance>0?'plh-receive':'plh-pay';let balance=t.opening,rows=[];rows.push(['','OPENING','','Opening Balance','','','',balance,'COUNTED']);if(t.paid){balance+=(t.opening<0?t.paid:-t.paid);rows.push(['','PAYMENT','','Paid Amount','','',t.paid,balance,'COUNTED'])}db.advances.filter(x=>x.empId===selectedEmp).sort((a,b)=>a.date.localeCompare(b.date)).forEach(x=>{balance+=Number(x.amount||0);rows.push([x.date,'ADVANCE',x.id,'Advance Given',x.amount,'','',balance,'COUNTED'])});db.bills.filter(x=>x.empId===selectedEmp).sort((a,b)=>a.date.localeCompare(b.date)).forEach(x=>{const st=String(x.status||'Pending');if(st==='Approved'){balance-=Number(x.amount||0);rows.push([x.date,'BILL',x.id,x.description||x.category,'',x.amount,'',balance,'APPROVED - COUNTED'])}else{rows.push([x.date,'BILL',x.id,`${x.description||x.category} (${st.toUpperCase()} - NOT COUNTING)`,'',x.amount,'',balance,`${st.toUpperCase()} - NOT COUNTING`])}});(db.settlements||[]).filter(x=>x.empId===selectedEmp).sort((a,b)=>a.date.localeCompare(b.date)).forEach(x=>{const isDeduct=String(x.type||'').toLowerCase().includes('deduct');balance+=isDeduct?-Number(x.amount||0):Number(x.amount||0);rows.push([x.date,'SETTLEMENT',x.id,`${x.type}${x.remark?' — '+x.remark:''}`,'','',Number(x.amount||0),balance,'COUNTED'])});area.innerHTML=`<div class="print-ledger-hero"><div class="plh-main"><span class="plh-label">Employee Ledger</span><div class="plh-name">${esc(e.name)}</div><div class="plh-meta">Employee ID: ${esc(e.id)} &nbsp; • &nbsp; Designation: ${esc(e.designation||'—')}</div></div><div class="plh-right"><span class="plh-label">Net Balance</span><div class="plh-net">${money(t.balance)}</div><div class="plh-help ${dueCls}">${due}</div></div></div><div class="minirow"><div class="mini"><small>Opening Balance</small><b>${money(t.opening)}</b></div><div class="mini"><small>Paid Amount</small><b>${money(t.paid)}</b></div><div class="mini"><small>Total Advance</small><b>${money(t.adv)}</b></div><div class="mini"><small>Approved Expense</small><b>${money(t.bills)}</b></div><div class="mini ${Math.abs(t.balance)<.005?'net-zero':t.balance>0?'net-positive':'net-negative'}"><small>Net Balance</small><b>${money(t.balance)}</b></div><div class="mini"><small>Settlement Status</small><b>${due}</b></div></div><div class="tablewrap" style="margin-top:15px"><table><thead><tr><th>Date</th><th>Type</th><th>Reference</th><th>Description / Status</th><th>Advance</th><th>Bill</th><th>Paid</th><th>Running Balance</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${fmt(r[0])}</td><td>${r[1]}</td><td>${esc(r[2])}</td><td>${esc(r[3])}</td><td>${r[4]?money(r[4]):''}</td><td>${r[5]?money(r[5]):''}</td><td>${r[6]?money(r[6]):''}</td><td>${money(r[7])}${r[8]&&r[8]!=='COUNTED'?` <small style="font-weight:700">(${esc(r[8])})</small>`:''}</td></tr>`).join('')}</tbody></table></div><div class="print-footer"><strong>${esc(db.company)}</strong> • Expense &amp; Advance Management System • Generated on ${new Date().toLocaleString('en-IN')}</div>`}
+function drawLedger(){const area=$('ledgerArea');if(!area||!selectedEmp)return;const e=emp(selectedEmp),t=totals(selectedEmp);const pendingBills=db.bills.filter(x=>x.empId===selectedEmp&&String(x.status||'Pending').toLowerCase()==='pending');const pendingAmount=pendingBills.reduce((s,x)=>s+Number(x.amount||0),0);const projectedBalance=t.balance-pendingAmount;const projectedDue=Math.abs(projectedBalance)<.005?'Settled / No Amount Due':projectedBalance>0?'Amount to Receive from Employee':'Amount to Pay to Employee';const projectedCls=Math.abs(projectedBalance)<.005?'plh-settled':projectedBalance>0?'plh-receive':'plh-pay';if($('printEmployeeName'))$('printEmployeeName').textContent=`Employee: ${e.name} | ID: ${e.id} | Designation: ${e.designation||'—'}`;const due=Math.abs(t.balance)<.005?'Settled / No Amount Due':t.balance>0?'Amount to Receive from Employee':'Amount to Pay to Employee';const dueCls=Math.abs(t.balance)<.005?'plh-settled':t.balance>0?'plh-receive':'plh-pay';let balance=t.opening,rows=[];rows.push(['','OPENING','','Opening Balance','','','',balance,'COUNTED']);if(t.paid){balance+=(t.opening<0?t.paid:-t.paid);rows.push(['','PAYMENT','','Paid Amount','','',t.paid,balance,'COUNTED'])}db.advances.filter(x=>x.empId===selectedEmp).sort((a,b)=>a.date.localeCompare(b.date)).forEach(x=>{balance+=Number(x.amount||0);rows.push([x.date,'ADVANCE',x.id,'Advance Given',x.amount,'','',balance,'COUNTED'])});db.bills.filter(x=>x.empId===selectedEmp).sort((a,b)=>a.date.localeCompare(b.date)).forEach(x=>{const st=String(x.status||'Pending');if(st==='Approved'){balance-=Number(x.amount||0);rows.push([x.date,'BILL',x.id,x.description||x.category,'',x.amount,'',balance,'APPROVED - COUNTED'])}else{rows.push([x.date,'BILL',x.id,`${x.description||x.category} (${st.toUpperCase()} - NOT COUNTING)`,'',x.amount,'',balance,`${st.toUpperCase()} - NOT COUNTING`])}});(db.settlements||[]).filter(x=>x.empId===selectedEmp).sort((a,b)=>a.date.localeCompare(b.date)).forEach(x=>{const isDeduct=String(x.type||'').toLowerCase().includes('deduct');balance+=isDeduct?-Number(x.amount||0):Number(x.amount||0);rows.push([x.date,'SETTLEMENT',x.id,`${x.type}${x.remark?' — '+x.remark:''}`,'','',Number(x.amount||0),balance,'COUNTED'])});area.innerHTML=`<div class="print-ledger-hero"><div class="plh-main"><span class="plh-label">Employee Ledger</span><div class="plh-name">${esc(e.name)}</div><div class="plh-meta">Employee ID: ${esc(e.id)} &nbsp; • &nbsp; Designation: ${esc(e.designation||'—')}</div></div><div class="plh-right"><span class="plh-label">Net Balance</span><div class="plh-net">${money(t.balance)}</div><div class="plh-help ${dueCls}">${due}</div></div></div><div class="minirow"><div class="mini"><small>Opening Balance</small><b>${money(t.opening)}</b></div><div class="mini"><small>Paid Amount</small><b>${money(t.paid)}</b></div><div class="mini"><small>Total Advance</small><b>${money(t.adv)}</b></div><div class="mini"><small>Approved Expense</small><b>${money(t.bills)}</b></div><div class="mini ${Math.abs(t.balance)<.005?'net-zero':t.balance>0?'net-positive':'net-negative'}"><small>Net Balance</small><b>${money(t.balance)}</b></div><div class="mini ${pendingAmount>0?'pending-projection':''}"><small>Pending Bills</small><b>${money(pendingAmount)}</b><span class="pending-projection-help">${pendingAmount>0?pendingBills.length+' bill(s) • if approved':'No pending bills'}</span></div><div class="mini ${projectedCls}"><small>After Pending Approval</small><b>${money(projectedBalance)}</b><span class="pending-projection-help">${projectedDue}</span></div></div><div class="tablewrap" style="margin-top:15px"><table><thead><tr><th>Date</th><th>Type</th><th>Reference</th><th>Description / Status</th><th>Advance</th><th>Bill</th><th>Paid</th><th>Running Balance</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${fmt(r[0])}</td><td>${r[1]}</td><td>${esc(r[2])}</td><td>${esc(r[3])}</td><td>${r[4]?money(r[4]):''}</td><td>${r[5]?money(r[5]):''}</td><td>${r[6]?money(r[6]):''}</td><td>${money(r[7])}${r[8]&&r[8]!=='COUNTED'?` <small style="font-weight:700">(${esc(r[8])})</small>`:''}</td></tr>`).join('')}</tbody></table></div><div class="print-footer"><strong>${esc(db.company)}</strong> • Expense &amp; Advance Management System • Generated on ${new Date().toLocaleString('en-IN')}</div>`}
 
 function reports(){
 $('page').innerHTML=`<div class="panel"><div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap"><div><h2 style="margin-bottom:4px">Reports & Excel</h2><p style="margin:0;color:#64748b">Download complete data, individual registers, dashboard summary and upload bulk entries from an Excel-compatible workbook.</p></div><div class="toolbar" style="margin:0"><button class="btn primary" id="exportWorkbook">⬇ Download Excel Workbook</button><button class="btn" id="downloadTemplate">⬇ Bulk Upload Template</button><button class="btn" id="bulkUploadBtn">⬆ Bulk Upload Excel</button><input id="bulkFile" type="file" accept=".xls,.xml,.csv" style="display:none"></div></div><div class="cards" style="margin-top:18px"><div class="card"><b>Employee Master</b><div style="font-size:28px;margin-top:8px">${db.employees.length}</div><small>Employees</small></div><div class="card"><b>Advance Register</b><div style="font-size:28px;margin-top:8px">${db.advances.length}</div><small>Advance entries</small></div><div class="card"><b>Bill Register</b><div style="font-size:28px;margin-top:8px">${db.bills.length}</div><small>All bills</small></div><div class="card"><b>Pending Bills</b><div style="font-size:28px;margin-top:8px">${db.bills.filter(x=>String(x.status).toLowerCase()==='pending').length}</div><small>Not counting</small></div></div><div class="panel" style="margin-top:16px;background:#f8fafc"><h3>Individual Downloads</h3><div class="toolbar"><button class="btn" data-report="employees">Employee Master Excel</button><button class="btn" data-report="advances">Advance Register Excel</button><button class="btn" data-report="bills">Bill Register Excel</button><button class="btn" data-report="settlements">Settlement Register Excel</button><button class="btn" data-report="ledger">Full Ledger Excel</button><button class="btn" data-report="dashboard">Dashboard Excel</button></div><p style="font-size:12px;color:#64748b;margin-bottom:0">Files are Excel-compatible <b>.xls</b> workbooks. You can open them directly in Microsoft Excel.</p></div><div class="panel" style="margin-top:16px"><h3>Bulk Upload</h3><p>Use the template above, fill the <b>Employees</b>, <b>Advances</b> and/or <b>Bills</b> sheets, save it as Excel XML <b>.xls</b> or the provided template format, then upload it here. Existing IDs will be updated; new IDs will be added.</p><div style="display:flex;gap:10px;flex-wrap:wrap"><span class="pill">Employees → ID, Name, Designation, Opening Balance, Paid Amount</span><span class="pill">Advances → Advance ID, Emp ID, Date, Amount, Remarks</span><span class="pill">Bills → Bill ID, Emp ID, Date, Category, Vendor, Invoice, Amount, Status, Description</span></div></div></div>`;
