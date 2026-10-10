@@ -809,6 +809,162 @@ body{background:radial-gradient(circle at 88% 4%,rgba(23,182,217,.10),transparen
   }
 }
 </style>
+
+<style id="premium-webflow-login">
+/* ================= PREMIUM WEBFLOW-INSPIRED 3D LOGIN ================= */
+#authOverlay{
+  isolation:isolate!important;overflow:hidden!important;padding:28px!important;
+  background:radial-gradient(ellipse at 16% 18%,rgba(8,185,244,.22),transparent 28%),
+             radial-gradient(ellipse at 82% 78%,rgba(22,119,240,.26),transparent 32%),
+             linear-gradient(125deg,#040b18 0%,#071a32 46%,#0a2b51 100%)!important;
+}
+#authOverlay:before,#authOverlay:after{content:"";position:absolute;pointer-events:none;z-index:-1;border-radius:50%;transform-style:preserve-3d}
+#authOverlay:before{
+  width:min(43vw,490px);height:min(43vw,490px);left:-9%;top:7%;
+  background:radial-gradient(circle at 32% 28%,rgba(255,255,255,.86) 0 1%,rgba(8,185,244,.72) 4%,rgba(22,119,240,.32) 22%,rgba(22,119,240,.06) 53%,transparent 70%);
+  border:1px solid rgba(134,211,255,.24);box-shadow:inset -22px -26px 55px rgba(2,12,34,.65),inset 9px 10px 30px rgba(255,255,255,.12),0 0 90px rgba(0,153,255,.18);
+  animation:krnOrbFloat 11s ease-in-out infinite;
+}
+#authOverlay:after{
+  width:min(31vw,340px);height:min(31vw,340px);right:-3%;bottom:-10%;
+  background:radial-gradient(circle at 30% 25%,rgba(255,255,255,.8),rgba(8,185,244,.58) 5%,rgba(22,119,240,.24) 24%,rgba(8,29,63,.05) 60%,transparent 70%);
+  border:1px solid rgba(134,211,255,.22);box-shadow:inset -18px -22px 42px rgba(2,12,34,.62),0 0 75px rgba(8,185,244,.16);
+  animation:krnOrbFloat 13s ease-in-out -3s infinite reverse;
+}
+.auth-card{
+  position:relative!important;isolation:isolate;width:min(450px,100%)!important;padding:38px 38px 30px!important;
+  border-radius:27px!important;text-align:left!important;overflow:hidden!important;
+  background:linear-gradient(145deg,rgba(255,255,255,.96),rgba(239,247,255,.88))!important;
+  border:1px solid rgba(255,255,255,.78)!important;
+  box-shadow:0 40px 100px rgba(0,0,0,.42),0 12px 35px rgba(0,113,220,.16),inset 0 1px rgba(255,255,255,.98)!important;
+  backdrop-filter:blur(24px) saturate(145%)!important;
+  animation:krnLoginRise .75s cubic-bezier(.2,.75,.25,1) both;
+}
+.auth-card:before{content:"";position:absolute;z-index:-1;left:-70px;top:-95px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(8,185,244,.16),transparent 68%);pointer-events:none}
+.auth-card:after{content:"KRN SPH  /  SECURE WORKSPACE";display:block;margin-top:23px;padding-top:15px;border-top:1px solid rgba(148,163,184,.24);font-size:9px;font-weight:850;letter-spacing:1.8px;color:#8292a8;text-align:center}
+.auth-logo{width:174px!important;height:58px!important;object-fit:contain!important;margin:0 auto 22px!important;filter:drop-shadow(0 8px 12px rgba(17,48,85,.10));}
+.auth-title{text-align:center!important;color:#0b2342!important;font-size:25px!important;line-height:1.2!important;letter-spacing:-.65px!important;font-weight:900!important;margin:0!important}
+.auth-sub{text-align:center!important;color:#657891!important;font-size:12px!important;line-height:1.6!important;margin:9px 0 25px!important}
+.auth-field{margin:15px 0!important}
+.auth-field label{display:block!important;color:#405774!important;font-size:10px!important;font-weight:900!important;letter-spacing:1.15px!important;text-transform:uppercase!important;margin-bottom:8px!important}
+.auth-field input{width:100%!important;height:49px!important;border:1px solid #d7e2ef!important;border-radius:13px!important;padding:0 15px!important;background:rgba(255,255,255,.86)!important;color:#132b49!important;font-size:14px!important;box-shadow:inset 0 1px 2px rgba(15,40,70,.03),0 4px 12px rgba(20,55,95,.035)!important;transition:border-color .2s,box-shadow .2s,transform .2s!important}
+.auth-field input:focus{outline:none!important;border-color:#3296f4!important;transform:translateY(-1px);box-shadow:0 0 0 4px rgba(22,119,240,.11),0 9px 22px rgba(22,119,240,.09)!important}
+.auth-btn{position:relative!important;overflow:hidden!important;width:100%!important;height:51px!important;margin-top:10px!important;border:1px solid rgba(255,255,255,.25)!important;border-radius:13px!important;background:linear-gradient(110deg,#087cf5,#0754c7 52%,#08a9df)!important;color:#fff!important;font-size:13px!important;font-weight:900!important;letter-spacing:.15px!important;box-shadow:0 12px 25px rgba(7,92,202,.27),inset 0 1px rgba(255,255,255,.28)!important;transition:transform .2s,box-shadow .2s,filter .2s!important}
+.auth-btn:before{content:"";position:absolute;inset:0;transform:translateX(-120%) skewX(-18deg);background:linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent);transition:transform .65s ease}
+.auth-btn:hover{transform:translateY(-2px)!important;filter:saturate(1.12)!important;box-shadow:0 16px 30px rgba(7,92,202,.34),inset 0 1px rgba(255,255,255,.3)!important}
+.auth-btn:hover:before{transform:translateX(120%) skewX(-18deg)}
+.auth-btn:active{transform:translateY(0) scale(.99)!important}
+.auth-error{min-height:18px!important;margin:11px 0 0!important;font-size:12px!important;text-align:center!important}
+.auth-default{margin-top:14px!important;text-align:center!important;font-size:10px!important;color:#8392a7!important;line-height:1.5!important}
+@keyframes krnOrbFloat{0%,100%{translate:0 0;rotate:0deg}50%{translate:0 -18px;rotate:5deg}}
+@keyframes krnLoginRise{from{opacity:0;transform:translateY(22px) scale(.975)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(max-width:600px){#authOverlay{padding:16px!important}.auth-card{padding:30px 23px 24px!important;border-radius:22px!important}.auth-logo{margin-bottom:18px!important}.auth-title{font-size:22px!important}#authOverlay:before{width:75vw;height:75vw;left:-35%;top:4%}#authOverlay:after{width:60vw;height:60vw;right:-22%;bottom:-5%}}
+@media(prefers-reduced-motion:reduce){#authOverlay:before,#authOverlay:after,.auth-card{animation:none!important}.auth-btn,.auth-field input{transition:none!important}}
+
+/* Soft pearl / glass Webflow split-screen login inspired by the supplied reference */
+/* Keep the login overlay hidden after successful authentication; override display:grid!important above. */
+#authOverlay.hidden{display:none!important}
+#authOverlay{display:grid!important;grid-template-columns:minmax(320px,36%) minmax(0,64%)!important;align-items:stretch!important;justify-content:stretch!important;gap:0!important;padding:0!important;background:radial-gradient(ellipse at 73% 36%,rgba(255,255,255,.96),rgba(239,237,250,.8) 27%,transparent 56%),linear-gradient(120deg,#b9dce8 0%,#d9d8e9 45%,#eee8f3 100%)!important;font-family:Inter,"Segoe UI",Arial,sans-serif!important}
+#authOverlay:before{width:min(44vw,560px)!important;height:min(44vw,560px)!important;left:43%!important;top:7%!important;background:radial-gradient(circle at 33% 27%,rgba(255,255,255,.98) 0 2%,rgba(255,255,255,.55) 7%,rgba(179,222,238,.42) 20%,rgba(255,255,255,.10) 52%,transparent 70%)!important;border:1px solid rgba(255,255,255,.55)!important;box-shadow:inset -20px -25px 55px rgba(118,137,177,.12),inset 10px 12px 30px rgba(255,255,255,.8),0 20px 90px rgba(111,127,176,.14)!important}
+#authOverlay:after{width:min(30vw,390px)!important;height:min(30vw,390px)!important;right:4%!important;bottom:-8%!important;background:radial-gradient(circle at 30% 24%,rgba(255,255,255,.98),rgba(255,255,255,.42) 8%,rgba(194,222,240,.38) 27%,rgba(255,255,255,.05) 64%,transparent 70%)!important;border:1px solid rgba(255,255,255,.6)!important;box-shadow:inset -18px -22px 42px rgba(118,137,177,.10),0 0 75px rgba(255,255,255,.38)!important}
+.auth-card{grid-column:1!important;grid-row:1!important;align-self:stretch!important;justify-self:stretch!important;width:100%!important;max-width:none!important;min-width:0!important;padding:clamp(28px,4vw,58px) clamp(22px,3.1vw,48px)!important;border-radius:0!important;text-align:left!important;display:flex!important;flex-direction:column!important;justify-content:center!important;background:linear-gradient(155deg,rgba(255,255,255,.44),rgba(235,238,248,.26))!important;border:0!important;border-right:1px solid rgba(255,255,255,.55)!important;box-shadow:12px 0 55px rgba(100,115,155,.08),inset -1px 0 rgba(255,255,255,.55)!important;backdrop-filter:blur(28px) saturate(140%)!important;z-index:2!important;animation:krnLoginRise .75s cubic-bezier(.2,.75,.25,1) both}
+.auth-card:before{left:-50px!important;top:-45px!important;width:220px!important;height:220px!important;background:radial-gradient(circle,rgba(255,255,255,.6),transparent 70%)!important}
+.auth-card:after{margin-top:24px!important;color:#73859b!important;border-color:rgba(255,255,255,.55)!important;font-size:8px!important;letter-spacing:2px!important}
+.auth-logo{width:155px!important;height:56px!important;margin:0 0 32px!important;object-position:left center!important;filter:drop-shadow(0 8px 14px rgba(66,90,130,.12))!important}
+.auth-title{text-align:left!important;font-size:clamp(24px,2.1vw,31px)!important;line-height:1.18!important;letter-spacing:-.9px!important;color:#26344f!important}
+.auth-sub{text-align:left!important;color:#66738e!important;font-size:12px!important;margin:10px 0 30px!important}
+.auth-field{margin:16px 0!important}
+.auth-field label{color:#5e6b86!important;font-size:10px!important;letter-spacing:1.3px!important}
+.auth-field input{height:48px!important;border-radius:999px!important;padding:0 18px!important;background:rgba(255,255,255,.30)!important;border:1px solid rgba(255,255,255,.86)!important;box-shadow:inset 0 1px 8px rgba(255,255,255,.5),0 7px 18px rgba(104,123,160,.07)!important;color:#283851!important}
+.auth-field input::placeholder{color:#8792a6!important}
+.auth-field input:focus{background:rgba(255,255,255,.66)!important;border-color:#fff!important;box-shadow:0 0 0 4px rgba(255,255,255,.3),0 8px 22px rgba(94,127,180,.13)!important}
+.auth-btn{height:49px!important;border-radius:999px!important;background:linear-gradient(110deg,#fff,#f4f5fb)!important;color:#52617f!important;border:1px solid rgba(255,255,255,.95)!important;box-shadow:0 12px 28px rgba(102,119,158,.13),inset 0 1px #fff!important;font-size:13px!important;letter-spacing:.7px!important}
+.auth-btn:hover{background:linear-gradient(110deg,#fff,#eaf6fb)!important;color:#263c65!important;box-shadow:0 16px 34px rgba(102,119,158,.20),inset 0 1px #fff!important}
+.auth-default{text-align:left!important;color:#78859b!important;font-size:10px!important;margin-top:18px!important}
+.auth-showcase{grid-column:2!important;grid-row:1!important;position:relative;isolation:isolate;overflow:hidden;min-width:0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:42px 5vw;color:#fff;background:radial-gradient(ellipse at 50% 50%,rgba(255,255,255,.26),transparent 45%);z-index:1}
+.showcase-nav,.showcase-bottom{position:absolute;left:5%;right:5%;display:flex;align-items:center;justify-content:space-between;gap:16px;color:rgba(255,255,255,.9);font-size:10px;font-weight:800;letter-spacing:1.5px}
+.showcase-nav{top:28px}.showcase-bottom{bottom:27px;color:rgba(91,106,143,.75);font-size:9px;letter-spacing:1.6px}
+.showcase-pill{padding:10px 20px;border:1px solid rgba(255,255,255,.7);border-radius:999px;background:rgba(255,255,255,.22);backdrop-filter:blur(14px);color:#5e6a8a}
+.showcase-copy{position:relative;z-index:4;text-align:center;transform:translateY(-2%);text-shadow:0 2px 20px rgba(255,255,255,.12)}
+.showcase-kicker{font-size:10px;font-weight:850;letter-spacing:3px;color:rgba(83,101,141,.82);margin-bottom:17px}
+.showcase-hello{font-size:clamp(58px,8vw,112px);font-weight:300;letter-spacing:-6px;line-height:1;color:#fff;text-shadow:0 8px 35px rgba(117,133,174,.18)}.showcase-hello span{color:#9ed8e8}
+.showcase-copy p{font-size:clamp(19px,2.1vw,28px);line-height:1.4;font-weight:350;color:#fff;margin:18px 0 22px;text-shadow:0 2px 18px rgba(90,110,155,.16)}
+.showcase-line{height:1px;width:72px;margin:0 auto 15px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.95),transparent)}.showcase-copy small{font-size:11px;letter-spacing:.3px;color:rgba(83,101,141,.82)}
+.showcase-orbit{position:absolute;left:50%;top:50%;border-radius:50%;transform:translate(-50%,-50%);pointer-events:none}
+.orbit-one{width:min(39vw,490px);height:min(39vw,490px);border:2px solid rgba(255,255,255,.74);box-shadow:0 0 20px rgba(255,255,255,.7),inset 0 0 28px rgba(255,255,255,.16),0 0 65px rgba(255,255,255,.48);animation:showcasePulse 6s ease-in-out infinite}
+.orbit-two{width:min(47vw,590px);height:min(47vw,590px);border:1px solid rgba(255,255,255,.34);box-shadow:0 0 55px rgba(255,255,255,.16)}
+.showcase-bubble{position:absolute;border-radius:50%;background:radial-gradient(circle at 30% 24%,rgba(255,255,255,.98),rgba(255,255,255,.78) 13%,rgba(225,231,247,.48) 38%,rgba(255,255,255,.12) 64%,rgba(255,255,255,.02) 72%);border:1px solid rgba(255,255,255,.58);box-shadow:inset -14px -18px 30px rgba(139,150,190,.12),inset 8px 9px 24px rgba(255,255,255,.72),0 20px 45px rgba(105,120,165,.12);backdrop-filter:blur(2px);animation:krnOrbFloat 9s ease-in-out infinite}
+.bubble-one{width:clamp(90px,14vw,180px);height:clamp(90px,14vw,180px);left:17%;top:11%}.bubble-two{width:clamp(76px,11vw,145px);height:clamp(76px,11vw,145px);right:9%;top:33%;animation-delay:-3s}.bubble-three{width:clamp(70px,10vw,130px);height:clamp(70px,10vw,130px);left:19%;bottom:10%;animation-delay:-5s}
+@keyframes showcasePulse{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.85}50%{transform:translate(-50%,-50%) scale(1.035);opacity:1}}
+@media(max-width:760px){#authOverlay{display:flex!important;flex-direction:column!important;min-height:100vh!important;padding:0!important;overflow:auto!important}.auth-card{width:100%!important;min-height:75vh!important;padding:32px 25px!important;border-right:0!important;border-bottom:1px solid rgba(255,255,255,.55)!important}.auth-logo{margin-bottom:24px!important}.auth-showcase{min-height:42vh!important;padding:45px 20px!important}.showcase-nav{top:16px}.showcase-bottom{bottom:14px}.showcase-hello{font-size:62px;letter-spacing:-3px}.showcase-copy p{font-size:18px;margin:10px 0 14px}.orbit-one{width:290px;height:290px}.orbit-two{width:350px;height:350px}.bubble-one{left:4%;top:14%}.bubble-two{right:2%;top:27%}.bubble-three{left:7%;bottom:5%}#authOverlay:before{left:30%!important;top:45%!important;width:75vw!important;height:75vw!important}#authOverlay:after{right:-18%!important;bottom:0!important;width:55vw!important;height:55vw!important}}
+
+</style>
+
+<style id="login-soft-dark-eye-comfort">
+/* Muted, lower-glare login palette; keep layout and authentication unchanged */
+#authOverlay:not(.hidden){
+ background:radial-gradient(ellipse at 73% 36%,rgba(203,211,228,.48),rgba(160,166,190,.28) 28%,transparent 58%),linear-gradient(120deg,#718c9b 0%,#77798f 45%,#8a8298 100%)!important;
+}
+#authOverlay:before{background:radial-gradient(circle at 33% 27%,rgba(235,240,246,.78) 0 2%,rgba(221,229,239,.38) 8%,rgba(150,190,207,.24) 22%,rgba(210,215,230,.06) 54%,transparent 72%)!important;border-color:rgba(220,230,239,.30)!important;box-shadow:inset -20px -25px 55px rgba(45,57,82,.12),inset 10px 12px 30px rgba(235,242,248,.26),0 20px 90px rgba(36,49,76,.12)!important}
+#authOverlay:after{background:radial-gradient(circle at 30% 24%,rgba(235,240,246,.75),rgba(210,219,231,.28) 9%,rgba(150,185,207,.22) 28%,rgba(205,210,225,.04) 65%,transparent 72%)!important;border-color:rgba(220,230,239,.32)!important;box-shadow:inset -18px -22px 42px rgba(45,57,82,.12),0 0 75px rgba(210,220,235,.16)!important}
+.auth-card{background:linear-gradient(155deg,rgba(226,232,241,.72),rgba(190,199,217,.62))!important;border-right-color:rgba(231,237,246,.34)!important;box-shadow:12px 0 55px rgba(29,40,65,.12),inset -1px 0 rgba(240,244,250,.24)!important}
+.auth-title{color:#24344d!important}.auth-sub{color:#4f607a!important}.auth-field label{color:#40516c!important}
+.auth-field input{background:rgba(245,247,251,.48)!important;border-color:rgba(235,240,247,.60)!important;color:#26364e!important;box-shadow:inset 0 1px 8px rgba(40,52,75,.06),0 7px 18px rgba(39,49,75,.06)!important}
+.auth-field input::placeholder{color:#66748a!important}.auth-field input:focus{background:rgba(248,250,253,.72)!important;border-color:rgba(239,244,250,.86)!important;box-shadow:0 0 0 4px rgba(220,230,242,.16),0 8px 22px rgba(44,61,91,.12)!important}
+.auth-btn{background:linear-gradient(110deg,#e3e8f0,#cbd5e4)!important;color:#354761!important;border-color:rgba(236,241,248,.68)!important;box-shadow:0 12px 28px rgba(31,43,69,.16),inset 0 1px rgba(255,255,255,.72)!important}
+.auth-btn:hover{background:linear-gradient(110deg,#edf1f6,#d3dfeb)!important;color:#243953!important}
+.auth-default{color:#596a83!important}.showcase-hello{color:#e9edf5!important;text-shadow:0 8px 35px rgba(36,46,72,.22)!important}.showcase-hello span{color:#b5dce7!important}.showcase-copy p{color:#e1e6ef!important;text-shadow:0 2px 18px rgba(35,45,70,.20)!important}.showcase-kicker,.showcase-copy small{color:rgba(229,234,243,.78)!important}.showcase-bottom{color:rgba(229,234,243,.68)!important}.showcase-pill{background:rgba(220,228,239,.16)!important;color:#e3e8f2!important;border-color:rgba(235,240,248,.42)!important}
+.orbit-one{border-color:rgba(232,238,247,.46)!important;box-shadow:0 0 16px rgba(220,230,242,.28),inset 0 0 24px rgba(220,230,242,.08),0 0 55px rgba(204,218,236,.20)!important}.orbit-two{border-color:rgba(225,233,244,.24)!important;box-shadow:0 0 45px rgba(215,225,240,.10)!important}
+.showcase-bubble{background:radial-gradient(circle at 30% 24%,rgba(237,241,247,.82),rgba(211,220,235,.58) 14%,rgba(164,179,205,.34) 40%,rgba(216,222,236,.08) 65%,rgba(230,235,244,.02) 73%)!important;border-color:rgba(228,235,245,.40)!important;box-shadow:inset -14px -18px 30px rgba(50,62,91,.12),inset 8px 9px 24px rgba(239,243,249,.30),0 20px 45px rgba(38,48,75,.12)!important}
+@media(prefers-reduced-motion:reduce){.showcase-bubble,.orbit-one{animation:none!important}}
+</style>
+
+<style id="login-premium-colorgrade-v2">
+/* Refined premium midnight-teal / muted-lilac grade; login-only overrides */
+#authOverlay:not(.hidden){
+ background:radial-gradient(ellipse at 76% 38%,rgba(102,145,165,.22),transparent 43%),radial-gradient(ellipse at 8% 88%,rgba(103,93,139,.20),transparent 42%),linear-gradient(118deg,#172b3a 0%,#202b40 48%,#302d43 100%)!important;
+}
+#authOverlay:before{background:radial-gradient(circle at 32% 25%,rgba(220,235,239,.70) 0 2%,rgba(146,190,201,.25) 10%,rgba(81,130,151,.20) 28%,rgba(99,119,155,.06) 57%,transparent 72%)!important;border-color:rgba(196,220,228,.20)!important;box-shadow:inset -22px -26px 55px rgba(5,15,28,.26),inset 10px 12px 30px rgba(215,234,239,.15),0 24px 85px rgba(4,12,25,.18)!important}
+#authOverlay:after{background:radial-gradient(circle at 30% 24%,rgba(220,233,240,.68),rgba(147,181,204,.24) 12%,rgba(93,118,157,.22) 32%,rgba(116,112,151,.05) 65%,transparent 73%)!important;border-color:rgba(194,214,230,.18)!important;box-shadow:inset -18px -22px 42px rgba(5,14,28,.24),0 0 75px rgba(117,148,177,.10)!important}
+.auth-card{background:linear-gradient(150deg,rgba(226,235,240,.95),rgba(199,211,222,.92))!important;border-right-color:rgba(255,255,255,.22)!important;box-shadow:14px 0 60px rgba(2,10,22,.22),inset -1px 0 rgba(255,255,255,.40)!important;backdrop-filter:blur(30px) saturate(118%)!important}
+.auth-title{color:#172c42!important}.auth-sub{color:#5a6e82!important}.auth-field label{color:#344e65!important}
+.auth-field input{background:rgba(247,249,251,.88)!important;border-color:rgba(117,143,165,.30)!important;color:#20384c!important;box-shadow:inset 0 1px 4px rgba(24,44,62,.035),0 6px 16px rgba(35,53,73,.045)!important}
+.auth-field input::placeholder{color:#7c8b99!important}.auth-field input:focus{background:#fff!important;border-color:#6e9da9!important;box-shadow:0 0 0 4px rgba(91,147,160,.14),0 8px 20px rgba(28,55,73,.08)!important}
+.auth-btn{background:linear-gradient(110deg,#315d70,#397e89)!important;color:#fff!important;border:1px solid rgba(210,233,235,.24)!important;box-shadow:0 10px 24px rgba(22,61,76,.25),inset 0 1px rgba(255,255,255,.18)!important;letter-spacing:.15px!important}
+.auth-btn:hover{background:linear-gradient(110deg,#3a6b7c,#448d96)!important;color:#fff!important;box-shadow:0 13px 28px rgba(22,61,76,.30),inset 0 1px rgba(255,255,255,.24)!important}
+.auth-default{color:#697c8d!important}.auth-error{color:#a44745!important}
+.showcase-hello{color:#e8edf2!important;text-shadow:0 8px 35px rgba(4,12,24,.25)!important}.showcase-hello span{color:#9bc8cf!important}.showcase-copy p{color:#cbd6e0!important;text-shadow:0 2px 18px rgba(5,12,25,.22)!important}.showcase-kicker,.showcase-copy small{color:rgba(194,211,221,.78)!important}.showcase-bottom{color:rgba(190,207,218,.58)!important}.showcase-pill{background:rgba(179,205,215,.09)!important;color:#d7e2e9!important;border-color:rgba(199,222,230,.20)!important}
+.orbit-one{border-color:rgba(173,211,220,.34)!important;box-shadow:0 0 18px rgba(118,177,191,.16),inset 0 0 24px rgba(164,201,210,.045),0 0 65px rgba(111,161,177,.10)!important}.orbit-two{border-color:rgba(190,193,224,.19)!important;box-shadow:0 0 45px rgba(156,158,201,.08)!important}
+.showcase-bubble{background:radial-gradient(circle at 30% 24%,rgba(231,240,243,.84),rgba(190,213,220,.48) 14%,rgba(114,157,174,.24) 40%,rgba(180,189,218,.06) 65%,rgba(220,228,239,.015) 73%)!important;border-color:rgba(203,225,231,.28)!important;box-shadow:inset -14px -18px 30px rgba(15,34,52,.15),inset 8px 9px 24px rgba(240,247,248,.28),0 20px 45px rgba(4,14,29,.14)!important}
+@media(prefers-reduced-motion:reduce){.showcase-bubble,.orbit-one{animation:none!important}}
+</style>
+
+
+<style id="account-wallpaper-panel-visibility-fix">
+/* Keep the account menu fully usable on shorter screens; wallpaper controls must not be clipped. */
+#accountMenu{
+  max-height:calc(100vh - 100px)!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  overscroll-behavior:contain;
+  box-sizing:border-box!important;
+  scrollbar-width:thin;
+  scrollbar-color:#b8c9d9 transparent;
+}
+#accountMenu .wallpaper-admin-tools{
+  display:block;
+  width:100%;
+  box-sizing:border-box;
+  margin:14px 0 16px!important;
+  position:relative;
+}
+#accountMenu .wallpaper-actions{align-items:center}
+#accountMenu .wallpaper-actions button{min-height:38px;white-space:normal}
+#accountMenu::-webkit-scrollbar{width:7px}
+#accountMenu::-webkit-scrollbar-thumb{background:#b8c9d9;border-radius:8px}
+@media(max-width:600px){#accountMenu{max-height:calc(100vh - 84px)!important}}
+</style>
+
 </head><body>
 <div id="authOverlay">
   <div class="auth-card">
@@ -820,6 +976,13 @@ body{background:radial-gradient(circle at 88% 4%,rgba(23,182,217,.10),transparen
     <button class="auth-btn" id="loginBtn">🔐 Login to Continue</button>
     <div class="auth-error" id="loginError"></div>
     <div class="auth-default" id="authDefaultHint"></div>
+  </div>
+  <div class="auth-showcase" aria-hidden="true">
+    <div class="showcase-nav"><span>WORKSPACE</span><span>SECURE ACCESS</span><span class="showcase-pill">KRN SPH</span></div>
+    <div class="showcase-orbit orbit-one"></div><div class="showcase-orbit orbit-two"></div>
+    <div class="showcase-bubble bubble-one"></div><div class="showcase-bubble bubble-two"></div><div class="showcase-bubble bubble-three"></div>
+    <div class="showcase-copy"><div class="showcase-kicker">EXPENSE • ADVANCE • LEDGER</div><div class="showcase-hello">Hello<span>.</span></div><p>Your workspace, beautifully<br>under control.</p><div class="showcase-line"></div><small>One secure place for smarter operations.</small></div>
+    <div class="showcase-bottom"><span>PRECISION IN EVERY DETAIL</span><span>01 / 03</span></div>
   </div>
 </div>
 <div id="smartAutomationPanel" class="smart-auto-panel" aria-hidden="true">
@@ -858,6 +1021,13 @@ body{background:radial-gradient(circle at 88% 4%,rgba(23,182,217,.10),transparen
     </div>
     <button class="account-save-profile" id="accountProfileSave">Save Profile</button>
     <div class="account-save-note">Name and photo are saved on this browser for the currently logged-in account. Your login email and Admin/Viewer role remain controlled by Supabase.</div>
+    <div id="wallpaperAdminTools" class="wallpaper-admin-tools" style="display:none">
+      <div class="account-edit-title">Lock Screen Wallpaper</div>
+      <p class="wallpaper-help">Admin can choose a background image for the login screen. It is saved on this browser.</p>
+      <div class="wallpaper-actions"><button type="button" id="wallpaperChoose">✦ Change Wallpaper</button><button type="button" id="wallpaperReset">Reset</button></div>
+      <input id="wallpaperFile" type="file" accept="image/*" hidden>
+      <div class="wallpaper-note" id="wallpaperNote">Recommended: landscape image, 1920 × 1080.</div>
+    </div>
     <button class="account-logout" id="accountMenuLogout">↪ Logout from this device</button>
   </div>
 </div>
@@ -971,6 +1141,7 @@ const search=$('ledgerSearch');const dropdown=$('ledgerDropdown');
 const renderEmployeeDropdown=()=>{const q=search.value.trim().toLowerCase();const filtered=db.employees.filter(e=>!q||String(e.name||'').toLowerCase().includes(q)||String(e.id||'').toLowerCase().includes(q));dropdown.innerHTML=filtered.length?filtered.map(e=>`<div class="ledger-employee-option" data-id="${esc(e.id)}"><b>${esc(e.id)}</b><span>${esc(e.name)}${e.designation?` — ${esc(e.designation)}`:''}</span></div>`).join(''):'<div class="ledger-no-results">No employee found</div>';dropdown.classList.add('show');
  dropdown.querySelectorAll('.ledger-employee-option').forEach(item=>item.onclick=()=>{selectedEmp=item.dataset.id;const ee=emp(selectedEmp);search.value=ee?`${ee.name} (${ee.id})`:'';dropdown.classList.remove('show');drawLedger()});};
 search.onfocus=renderEmployeeDropdown;search.oninput=()=>{selectedEmp='';$('ledgerArea').innerHTML='<div class="empty">Select an employee from the dropdown.</div>';renderEmployeeDropdown()};
+search.addEventListener('keydown',e=>{if(e.key!=='Enter')return;e.preventDefault();const q=search.value.trim().toLowerCase();if(!q)return;const exact=db.employees.find(x=>String(x.id||'').trim().toLowerCase()===q);const matches=db.employees.filter(x=>String(x.id||'').toLowerCase().includes(q)||String(x.name||'').toLowerCase().includes(q));const chosen=exact||(matches.length===1?matches[0]:null);if(chosen){selectedEmp=chosen.id;search.value=chosen.id+' — '+chosen.name;dropdown.classList.remove('show');drawLedger();return;}if(matches.length>1){renderEmployeeDropdown();dropdown.classList.add('show');const first=dropdown.querySelector('.ledger-employee-option');if(first)first.focus();return;}$('ledgerArea').innerHTML='<div class="empty">Employee ID not found. Please check the ID.</div>';dropdown.classList.remove('show');});
 document.addEventListener('click',function ledgerOutside(e){if(!e.target.closest('.ledger-lookup'))dropdown.classList.remove('show')},{once:false});
 $('printLedger').onclick=()=>window.print();
 if(selectedEmp){const ee=emp(selectedEmp);if(ee)search.value=`${ee.name} (${ee.id})`;drawLedger()}}
@@ -1256,6 +1427,85 @@ window.addEventListener('load',()=>{
     document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeAuto();return}const target=e.target;const isEditable=target&&(target.matches('input,textarea,select,[contenteditable="true"]')||target.isContentEditable);if(isEditable)return;if(e.ctrlKey&&!e.shiftKey&&!e.altKey){const k=e.key.toLowerCase();if(k==='b'){e.preventDefault();safeClick('topBill')}else if(k==='a'){e.preventDefault();safeClick('topAdvance')}else if(k==='l'){e.preventDefault();const navBtn=document.querySelector('button[data-page="ledger"]');if(navBtn)navBtn.click()}}});
     setInterval(updateAutomation,3000); updateAutomation();
   });
+})();
+</script>
+
+
+<style id="premium-cloud-login-finish">
+/* Premium sky-glass palette inspired by the supplied reference */
+#authOverlay:not(.hidden){
+ background-color:#a9c9df!important;
+ background-image:
+   radial-gradient(ellipse at 50% 108%,rgba(255,245,224,.92) 0%,rgba(242,235,224,.60) 24%,transparent 48%),
+   radial-gradient(ellipse at 18% 76%,rgba(255,255,255,.78) 0%,rgba(255,255,255,.22) 23%,transparent 48%),
+   radial-gradient(ellipse at 82% 80%,rgba(255,255,255,.70) 0%,rgba(235,241,247,.20) 25%,transparent 50%),
+   linear-gradient(180deg,#78b6e1 0%,#b8d5e6 38%,#d9dce4 66%,#e8e2d9 100%)!important;
+ background-size:cover!important;background-position:center!important;
+}
+#authOverlay:not(.has-custom-wallpaper)::after{opacity:.62!important}
+.auth-card{background:linear-gradient(145deg,rgba(248,250,252,.70),rgba(228,235,244,.48))!important;border:1px solid rgba(255,255,255,.78)!important;box-shadow:0 28px 80px rgba(35,54,82,.20),inset 0 1px rgba(255,255,255,.85)!important;backdrop-filter:blur(25px) saturate(125%)!important}
+.auth-title{color:#172b45!important}.auth-sub{color:#596d83!important}
+.auth-field input{background:rgba(248,250,253,.54)!important;border-color:rgba(255,255,255,.88)!important;color:#263a52!important;box-shadow:inset 0 1px 6px rgba(40,55,78,.06),0 5px 16px rgba(40,55,78,.06)!important}
+.auth-field input:focus{background:rgba(255,255,255,.78)!important;border-color:#fff!important;box-shadow:0 0 0 4px rgba(255,255,255,.28),0 8px 22px rgba(44,75,112,.12)!important}
+.auth-btn{background:linear-gradient(110deg,#172b43,#263e59)!important;color:#fff!important;border-color:rgba(255,255,255,.45)!important;box-shadow:0 10px 24px rgba(22,39,61,.24),inset 0 1px rgba(255,255,255,.18)!important}
+.auth-btn:hover{background:linear-gradient(110deg,#243e5a,#365672)!important;color:#fff!important}
+.auth-default{color:#536880!important}
+.showcase-hello{color:#fff!important;text-shadow:0 5px 28px rgba(39,67,97,.24)!important}.showcase-hello span{color:#d5f0fa!important}
+.showcase-copy p{color:#f8fbff!important;text-shadow:0 2px 16px rgba(39,67,97,.22)!important}.showcase-kicker,.showcase-copy small{color:rgba(255,255,255,.88)!important}.showcase-bottom{color:rgba(255,255,255,.80)!important}
+.showcase-pill{background:rgba(255,255,255,.24)!important;color:#fff!important;border-color:rgba(255,255,255,.58)!important}
+.orbit-one{border-color:rgba(255,255,255,.68)!important;box-shadow:0 0 22px rgba(255,255,255,.36),inset 0 0 25px rgba(255,255,255,.16),0 0 60px rgba(255,255,255,.22)!important}
+.orbit-two{border-color:rgba(255,255,255,.38)!important}
+.showcase-bubble{background:radial-gradient(circle at 30% 24%,rgba(255,255,255,.96),rgba(250,252,255,.70) 14%,rgba(217,233,246,.42) 40%,rgba(255,255,255,.10) 66%,transparent 74%)!important;border-color:rgba(255,255,255,.68)!important;box-shadow:inset -14px -18px 30px rgba(89,112,143,.10),inset 8px 9px 24px rgba(255,255,255,.62),0 20px 45px rgba(70,96,130,.13)!important}
+.wallpaper-admin-tools{margin:14px 0 16px;padding:14px;border:1px solid #dbe5ef;border-radius:14px;background:linear-gradient(145deg,#f8fbff,#eef4fa)}
+.wallpaper-help{font-size:11px;line-height:1.5;color:#61718a;margin:6px 0 11px}
+.wallpaper-actions{display:flex;gap:8px;flex-wrap:wrap}.wallpaper-actions button{border:1px solid #d3dfec;border-radius:10px;padding:9px 12px;background:#fff;color:#233d5a;font-size:11px;font-weight:800;cursor:pointer;box-shadow:0 4px 12px rgba(24,55,94,.07)}.wallpaper-actions button:first-child{background:linear-gradient(135deg,#1a456b,#2f6c8b);color:#fff;border-color:#2f6c8b}
+.wallpaper-note{font-size:10px;color:#8492a6;margin-top:9px}
+#authOverlay.has-custom-wallpaper{background-image:var(--krn-custom-wallpaper)!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important}
+#authOverlay.has-custom-wallpaper:before,#authOverlay.has-custom-wallpaper:after{opacity:.45!important}
+#authOverlay.has-custom-wallpaper:after{filter:blur(1px)}
+@media(prefers-reduced-motion:reduce){.showcase-bubble,.orbit-one{animation:none!important}}
+</style>
+<script id="admin-lockscreen-wallpaper">
+(function(){
+  const KEY='krnSph.lockScreenWallpaper.v1';
+  const overlay=()=>document.getElementById('authOverlay');
+  function applyWallpaper(){
+    const o=overlay(); if(!o)return;
+    let data=''; try{data=localStorage.getItem(KEY)||''}catch(e){}
+    if(data && data.startsWith('data:image/')){o.style.setProperty('--krn-custom-wallpaper','url("'+data+'")');o.classList.add('has-custom-wallpaper')}
+    else{o.style.removeProperty('--krn-custom-wallpaper');o.classList.remove('has-custom-wallpaper')}
+  }
+  function updateAdminControl(){
+    const tools=document.getElementById('wallpaperAdminTools');
+    if(tools)tools.style.display=(typeof cloudRole!=='undefined' && cloudRole==='admin')?'block':'none';
+  }
+  document.addEventListener('DOMContentLoaded',()=>{
+    applyWallpaper();
+    const choose=document.getElementById('wallpaperChoose'), file=document.getElementById('wallpaperFile'), reset=document.getElementById('wallpaperReset'), note=document.getElementById('wallpaperNote');
+    if(choose&&file)choose.addEventListener('click',()=>{if(typeof cloudRole==='undefined'||cloudRole!=='admin'){alert('Only Admin can change the lock screen wallpaper.');return}file.click()});
+    if(file)file.addEventListener('change',()=>{
+      if(typeof cloudRole==='undefined'||cloudRole!=='admin'){alert('Only Admin can change the lock screen wallpaper.');file.value='';return}
+      const f=file.files&&file.files[0]; if(!f)return;
+      if(!f.type.startsWith('image/')){alert('Please select an image file.');return}
+      const reader=new FileReader();reader.onload=()=>{
+        const img=new Image();img.onload=()=>{
+          const maxW=1920,maxH=1080,scale=Math.min(1,maxW/img.width,maxH/img.height),w=Math.max(1,Math.round(img.width*scale)),h=Math.max(1,Math.round(img.height*scale));
+          const c=document.createElement('canvas');c.width=w;c.height=h;const ctx=c.getContext('2d');ctx.drawImage(img,0,0,w,h);
+          const data=c.toDataURL('image/jpeg',.84);
+          try{localStorage.setItem(KEY,data);applyWallpaper();if(note)note.textContent='Wallpaper updated on this browser.';alert('Lock screen wallpaper updated.')}catch(e){alert('Image is too large to save. Please choose a smaller image.');}
+          file.value='';
+        };img.onerror=()=>alert('Image could not be loaded. Please choose another image.');img.src=reader.result;
+      };reader.readAsDataURL(f);
+    });
+    if(reset)reset.addEventListener('click',()=>{if(typeof cloudRole==='undefined'||cloudRole!=='admin'){alert('Only Admin can reset the wallpaper.');return}try{localStorage.removeItem(KEY)}catch(e){}applyWallpaper();if(note)note.textContent='Default sky-glass wallpaper is active.';});
+    const menu=document.getElementById('accountMenu');
+    if(menu){new MutationObserver(updateAdminControl).observe(menu,{attributes:true,attributeFilter:['class']});}
+    const fab=document.getElementById('accountMenuRole');if(fab)new MutationObserver(updateAdminControl).observe(fab,{childList:true,characterData:true,subtree:true});
+    setTimeout(updateAdminControl,400);setTimeout(updateAdminControl,1500);
+  });
+  window.addEventListener('storage',e=>{if(e.key===KEY)applyWallpaper()});
+  // Apply before first paint when the browser has a saved wallpaper.
+  applyWallpaper();
 })();
 </script>
 
