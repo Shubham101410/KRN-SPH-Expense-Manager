@@ -3213,7 +3213,7 @@ html body #krnUltraBanner .krn-live:before{content:"";position:absolute;left:0;r
    '<div class="lv-foot" id="lvFoot"></div></div><div class="lv-tip"></div>';
   const left=ban.querySelector('.ux-left');if(left)left.insertAdjacentElement('afterend',card);else ban.appendChild(card);
   cv=card.querySelector('canvas');tip=card.querySelector('.lv-tip');
-  dpr=Math.min(2,window.devicePixelRatio||1);
+  dpr=Math.min(1.5,window.devicePixelRatio||1);
   const sz=()=>{W=cv.clientWidth||182;H=card.clientHeight||150;cv.width=W*dpr;cv.height=H*dpr;ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);if(!running)draw(0)};
   sz();addEventListener('resize',sz);
   cv.addEventListener('pointermove',e=>{
@@ -3232,8 +3232,8 @@ html body #krnUltraBanner .krn-live:before{content:"";position:absolute;left:0;r
  function tick(){const t=$('lvTime');if(t)t.textContent=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false})}
  function boot(){
   let n=0;const w=setInterval(()=>{if(build()){clearInterval(w);refresh();start()}else if(++n>60)clearInterval(w)},300);
-  setInterval(()=>{if(card)refresh();if(REDUCED&&card)draw(0)},1500);
-  setInterval(tick,1000);tick();
+  setInterval(()=>{if(card)refresh();if(REDUCED&&card)draw(0)},5000);
+  setInterval(tick,10000);tick();
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
@@ -3735,4 +3735,12 @@ body:not([data-krn-page="dashboard"]) #krnUltraBanner{display:none!important}
 .tablewrap tbody tr,.tablewrap tbody tr:hover{transform:none!important;z-index:auto!important}
 .tablewrap tbody td{position:relative;z-index:0}
 </style>
+
+<style id="performance-smoothing-only">
+/* Keep existing visuals, but avoid expensive full-page blur and hover transforms during interactions. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior:auto!important; animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important; }
+}
+</style>
+
 </body></html>
