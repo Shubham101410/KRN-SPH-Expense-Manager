@@ -965,6 +965,19 @@ body{background:radial-gradient(circle at 88% 4%,rgba(23,182,217,.10),transparen
 @media(max-width:600px){#accountMenu{max-height:calc(100vh - 84px)!important}}
 </style>
 
+<style id="login-left-panel-transparency-only">
+/* Only increase transparency of the left login details panel */
+#authOverlay:not(.hidden) .auth-card{
+  background:linear-gradient(145deg,rgba(248,250,252,.42),rgba(228,235,244,.26))!important;
+}
+</style>
+<style id="login-panel-extra-transparency-final">
+/* Requested change only: let more of the existing login wallpaper show through the left details panel */
+#authOverlay:not(.hidden) .auth-card{
+  background:linear-gradient(145deg,rgba(248,250,252,.24),rgba(228,235,244,.10))!important;
+  backdrop-filter:blur(16px) saturate(115%)!important;
+}
+</style>
 </head><body>
 <div id="authOverlay">
   <div class="auth-card">
@@ -1508,5 +1521,52 @@ window.addEventListener('load',()=>{
   applyWallpaper();
 })();
 </script>
+
+
+<style id="login-panel-ultra-transparency">
+/* Only requested change: make the login details panel much more transparent */
+#authOverlay:not(.hidden) .auth-card{
+  background:linear-gradient(145deg,rgba(248,250,252,.08),rgba(228,235,244,.025))!important;
+  -webkit-backdrop-filter:blur(8px) saturate(108%)!important;
+  backdrop-filter:blur(8px) saturate(108%)!important;
+  border-color:rgba(255,255,255,.38)!important;
+  box-shadow:0 18px 55px rgba(35,54,82,.09),inset 0 1px rgba(255,255,255,.18)!important;
+}
+</style>
+
+<style id="mobile-login-compatibility-fix">
+/* Mobile-only responsive fixes for the login screen; desktop styling remains unchanged */
+@media (max-width: 600px){
+  #authOverlay:not(.hidden){
+    box-sizing:border-box!important; width:100%!important; min-height:100dvh!important; height:auto!important;
+    padding:18px 12px!important; align-items:center!important; justify-content:center!important;
+    overflow-x:hidden!important; overflow-y:auto!important; background-attachment:fixed!important;
+  }
+  #authOverlay:not(.hidden) .auth-card{
+    width:100%!important; max-width:430px!important; min-width:0!important;
+    margin:0 auto!important; padding:24px 19px!important; border-radius:21px!important;
+    max-height:none!important; overflow:visible!important;
+  }
+  #authOverlay .auth-logo{width:min(155px,65%)!important;height:auto!important;max-height:55px!important;object-fit:contain!important;margin:0 auto 15px!important}
+  #authOverlay .auth-title{font-size:clamp(21px,6vw,25px)!important;line-height:1.2!important;overflow-wrap:anywhere!important}
+  #authOverlay .auth-sub{font-size:12px!important;line-height:1.45!important;margin:7px 0 20px!important}
+  #authOverlay .auth-field{margin:12px 0!important}
+  #authOverlay .auth-field label{font-size:11px!important}
+  #authOverlay .auth-field input{width:100%!important;min-width:0!important;height:46px!important;font-size:16px!important;padding:0 12px!important}
+  #authOverlay .auth-btn{width:100%!important;min-height:47px!important;height:auto!important;padding:12px 10px!important;font-size:13px!important;white-space:normal!important}
+  #authOverlay .auth-default{font-size:10px!important;line-height:1.5!important;overflow-wrap:anywhere!important}
+  #authOverlay .wallpaper-admin-tools{padding:11px!important}
+  #authOverlay .wallpaper-actions button{max-width:100%!important}
+}
+@media (max-width:380px){
+  #authOverlay:not(.hidden){padding:12px 9px!important}
+  #authOverlay:not(.hidden) .auth-card{padding:21px 15px!important;border-radius:18px!important}
+  #authOverlay .auth-logo{width:min(140px,65%)!important}
+  #authOverlay .auth-title{font-size:21px!important}
+}
+@media (max-height:620px) and (max-width:600px){
+  #authOverlay:not(.hidden){align-items:flex-start!important;padding-top:12px!important;padding-bottom:12px!important}
+}
+</style>
 
 </body></html>
