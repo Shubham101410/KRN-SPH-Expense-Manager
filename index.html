@@ -3351,7 +3351,7 @@ body:not([data-krn-page="dashboard"]) #krnUltraBanner{display:none!important}
 #krnUltraBanner .krn-aurora i:nth-child(3){background:radial-gradient(circle,#a855f7,transparent 66%);opacity:.38;animation:krnAur3 22s ease-in-out infinite}
 #krnUltraBanner .ux-left,#krnUltraBanner .ux-right{position:relative;z-index:1}
 /* ---- cursor glow that follows the mouse across cards and panels ---- */
-#krnGlow{position:fixed;left:0;top:0;width:340px;height:340px;z-index:5;pointer-events:none;opacity:0;transition:opacity .25s ease;background:radial-gradient(circle,rgba(56,189,248,.20) 0,rgba(99,102,241,.10) 38%,transparent 66%);will-change:transform,opacity}
+#krnGlow{position:fixed;left:0;top:0;width:240px;height:240px;z-index:5;pointer-events:none;opacity:0;transition:opacity .25s ease;background:radial-gradient(circle,rgba(56,189,248,.07) 0,rgba(99,102,241,.03) 40%,transparent 66%);will-change:transform,opacity}
 #krnGlow.on{opacity:1}
 /* ---- KPI numbers land with a tiny glow ---- */
 @keyframes krnNumPop{0%{text-shadow:0 0 0 rgba(37,99,235,0)}40%{text-shadow:0 0 16px rgba(37,99,235,.35)}100%{text-shadow:0 0 0 rgba(37,99,235,0)}}
@@ -3375,7 +3375,7 @@ body:not([data-krn-page="dashboard"]) #krnUltraBanner{display:none!important}
   const move=()=>{raf=0;if(!ev)return;
    const t=ev.target&&ev.target.closest?ev.target.closest('.cards .card,.panel .mini,.master-stat,.panel'):null;
    if(!t||t.closest('.modal')){g.classList.remove('on');return}
-   const r=t.getBoundingClientRect(),S=340,gx=ev.clientX-S/2,gy=ev.clientY-S/2;
+   const r=t.getBoundingClientRect(),S=240,gx=ev.clientX-S/2,gy=ev.clientY-S/2;
    const top=Math.max(0,r.top-gy),left=Math.max(0,r.left-gx),right=Math.max(0,gx+S-r.right),bottom=Math.max(0,gy+S-r.bottom);
    g.style.transform='translate('+gx+'px,'+gy+'px)';
    g.style.clipPath='inset('+top+'px '+right+'px '+bottom+'px '+left+'px round 16px)';
@@ -4399,4 +4399,120 @@ html[data-theme=dark] .krn-av{box-shadow:0 2px 8px rgba(0,0,0,.4)}
 .tablewrap tbody tr{content-visibility:auto;contain-intrinsic-size:auto 66px}
 .krn-donut .seg,.krn-track i{animation:none!important}
 }
-</style></body></html>
+</style><style id="krn-fixes-v1">
+/* ===== 1. Clear (x) button inside every search box ===== */
+input.search{padding-right:40px!important}
+.krn-clear-x{position:absolute;z-index:6;width:26px;height:26px;padding:0;border:0;border-radius:50%;background:rgba(100,116,139,.16);color:#475569;font:700 14px/26px Arial,sans-serif;text-align:center;cursor:pointer;display:none}
+.krn-clear-x.show{display:block}
+.krn-clear-x:hover{background:rgba(220,38,38,.16);color:#b91c1c}
+html[data-theme=dark] .krn-clear-x{background:rgba(148,163,184,.22);color:#e2e8f0}
+/* ===== 2. Dashboard: table area must not shrink while filtering (stops the page from sliding) ===== */
+#dashboardTableWrap{overflow-anchor:none}
+/* ===== 3. Print: only the ledger (no sidebar / rail / menu / panels / search bar) ===== */
+@media print{
+  html body:not(#kpf):not(#kpf2) .app>aside.side,html body:not(#kpf):not(#kpf2) .side,html body:not(#kpf):not(#kpf2) .side *,
+  html body:not(#kpf):not(#kpf2) #navDrawerToggle,html body:not(#kpf):not(#kpf2) #navDrawerBackdrop,html body:not(#kpf):not(#kpf2) #smartAutomationPanel,html body:not(#kpf):not(#kpf2) #securityFab,html body:not(#kpf):not(#kpf2) #krnSyncBadge,
+  html body:not(#kpf):not(#kpf2) #krnBackToTop,html body:not(#kpf):not(#kpf2) #krnScrollProgress,html body:not(#kpf):not(#kpf2) #krnUltraBanner,html body:not(#kpf):not(#kpf2) #krnPrefBtn,html body:not(#kpf):not(#kpf2) #krnShortcutLauncher,
+  html body:not(#kpf):not(#kpf2) .ledger-toolbar,html body:not(#kpf):not(#kpf2) .ledger-search-hint,html body:not(#kpf):not(#kpf2) .ledger-dropdown,html body:not(#kpf):not(#kpf2) .krn-clear-x,html body:not(#kpf):not(#kpf2) .top{display:none!important;visibility:hidden!important}
+  html body:not(#kpf):not(#kpf2) #ledgerArea th{white-space:normal!important;line-height:1.15!important;vertical-align:bottom!important}
+}
+</style>
+<script id="krn-fixes-v1-script">
+(function(){
+  var $=function(id){return document.getElementById(id)};
+
+  /* ---- 1. Dashboard "Edit" button (had no click handler) ---- */
+  document.addEventListener('click',function(e){
+    var b=e.target.closest&&e.target.closest('#dashboardTableWrap .editEmp');
+    if(!b)return;
+    e.preventDefault();
+    if(typeof openModal==='function')openModal('employee',b.getAttribute('data-id'));
+  });
+
+  /* ---- 2. Dashboard search: keep table height stable so the screen does not slide down ---- */
+  var origSetup=window.setupDashboardSearch;
+  if(typeof origSetup==='function'){
+    window.setupDashboardSearch=function(){
+      var wrap=$('dashboardTableWrap');
+      if(wrap){wrap.style.minHeight='';var h=wrap.offsetHeight;if(h>0)wrap.style.minHeight=h+'px'}
+      return origSetup.apply(this,arguments);
+    };
+  }
+
+  function lockDash(){
+    var wrap=$('dashboardTableWrap');
+    if(wrap&&!wrap.style.minHeight){var h=wrap.offsetHeight;if(h>0)wrap.style.minHeight=h+'px'}
+  }
+  /* capture phase = runs before the page's own search handlers filter the rows */
+  document.addEventListener('input',function(e){if(e.target&&e.target.id==='dashboardSearch')lockDash()},true);
+  document.addEventListener('change',function(e){if(e.target&&e.target.id==='dashboardStatusFilter')lockDash()},true);
+  document.addEventListener('click',function(e){if(e.target.closest&&e.target.closest('.quick-filter button,#clearDashboardSearch'))lockDash()},true);
+  document.addEventListener('focusin',function(e){if(e.target&&e.target.id==='dashboardSearch')lockDash()},true);
+
+  /* ---- 3. (x) clear button on every search box + smarter ledger search ---- */
+  function place(inp,btn){
+    var p=inp.parentElement;if(!p)return;
+    if(getComputedStyle(p).position==='static')p.style.position='relative';
+    btn.style.top=(inp.offsetTop+Math.round((inp.offsetHeight-26)/2))+'px';
+    btn.style.left=(inp.offsetLeft+inp.offsetWidth-26-10)+'px';
+  }
+  function sync(inp,btn){btn.classList.toggle('show',!!inp.value);place(inp,btn)}
+  function clearInput(inp){
+    inp.value='';
+    inp.dispatchEvent(new Event('input',{bubbles:true}));
+    inp.focus();
+  }
+  function enhance(){
+    document.querySelectorAll('#page input.search').forEach(function(inp){
+      if(inp.dataset.krnX)return;
+      inp.dataset.krnX='1';
+      var btn=document.createElement('button');
+      btn.type='button';btn.className='krn-clear-x';btn.title='Clear search (Esc)';btn.setAttribute('aria-label','Clear search');btn.textContent='\u2715';
+      btn.addEventListener('mousedown',function(e){e.preventDefault()});
+      btn.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();clearInput(inp);sync(inp,btn)});
+      inp.parentElement.appendChild(btn);
+      inp.addEventListener('input',function(){sync(inp,btn)});
+      inp.addEventListener('focus',function(){sync(inp,btn)});
+      sync(inp,btn);
+      setTimeout(function(){sync(inp,btn)},60);
+      setTimeout(function(){sync(inp,btn)},400);
+
+      if(inp.id==='ledgerSearch'){
+        /* once an employee is selected the box holds "Name (ID)": clicking it again used to show
+           "No employee found" and forced you to delete everything. Now: show the full list and
+           select the text so typing simply replaces it. */
+        var dd=$('ledgerDropdown'),origFocus=inp.onfocus;
+        var openAll=function(ev){
+          var v=inp.value,had=!!(typeof selectedEmp!=='undefined'&&selectedEmp);
+          if(had){inp.value=''}
+          if(origFocus)origFocus.call(inp,ev);
+          if(had){inp.value=v;try{inp.select()}catch(x){}}
+        };
+        inp.onfocus=openAll;
+        inp.addEventListener('click',function(ev){if(dd&&!dd.classList.contains('show'))openAll(ev)});
+      }
+    });
+  }
+  var q=0;
+  function schedule(){if(q)return;q=requestAnimationFrame(function(){q=0;enhance()})}
+  var pg=$('page');
+  if(pg&&'MutationObserver' in window)new MutationObserver(schedule).observe(pg,{childList:true,subtree:true});
+  window.addEventListener('resize',function(){document.querySelectorAll('#page input.search[data-krn-x]').forEach(function(inp){var b=inp.parentElement&&inp.parentElement.querySelector('.krn-clear-x');if(b)place(inp,b)})});
+  enhance();
+
+  /* ---- 4. Esc: close New Bill / New Advance / Edit popups, and clear the search box ---- */
+  document.addEventListener('keydown',function(e){
+    if(e.key!=='Escape')return;
+    var m=$('modal');
+    if(m&&!m.classList.contains('hidden')){e.preventDefault();e.stopPropagation();if(typeof closeModal==='function')closeModal();return}
+    var sm=$('securityModal');
+    if(sm&&sm.classList.contains('show')){e.preventDefault();if(typeof closeSecurity==='function')closeSecurity();return}
+    var a=document.activeElement;
+    if(a&&a.matches&&a.matches('#page input.search')){
+      if(a.value){e.preventDefault();clearInput(a)}
+      else{var d=$('ledgerDropdown');if(d)d.classList.remove('show');a.blur()}
+    }
+  },true);
+})();
+</script>
+</body></html>
