@@ -4015,4 +4015,378 @@ html.krn-lite .print-ledger-hero[class*="krn-h-"]{animation:none!important}
  .tablewrap{border-radius:18px!important}
 }
 </style>
+<!-- ===================== KRN VISUAL UPGRADE v1 =====================
+     Adds: dashboard charts (sparklines, donut, top-5 bars), employee avatars,
+     row status stripes + balance bars, and a dark-mode toggle.
+     Self-contained. To remove: delete this <style> + <script> block. -->
+<style id="krn-visual-upgrade-css">
+/* ---------- colour system: Pay = gold, Receive = emerald, Settled = blue ---------- */
+:root{--k-pay:#f59e0b;--k-recv:#10b981;--k-set:#3b82f6}
+
+/* ---------- KPI sparklines ---------- */
+.cards .card{position:relative;container-type:inline-size}
+.krn-spark{position:absolute;right:14px;top:42px;width:54px;height:28px;color:var(--ac,#3b82f6);pointer-events:none;overflow:visible}
+.krn-spark path.l{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.krn-spark circle{fill:currentColor}
+@container (max-width:194px){.krn-spark{display:none}}
+
+/* ---------- chart cards ---------- */
+.krn-charts{display:grid;grid-template-columns:minmax(340px,440px) 1fr;gap:16px;margin-top:16px}
+@media(max-width:1150px){.krn-charts{grid-template-columns:1fr}}
+.krn-cc{display:flex;flex-direction:column;background:#fff;border:1px solid #e1e6ee;border-radius:22px;padding:18px 22px 20px;box-shadow:0 5px 20px rgba(16,42,76,.06)}
+.krn-cc h3{margin:0;font-size:16px;letter-spacing:-.2px;color:#0d3158;display:flex;align-items:center;gap:10px}
+.krn-cc h3:before{content:"";width:6px;height:18px;border-radius:4px;background:linear-gradient(#3b8cff,#17b6d9)}
+.krn-cc .krn-sub{margin:3px 0 14px 16px;font-size:12px;color:#6b7c93}
+.krn-donut-wrap{display:flex;align-items:center;gap:22px;flex-wrap:wrap;flex:1;align-content:center}
+.krn-donut{width:164px;height:164px;flex:none}
+.krn-donut .seg{fill:none;stroke-width:17;transition:stroke-width .15s}
+.krn-donut .seg:hover{stroke-width:21}
+.krn-donut .track{fill:none;stroke:rgba(100,116,139,.15);stroke-width:17}
+.krn-donut text{font-family:inherit;text-anchor:middle}
+.krn-donut .n{font-size:30px;font-weight:800;fill:#0f2a4a}
+.krn-donut .t{font-size:10.5px;font-weight:700;letter-spacing:.8px;fill:#6b7c93;text-transform:uppercase}
+.krn-legend{flex:1;min-width:190px;display:grid;gap:10px}
+.krn-lg{display:grid;grid-template-columns:12px 1fr auto;gap:4px 10px;align-items:center}
+.krn-lg i{width:12px;height:12px;border-radius:4px;background:var(--c)}
+.krn-lg b{font-size:13px;color:#14213d}
+.krn-lg span{font-size:12px;color:#6b7c93;grid-column:2}
+.krn-lg em{font-style:normal;font-weight:800;font-size:15px;color:#0f2a4a;grid-row:1/3;grid-column:3;text-align:right;font-variant-numeric:tabular-nums}
+.krn-lg em small{display:block;font-size:11px;font-weight:700;color:#6b7c93}
+.krn-bars{display:grid;gap:11px}
+.krn-bar{display:grid;grid-template-columns:minmax(150px,210px) 1fr minmax(96px,auto);gap:14px;align-items:center;cursor:pointer;padding:6px 8px;margin:0 -8px;border-radius:12px;transition:background .15s}
+.krn-bar:hover{background:rgba(59,130,246,.07)}
+.krn-bar .who{display:flex;align-items:center;gap:10px;min-width:0}
+.krn-bar .who div{min-width:0}
+.krn-bar .who b{display:block;font-size:13px;color:#14213d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.krn-bar .who small{font-size:11px;color:#6b7c93}
+.krn-track{height:12px;border-radius:99px;background:rgba(100,116,139,.15);overflow:hidden}
+.krn-track i{display:block;height:100%;width:var(--w);border-radius:99px;background:linear-gradient(90deg,var(--c),var(--c2,var(--c)));transform-origin:left;animation:krnGrow .8s cubic-bezier(.2,.8,.25,1) both}
+.krn-amt{text-align:right;font-weight:800;font-size:14px;color:#0f2a4a;font-variant-numeric:tabular-nums}
+.krn-amt small{display:block;font-size:10.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--c)}
+.krn-empty{padding:26px 6px;color:#6b7c93;font-size:13px}
+@keyframes krnGrow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes krnDraw{from{stroke-dasharray:0 1000}}
+.krn-donut .seg{animation:krnDraw .9s cubic-bezier(.2,.8,.25,1) both}
+@media(prefers-reduced-motion:reduce){.krn-track i,.krn-donut .seg{animation:none}}
+@media(max-width:620px){.krn-bar{grid-template-columns:1fr auto}.krn-bar .krn-track{grid-column:1/3;grid-row:2}}
+
+/* ---------- avatars + row visuals ---------- */
+.krn-av{display:inline-flex;align-items:center;justify-content:center;flex:none;width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;font-size:10.5px;font-weight:800;letter-spacing:.3px;margin-right:8px;vertical-align:middle;box-shadow:0 2px 6px rgba(15,42,74,.18)}
+.krn-av::before{content:attr(data-ini)}
+.krn-bar .krn-av{margin-right:0;width:32px;height:32px}
+#dashboardTableWrap tbody tr.krn-row td:first-child{box-shadow:inset 4px 0 0 var(--rc)}
+.krn-st-recv{--rc:var(--k-recv)}.krn-st-pay{--rc:var(--k-pay)}.krn-st-set{--rc:var(--k-set)}
+.krn-nb{height:5px;border-radius:99px;background:rgba(100,116,139,.18);margin-top:7px;overflow:hidden;min-width:130px}
+.krn-nb i{display:block;height:100%;width:var(--w);border-radius:99px;background:var(--rc)}
+/* unified status colours (applied by script from the pill text, on every page) */
+.status[data-krn-k=recv]{background:#d1fae5!important;color:#047857!important;border-color:#a7f3d0!important}
+.status[data-krn-k=pay]{background:#fef3c7!important;color:#b45309!important;border-color:#fde68a!important}
+.status[data-krn-k=set]{background:#dbeafe!important;color:#1d4ed8!important;border-color:#bfdbfe!important}
+.net-help.net-receive,#dashboardTableWrap tr.krn-st-recv .net-amount{color:#047857!important}
+.net-help.net-pay,#dashboardTableWrap tr.krn-st-pay .net-amount{color:#b45309!important}
+.net-help.net-settled,#dashboardTableWrap tr.krn-st-set .net-amount{color:#1d4ed8!important}
+
+/* ---------- theme toggle button ---------- */
+.krn-theme-btn{min-width:44px;font-size:17px!important;line-height:1;padding-left:12px!important;padding-right:12px!important}
+.krn-theme-btn:hover{transform:translateY(-1px)}
+
+@media print{.krn-charts,.krn-spark,.krn-theme-btn{display:none!important}.krn-av{display:none!important}}
+
+/* =====================================================================
+   DARK MODE (screen only, so printing/PDF always stays white)
+   ===================================================================== */
+@media screen{
+html[data-theme=dark]{color-scheme:dark}
+html[data-theme=dark] body{background:radial-gradient(circle at 82% 0%,rgba(0,150,255,.10),transparent 34%),linear-gradient(135deg,#060b16 0%,#0a1220 50%,#070e1a 100%)!important;color:#e3ebf6!important}
+html[data-theme=dark] h1,html[data-theme=dark] h2,html[data-theme=dark] h3,html[data-theme=dark] h4{color:#eaf1fb}
+html[data-theme=dark] #title{background:linear-gradient(90deg,#9cc7ff 10%,#4fb3ff 90%)!important;-webkit-background-clip:text!important;background-clip:text!important;-webkit-text-fill-color:transparent!important}
+
+/* top bar, cards, panels */
+html[data-theme=dark] .top{background:rgba(14,23,40,.85)!important;border-color:#1f2e4a!important;box-shadow:0 8px 28px rgba(0,0,0,.35)!important}
+html[data-theme=dark] .card,html[data-theme=dark] .panel,html[data-theme=dark] .krn-cc,html[data-theme=dark] .mini{background:#101a2e!important;border-color:#1f2e4a!important;box-shadow:0 8px 26px rgba(0,0,0,.32)!important;color:#e3ebf6}
+html[data-theme=dark] .cards .card{background:linear-gradient(160deg,#122039,#0e182b)!important}
+html[data-theme=dark] .cards .card .num{color:#f1f6fd!important}
+html[data-theme=dark] .cards .card .label{color:#8fa3bf!important}
+html[data-theme=dark] .cards .card .sub{color:#8396b1!important}
+html[data-theme=dark] .section-head h2,html[data-theme=dark] .krn-cc h3,html[data-theme=dark] .modalbox h2,html[data-theme=dark] .modalbox h3{color:#eaf1fb!important}
+html[data-theme=dark] .section-head p,html[data-theme=dark] .krn-cc .krn-sub,html[data-theme=dark] .krn-lg span,html[data-theme=dark] .krn-bar .who small,html[data-theme=dark] .krn-empty,html[data-theme=dark] .field label,html[data-theme=dark] .mini small,html[data-theme=dark] .empty,html[data-theme=dark] .ledger-search-hint{color:#8fa3bf!important}
+html[data-theme=dark] .krn-lg b,html[data-theme=dark] .krn-bar .who b,html[data-theme=dark] .krn-amt,html[data-theme=dark] .krn-lg em,html[data-theme=dark] .krn-donut .n{color:#eaf1fb!important;fill:#eaf1fb}
+html[data-theme=dark] .krn-donut .t{fill:#8fa3bf}
+html[data-theme=dark] .krn-lg em small{color:#8fa3bf}
+html[data-theme=dark] .modalbox label{color:#8fa3bf!important}
+
+html[data-theme=dark] .dashboard-filter-summary,html[data-theme=dark] .toolbar{border-color:transparent!important;box-shadow:none!important;background:transparent!important}
+html[data-theme=dark] .tablewrap,html[data-theme=dark] .top,html[data-theme=dark] .panel,html[data-theme=dark] .card{box-shadow:0 8px 26px rgba(0,0,0,.32)!important}
+/* inputs / buttons */
+html[data-theme=dark] input,html[data-theme=dark] select,html[data-theme=dark] textarea,html[data-theme=dark] .search{background:#0b1425!important;color:#e6eef9!important;border-color:#27385a!important}
+html[data-theme=dark] input::placeholder,html[data-theme=dark] textarea::placeholder{color:#6f84a3!important}
+html[data-theme=dark] .btn{background:#13213a!important;color:#dce8f8!important;border-color:#27385a!important}
+html[data-theme=dark] .btn:hover{border-color:#4c8dff!important}
+html[data-theme=dark] .btn.primary,html[data-theme=dark] .primary{background:linear-gradient(135deg,#2f7df6,#1d5fd1)!important;color:#fff!important;border-color:#2f7df6!important}
+html[data-theme=dark] .btn.green,html[data-theme=dark] .green{background:linear-gradient(135deg,#10a38a,#0b7d71)!important;color:#fff!important;border-color:#0f766e!important}
+html[data-theme=dark] .tablewrap .btn{background:#13213a!important;color:#dce8f8!important;border-color:#2a3d62!important}
+html[data-theme=dark] .tablewrap .ledgerBtn,html[data-theme=dark] .tablewrap .btn.ledgerBtn{background:linear-gradient(135deg,#2f7df6,#1d5fd1)!important;color:#fff!important;border-color:#2f7df6!important}
+
+/* tables */
+html[data-theme=dark] .tablewrap{border-color:#1f2e4a!important;background:#0e182b!important}
+html[data-theme=dark] table{color:#e3ebf6}
+html[data-theme=dark] th,html[data-theme=dark] .tablewrap thead th{background:#14233d!important;color:#9db2cf!important;border-color:#22345a!important}
+html[data-theme=dark] td,html[data-theme=dark] .tablewrap tbody td{border-color:#1b2a47!important;color:#dfe8f5}
+html[data-theme=dark] .tablewrap tbody tr{background:#0e182b!important}
+html[data-theme=dark] .tablewrap tbody tr:nth-child(even){background:#101c31!important}
+html[data-theme=dark] .tablewrap tbody tr:hover{background:#16284a!important}
+html[data-theme=dark] #dashboardTableWrap tbody td:nth-child(2),html[data-theme=dark] #dashboardTableWrap tbody tr:nth-child(even) td:nth-child(2){background:inherit!important;box-shadow:3px 0 8px rgba(0,0,0,.25)!important}
+html[data-theme=dark] #dashboardTableWrap thead th:nth-child(2){background:#14233d!important}
+html[data-theme=dark] .net-cell,html[data-theme=dark] td.net-cell{background:transparent!important}
+
+/* dashboard filter area */
+html[data-theme=dark] .dashboard-search,html[data-theme=dark] .searchbox{background:#0d1729!important;border-color:#22345a!important}
+html[data-theme=dark] .filter-summary-card{background:linear-gradient(120deg,#12213b,#0e1a30)!important;border-color:#22345a!important;box-shadow:0 8px 24px rgba(0,0,0,.3)!important;color:#dce8f8!important}
+html[data-theme=dark] .filter-summary-card *{color:#dce8f8}
+html[data-theme=dark] .filter-summary-card strong,html[data-theme=dark] .fs-total b{color:#f2f7ff!important}
+html[data-theme=dark] .legend{background:#0d1729!important;border-color:#22345a!important;color:#9db2cf!important}
+html[data-theme=dark] .quick-filter button{background:#13213a!important;color:#cfe0f6!important;border-color:#2a3d62!important}
+html[data-theme=dark] .quick-filter button.active{background:#2563eb!important;color:#fff!important;border-color:#3b82f6!important}
+html[data-theme=dark] .search-hint{color:#7d92b0!important}
+
+/* ledger header card */
+html[data-theme=dark] .print-ledger-hero{background:linear-gradient(120deg,#10213c,#0d1a30)!important;border-color:#22345a!important;box-shadow:0 8px 24px rgba(0,0,0,.3)!important}
+html[data-theme=dark] .print-ledger-hero::before,html[data-theme=dark] .print-ledger-hero::after{opacity:.35}
+html[data-theme=dark] .print-ledger-hero .plh-name{color:#eaf1fb!important}
+html[data-theme=dark] .print-ledger-hero .plh-meta,html[data-theme=dark] .print-ledger-hero .plh-label{color:#8fa3bf!important}
+html[data-theme=dark] .print-ledger-hero .plh-net{color:#f1f6fd!important}
+html[data-theme=dark] .print-ledger-hero .plh-right{border-color:#22345a!important}
+html[data-theme=dark] .plh-receive{color:#fbbf24!important}
+html[data-theme=dark] .plh-pay{color:#c4b5fd!important}
+html[data-theme=dark] .plh-settled{color:#6ee7b7!important}
+/* modal + dropdowns */
+html[data-theme=dark] .modalbox{background:#0f1a2e!important;border-color:#22345a!important;color:#e3ebf6}
+html[data-theme=dark] .modalhead{border-color:#22345a!important}
+html[data-theme=dark] .employee-lookup{background:#0d1729!important;border-color:#22345a!important}
+html[data-theme=dark] .mini.plh-receive small,html[data-theme=dark] .mini.plh-receive .plh-help{color:#fbbf24!important}
+html[data-theme=dark] .mini.plh-pay small,html[data-theme=dark] .mini.plh-pay .plh-help{color:#c4b5fd!important}
+html[data-theme=dark] .mini.plh-settled small,html[data-theme=dark] .mini.plh-settled .plh-help{color:#6ee7b7!important}
+html[data-theme=dark] .ledger-dropdown{background:#0f1a2e!important;border-color:#27385a!important}
+html[data-theme=dark] .ledger-employee-option{border-color:#1b2a47!important}
+html[data-theme=dark] .ledger-employee-option:hover{background:#17294a!important}
+html[data-theme=dark] .ledger-employee-option b{color:#eaf1fb!important}
+html[data-theme=dark] .ledger-employee-option span{color:#8fa3bf!important}
+
+/* status pills + balance text */
+html[data-theme=dark] .ok{background:rgba(16,185,129,.16)!important;color:#6ee7b7!important}
+html[data-theme=dark] .due{background:rgba(239,68,68,.16)!important;color:#fca5a5!important}
+html[data-theme=dark] .wait{background:rgba(245,158,11,.16)!important;color:#fcd34d!important}
+html[data-theme=dark] .status[data-krn-k=recv]{background:rgba(16,185,129,.16)!important;color:#6ee7b7!important;border-color:rgba(16,185,129,.35)!important}
+html[data-theme=dark] .status[data-krn-k=pay]{background:rgba(245,158,11,.16)!important;color:#fcd34d!important;border-color:rgba(245,158,11,.35)!important}
+html[data-theme=dark] .status[data-krn-k=set]{background:rgba(59,130,246,.18)!important;color:#93c5fd!important;border-color:rgba(59,130,246,.38)!important}
+html[data-theme=dark] .net-help.net-receive,html[data-theme=dark] #dashboardTableWrap tr.krn-st-recv .net-amount{color:#6ee7b7!important}
+html[data-theme=dark] .net-help.net-pay,html[data-theme=dark] #dashboardTableWrap tr.krn-st-pay .net-amount{color:#fcd34d!important}
+html[data-theme=dark] .net-help.net-settled,html[data-theme=dark] #dashboardTableWrap tr.krn-st-set .net-amount{color:#93c5fd!important}
+html[data-theme=dark] .net-amount{color:#eaf1fb}
+
+/* table text (other layers set very dark colours on cells) */
+html[data-theme=dark] td,html[data-theme=dark] td b,html[data-theme=dark] td strong,html[data-theme=dark] td small,html[data-theme=dark] td span:not(.status):not(.pending-count-badge):not(.krn-av){color:#dfe8f5!important}
+html[data-theme=dark] .mini b,html[data-theme=dark] .master-stat b,html[data-theme=dark] .plh-name,html[data-theme=dark] .plh-net{color:#eaf1fb!important}
+html[data-theme=dark] .master-stat span,html[data-theme=dark] .mini small{color:#8fa3bf!important}
+html[data-theme=dark] .master-stat{background:linear-gradient(160deg,#122039,#0e182b)!important;border-color:#22345a!important;box-shadow:0 6px 18px rgba(0,0,0,.3)!important}
+html[data-theme=dark] .pending-count-badge{background:rgba(245,158,11,.14)!important;border-color:rgba(245,158,11,.4)!important;color:#fbbf24!important}
+html[data-theme=dark] .pending-count-badge.zero{background:rgba(16,185,129,.12)!important;border-color:rgba(16,185,129,.35)!important;color:#6ee7b7!important}
+html[data-theme=dark] .pending-live{color:#fbbf24!important}
+html[data-theme=dark] .dashboard-filter-summary{background:transparent!important}
+/* top-bar chips */
+html[data-theme=dark] .smart-auto-btn,html[data-theme=dark] .krn-sync-badge{background:linear-gradient(145deg,#13213a,#0f1b31)!important;border-color:#27385a!important;color:#dce8f8!important;box-shadow:0 4px 14px rgba(0,0,0,.3)!important}
+html[data-theme=dark] .smart-auto-btn span,html[data-theme=dark] #krnSyncText,html[data-theme=dark] .krn-sync-badge span{color:#dce8f8!important}
+/* bills page */
+html[data-theme=dark] .bill-tab{background:#13213a!important;color:#cfe0f6!important;border-color:#2a3d62!important}
+html[data-theme=dark] .bill-tab.active{background:#2563eb!important;color:#fff!important}
+html[data-theme=dark] .bill-tab span{color:inherit!important;background:transparent!important}
+html[data-theme=dark] .pending-summary,html[data-theme=dark] .pending-head{background:#101a2e!important;border-color:#22345a!important;color:#e3ebf6!important}
+html[data-theme=dark] .pending-total,html[data-theme=dark] .pending-summary b,html[data-theme=dark] .pending-summary strong{color:#eaf1fb!important}
+html[data-theme=dark] .krn-bar:hover{background:rgba(96,165,250,.10)}
+html[data-theme=dark] .krn-av{box-shadow:0 2px 8px rgba(0,0,0,.4)}
+}
+</style>
+
+<script id="krn-visual-upgrade-js">
+(function(){
+  'use strict';
+  if(window.__krnVisualUpgrade) return; window.__krnVisualUpgrade=true;
+
+  var COL={pay:'#f59e0b',recv:'#10b981',set:'#3b82f6'};
+  var COL2={pay:'#fbbf24',recv:'#34d399',set:'#60a5fa'};
+  var LABEL={pay:'Pay to employee',recv:'Receive from employee',set:'Settled'};
+  var PALETTE=[['#6366f1','#8b5cf6'],['#0ea5e9','#06b6d4'],['#f43f5e','#fb7185'],['#f97316','#fb923c'],['#14b8a6','#2dd4bf'],['#a855f7','#d946ef'],['#3b82f6','#60a5fa'],['#84cc16','#22c55e']];
+
+  function $(id){return document.getElementById(id)}
+  function E(s){return typeof esc==='function'?esc(s):String(s==null?'':s).replace(/[&<>"']/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]})}
+  function M(n){return typeof money==='function'?money(n):'\u20b9'+Number(n||0).toLocaleString('en-IN')}
+  function kind(b){return Math.abs(b)<.005?'set':(b>0?'recv':'pay')}
+  function initials(name){
+    var p=String(name||'?').replace(/[^A-Za-z\u0900-\u097F\s]/g,' ').trim().split(/\s+/).filter(Boolean);
+    if(!p.length) return '?';
+    return ((p[0][0]||'')+(p.length>1?(p[p.length-1][0]||''):'')).toUpperCase();
+  }
+  function hue(str){var h=0;for(var i=0;i<str.length;i++)h=(h*31+str.charCodeAt(i))>>>0;return PALETTE[h%PALETTE.length]}
+  function avatar(name,id){var c=hue(String(id||name));return '<span class="krn-av" aria-hidden="true" data-ini="'+E(initials(name))+'" style="--a1:'+c[0]+';--a2:'+c[1]+'"></span>'}
+
+  /* ---------- data ---------- */
+  function employeeRows(){
+    return (db.employees||[]).map(function(e){var t=totals(e.id);return {e:e,b:t.balance,k:kind(t.balance)}});
+  }
+  function weekStart(d){
+    var dt=new Date(d+'T00:00:00'); if(isNaN(dt.getTime())) return null;
+    dt.setDate(dt.getDate()-((dt.getDay()+6)%7)); return dt.getTime();
+  }
+  function weekly(items,val){
+    var map={},min=Infinity,max=-Infinity;
+    items.forEach(function(x){var k=weekStart(x.date); if(k==null) return; map[k]=(map[k]||0)+val(x); if(k<min)min=k; if(k>max)max=k;});
+    if(!isFinite(min)) return [];
+    var out=[],step=7*864e5;
+    for(var k=min;k<=max;k+=step) out.push(map[k]||0);
+    out=out.slice(-8);
+    if(out.length<2) out.unshift(0);
+    return out;
+  }
+
+  /* ---------- sparkline ---------- */
+  var sid=0;
+  function spark(vals,title){
+    if(!vals||vals.length<2||Math.max.apply(null,vals)<=0) return '';
+    var W=54,H=28,pad=3,max=Math.max.apply(null,vals),n=vals.length,pts=vals.map(function(v,i){return [pad+i*(W-2*pad)/(n-1),H-pad-(v/max)*(H-2*pad)]});
+    var d='M'+pts.map(function(p){return p[0].toFixed(1)+' '+p[1].toFixed(1)}).join(' L');
+    var area=d+' L'+pts[n-1][0].toFixed(1)+' '+H+' L'+pts[0][0].toFixed(1)+' '+H+' Z';
+    var g='ks'+(++sid), last=pts[n-1];
+    return '<svg class="krn-spark" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+E(title)+'"><title>'+E(title)+'</title><defs><linearGradient id="'+g+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="currentColor" stop-opacity=".30"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/></linearGradient></defs><path d="'+area+'" fill="url(#'+g+')"/><path class="l" d="'+d+'"/><circle cx="'+last[0].toFixed(1)+'" cy="'+last[1].toFixed(1)+'" r="2.6"/></svg>';
+  }
+  function addSparks(page){
+    var cfg=[
+      ['.metric-advance',weekly(db.advances||[],function(x){return Number(x.amount||0)}),'Advances per week'],
+      ['.metric-approved',weekly((db.bills||[]).filter(function(b){return String(b.status).toLowerCase()==='approved'}),function(x){return Number(x.amount||0)}),'Approved bills per week'],
+      ['.metric-pending',weekly((db.bills||[]).filter(function(b){return String(b.status).toLowerCase()==='pending'}),function(){return 1}),'Pending bills per week']
+    ];
+    cfg.forEach(function(c){var card=page.querySelector('.cards '+c[0]); if(!card) return; var old=card.querySelector('.krn-spark'); if(old) old.remove(); var h=spark(c[1],c[2]); if(h) card.insertAdjacentHTML('beforeend',h);});
+  }
+
+  /* ---------- donut + top 5 ---------- */
+  function donutCard(rows){
+    var cnt={recv:0,pay:0,set:0},amt={recv:0,pay:0,set:0};
+    rows.forEach(function(r){cnt[r.k]++; amt[r.k]+=Math.abs(r.b)});
+    var total=rows.length, R=62, C=2*Math.PI*R, off=0, gap=total>1?3:0, segs='';
+    ['recv','pay','set'].forEach(function(k){
+      if(!cnt[k]||!total) return;
+      var len=Math.max(C*cnt[k]/total-gap,0.1);
+      segs+='<circle class="seg" cx="82" cy="82" r="'+R+'" stroke="'+COL[k]+'" stroke-dasharray="'+len.toFixed(2)+' '+(C-len).toFixed(2)+'" stroke-dashoffset="'+(-off).toFixed(2)+'" transform="rotate(-90 82 82)"><title>'+LABEL[k]+': '+cnt[k]+' employees</title></circle>';
+      off+=C*cnt[k]/total;
+    });
+    var legend=['recv','pay','set'].map(function(k){
+      var pct=total?Math.round(cnt[k]*100/total):0;
+      return '<div class="krn-lg" style="--c:'+COL[k]+'"><i></i><b>'+LABEL[k]+'</b><em>'+cnt[k]+'<small>'+pct+'%</small></em><span>'+(k==='set'?'No amount due':M(amt[k])+(k==='recv'?' to collect':' to pay'))+'</span></div>';
+    }).join('');
+    return '<div class="krn-cc"><h3>Balance split</h3><p class="krn-sub">Employees by settlement position</p><div class="krn-donut-wrap"><svg class="krn-donut" viewBox="0 0 164 164" role="img" aria-label="Employee balance split"><circle class="track" cx="82" cy="82" r="'+R+'"/>'+segs+'<text class="n" x="82" y="86">'+total+'</text><text class="t" x="82" y="106">Employees</text></svg><div class="krn-legend">'+legend+'</div></div></div>';
+  }
+  function topCard(rows){
+    var list=rows.filter(function(r){return r.k!=='set'}).sort(function(a,b){return Math.abs(b.b)-Math.abs(a.b)}).slice(0,5);
+    var max=list.length?Math.abs(list[0].b):1, body;
+    if(!list.length) body='<div class="krn-empty">Everyone is settled \u2014 nothing outstanding.</div>';
+    else body='<div class="krn-bars">'+list.map(function(r){
+      var w=Math.max(Math.abs(r.b)/max*100,3).toFixed(1);
+      return '<div class="krn-bar" data-emp="'+E(r.e.id)+'" title="Open ledger" style="--c:'+COL[r.k]+';--c2:'+COL2[r.k]+'"><div class="who">'+avatar(r.e.name,r.e.id)+'<div><b>'+E(r.e.name)+'</b><small>'+E(r.e.id)+'</small></div></div><div class="krn-track"><i style="--w:'+w+'%"></i></div><div class="krn-amt">'+M(Math.abs(r.b))+'<small>'+(r.k==='recv'?'Receive':'Pay')+'</small></div></div>';
+    }).join('')+'</div>';
+    return '<div class="krn-cc"><h3>Top 5 outstanding</h3><p class="krn-sub">Largest balances \u2014 click a row to open the ledger</p>'+body+'</div>';
+  }
+
+  /* ---------- table row visuals ---------- */
+  function decorateRows(rows){
+    var map={}; rows.forEach(function(r){map[r.e.id]=r});
+    var max=rows.reduce(function(m,r){return Math.max(m,Math.abs(r.b))},0)||1;
+    document.querySelectorAll('#dashboardTableWrap tbody tr').forEach(function(tr){
+      var id=(tr.cells[0]&&tr.cells[0].textContent||'').trim(), r=map[id]; if(!r) return;
+      tr.classList.remove('krn-st-recv','krn-st-pay','krn-st-set'); tr.classList.add('krn-row','krn-st-'+r.k);
+      var nameCell=tr.cells[1];
+      if(nameCell&&!nameCell.querySelector('.krn-av')) nameCell.insertAdjacentHTML('afterbegin',avatar(r.e.name,r.e.id));
+      var net=tr.querySelector('.net-cell');
+      if(net&&!net.querySelector('.krn-nb')){
+        var w=r.k==='set'?0:Math.max(Math.abs(r.b)/max*100,3).toFixed(1);
+        net.insertAdjacentHTML('beforeend','<div class="krn-nb" title="'+Math.round(Math.abs(r.b)/max*100)+'% of the largest balance"><i style="--w:'+w+'%"></i></div>');
+      }
+    });
+  }
+
+  function enhanceDashboard(){
+    var page=$('page'); if(!page) return;
+    var cards=page.querySelector('.cards'); if(!cards) return;
+    var rows=employeeRows();
+    var old=$('krnCharts'); if(old) old.remove();
+    var host=document.createElement('div'); host.id='krnCharts'; host.className='krn-charts';
+    host.innerHTML=donutCard(rows)+topCard(rows);
+    cards.insertAdjacentElement('afterend',host);
+    host.addEventListener('click',function(ev){
+      var b=ev.target.closest('.krn-bar'); if(!b) return;
+      selectedEmp=b.getAttribute('data-emp'); nav('ledger');
+    });
+    addSparks(page);
+    decorateRows(rows);
+  }
+
+  /* wrap dashboard() (render() looks it up on every call) */
+  var origDashboard=window.dashboard;
+  if(typeof origDashboard==='function'){
+    window.dashboard=function(){
+      var r=origDashboard.apply(this,arguments);
+      try{enhanceDashboard()}catch(err){console.error('[krn visual upgrade]',err)}
+      return r;
+    };
+  }
+
+
+  /* ---------- unified status colours: tag pills by their text on every page ---------- */
+  function paintStatuses(){
+    document.querySelectorAll('#page .status').forEach(function(el){
+      var t=(el.textContent||'').trim().toUpperCase(),k=null;
+      if(t==='SETTLED') k='set'; else if(t==='BALANCE DUE FROM EMPLOYEE') k='recv'; else if(t==='ADDITIONAL PAYMENT DUE') k='pay';
+      if(k) el.setAttribute('data-krn-k',k); else el.removeAttribute('data-krn-k');
+    });
+  }
+  var origRender=window.render;
+  if(typeof origRender==='function'){
+    window.render=function(){
+      var r=origRender.apply(this,arguments);
+      try{paintStatuses()}catch(err){console.error('[krn visual upgrade]',err)}
+      return r;
+    };
+  }
+
+  try{ if(typeof page!=='undefined'&&typeof render==='function'&&$('page')&&$('page').children.length) render(); }catch(e){}
+
+  /* ---------- dark mode ---------- */
+  var TKEY='krn.theme';
+  function current(){return document.documentElement.getAttribute('data-theme')==='dark'?'dark':'light'}
+  function paintBtn(){
+    var b=$('krnThemeBtn'); if(!b) return;
+    var d=current()==='dark';
+    b.textContent=d?'\u2600\ufe0f':'\ud83c\udf19';
+    b.title=d?'Switch to light mode':'Switch to dark mode';
+    b.setAttribute('aria-label',b.title);
+    b.setAttribute('aria-pressed',d?'true':'false');
+  }
+  function setTheme(t,persist){
+    if(t==='dark') document.documentElement.setAttribute('data-theme','dark'); else document.documentElement.removeAttribute('data-theme');
+    if(persist!==false){try{localStorage.setItem(TKEY,t)}catch(e){}}
+    paintBtn();
+  }
+  window.krnTheme={set:setTheme,toggle:function(){setTheme(current()==='dark'?'light':'dark')},get:current};
+  function mountBtn(){
+    if($('krnThemeBtn')) return;
+    var actions=document.querySelector('.top .actions'); if(!actions) return;
+    var b=document.createElement('button'); b.type='button'; b.id='krnThemeBtn'; b.className='btn krn-theme-btn';
+    b.addEventListener('click',function(){window.krnTheme.toggle()});
+    actions.insertBefore(b,actions.firstChild); paintBtn();
+  }
+  var saved=null; try{saved=localStorage.getItem(TKEY)}catch(e){}
+  if(saved==='dark') document.documentElement.setAttribute('data-theme','dark');
+  mountBtn(); paintBtn();
+  if(!$('krnThemeBtn')) document.addEventListener('DOMContentLoaded',mountBtn);
+})();
+</script>
+
 </body></html>
