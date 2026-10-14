@@ -1196,18 +1196,18 @@ document.querySelectorAll('[data-report]').forEach(b=>b.onclick=()=>downloadExce
 function xmlEsc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;')}
 function sheetXML(name,headers,rows){const all=[headers,...rows];return `<Worksheet ss:Name="${xmlEsc(name)}"><Table>${all.map(r=>'<Row>'+r.map(v=>`<Cell><Data ss:Type="${typeof v==='number'&&!Number.isNaN(v)?'Number':'String'}">${xmlEsc(v)}</Data></Cell>`).join('')+'</Row>').join('')}</Table></Worksheet>`}
 function buildWorkbook(){
-const empRows=db.employees.map(e=>{const t=totals(e.id);return[e.id,e.name,e.designation||'',t.opening,t.paid,t.adv,t.bills,t.balance,status(t)]});
+const empRows=db.employees.map(e=>{const t=totals(e.id);return[e.id,e.name,e.designation||'',t.opening,t.paid,t.adv,t.bills,t.balance,status(t),e.advanceLimit||'']});
 const advRows=db.advances.map(x=>[x.id,x.empId,emp(x.empId)?.name||'',x.date,x.amount,x.remarks||'']);
 const billRows=db.bills.map(x=>[x.id,x.empId,emp(x.empId)?.name||'',x.date,x.submissionDate||x.date,x.category||'',x.vendor||'',x.invoice||'',x.amount,x.status||'Pending',x.description||'']);
 const dashRows=[['Metric','Value'],['Employees',db.employees.length],['Total Advances',db.advances.reduce((s,x)=>s+Number(x.amount||0),0)],['Approved Bills',db.bills.filter(x=>x.status==='Approved').reduce((s,x)=>s+Number(x.amount||0),0)],['Pending Bills',db.bills.filter(x=>x.status==='Pending').length],['Pending Bill Amount',db.bills.filter(x=>x.status==='Pending').reduce((s,x)=>s+Number(x.amount||0),0)],['Paid Amount',db.employees.reduce((s,e)=>s+Number(e.openingPaid||0),0)]];
 const ledgerRows=[];db.employees.forEach(e=>{const t=totals(e.id);let b=t.opening;ledgerRows.push([e.id,e.name,'','OPENING','','Opening Balance','','','',b]);if(t.paid){b+=(t.opening<0?t.paid:-t.paid);ledgerRows.push([e.id,e.name,'','PAYMENT','','Paid Amount','','',t.paid,b])}db.advances.filter(x=>x.empId===e.id).forEach(x=>{b+=Number(x.amount||0);ledgerRows.push([e.id,e.name,x.date,'ADVANCE',x.id,'Advance Given',x.amount,'','',b])});db.bills.filter(x=>x.empId===e.id).forEach(x=>{if(x.status==='Approved'){b-=Number(x.amount||0);ledgerRows.push([e.id,e.name,x.date,'BILL',x.id,x.description||x.category,'',x.amount,'',b])}else ledgerRows.push([e.id,e.name,x.date,'BILL',x.id,`${x.description||x.category} (${x.status||'Pending'} - NOT COUNTING)`,'',x.amount,'',''])})});
-return `<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet" xmlns:x="urn:schemas-microsoft-com:office:excel"><Styles><Style ss:ID="Header"><Font ss:Bold="1"/></Style></Styles>${sheetXML('Employees',['Emp ID','Employee','Designation','Opening Balance','Paid Amount','Advance','Approved Bills','Net Balance','Status'],empRows)}${sheetXML('Advances',['Advance ID','Emp ID','Employee','Date','Amount','Remarks'],advRows)}${sheetXML('Bills',['Bill ID','Emp ID','Employee','Bill Date','Submission Date','Category','Vendor','Invoice','Amount','Status','Description'],billRows)}${sheetXML('Dashboard',dashRows[0],dashRows.slice(1))}${sheetXML('Full Ledger',['Emp ID','Employee','Date','Type','Reference','Description / Status','Advance','Bill','Paid','Running Balance'],ledgerRows)}</Workbook>`}
+return `<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet" xmlns:x="urn:schemas-microsoft-com:office:excel"><Styles><Style ss:ID="Header"><Font ss:Bold="1"/></Style></Styles>${sheetXML('Employees',['Emp ID','Employee','Designation','Opening Balance','Paid Amount','Advance','Approved Bills','Net Balance','Status','Advance Limit'],empRows)}${sheetXML('Advances',['Advance ID','Emp ID','Employee','Date','Amount','Remarks'],advRows)}${sheetXML('Bills',['Bill ID','Emp ID','Employee','Bill Date','Submission Date','Category','Vendor','Invoice','Amount','Status','Description'],billRows)}${sheetXML('Dashboard',dashRows[0],dashRows.slice(1))}${sheetXML('Full Ledger',['Emp ID','Employee','Date','Type','Reference','Description / Status','Advance','Bill','Paid','Running Balance'],ledgerRows)}</Workbook>`}
 function downloadExcelWorkbook(filename,template=false){let xml=buildWorkbook();if(template){/* keep current data out of template */xml=buildEmptyTemplate()}const blob=new Blob([xml],{type:'application/vnd.ms-excel'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename+'.xls';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
-function buildEmptyTemplate(){return `<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">${sheetXML('Employees',['Emp ID','Employee','Designation','Opening Balance','Paid Amount'],[])}${sheetXML('Advances',['Advance ID','Emp ID','Date','Amount','Remarks'],[])}${sheetXML('Bills',['Bill ID','Emp ID','Bill Date','Submission Date','Category','Vendor','Invoice','Amount','Status','Description'],[])}</Workbook>`}
-function downloadExcelSheet(kind){let rows=[];let name='';if(kind==='employees'){name='Employee_Master';rows=[['Emp ID','Employee','Designation','Opening Balance','Paid Amount','Advance','Approved Bills','Net Balance','Status'],...db.employees.map(e=>{const t=totals(e.id);return[e.id,e.name,e.designation||'',t.opening,t.paid,t.adv,t.bills,t.balance,status(t)]})]}else if(kind==='advances'){name='Advance_Register';rows=[['Advance ID','Emp ID','Employee','Date','Amount','Remarks'],...db.advances.map(x=>[x.id,x.empId,emp(x.empId)?.name||'',x.date,x.amount,x.remarks||''])]}else if(kind==='bills'){name='Bill_Register';rows=[['Bill ID','Emp ID','Employee','Bill Date','Submission Date','Category','Vendor','Invoice','Amount','Status','Description'],...db.bills.map(x=>[x.id,x.empId,emp(x.empId)?.name||'',x.date,x.submissionDate||x.date,x.category||'',x.vendor||'',x.invoice||'',x.amount,x.status||'Pending',x.description||''])]}else if(kind==='settlements'){name='Settlement_Register';rows=[['Settlement ID','Emp ID','Employee','Date','Type','Amount','Remark'],...(db.settlements||[]).map(x=>[x.id,x.empId,emp(x.empId)?.name||'',x.date,x.type,x.amount,x.remark||''])]}else if(kind==='dashboard'){name='Dashboard';rows=[['Metric','Value'],['Employees',db.employees.length],['Total Advances',db.advances.reduce((s,x)=>s+Number(x.amount||0),0)],['Approved Bills',db.bills.filter(x=>x.status==='Approved').reduce((s,x)=>s+Number(x.amount||0),0)],['Pending Bills',db.bills.filter(x=>x.status==='Pending').length],['Pending Bill Amount',db.bills.filter(x=>x.status==='Pending').reduce((s,x)=>s+Number(x.amount||0),0)],['Paid Amount',db.employees.reduce((s,e)=>s+Number(e.openingPaid||0),0)]]}else{name='Full_Ledger';rows=[['Emp ID','Employee','Date','Type','Reference','Description','Advance','Bill','Paid','Running Balance'],...db.employees.flatMap(e=>{const t=totals(e.id),r=[];let b=t.opening;r.push([e.id,e.name,'','OPENING','','Opening Balance','','','',b]);if(t.paid){b+=(t.opening<0?t.paid:-t.paid);r.push([e.id,e.name,'','PAYMENT','','Paid Amount','','',t.paid,b])}db.advances.filter(x=>x.empId===e.id).forEach(x=>{b+=Number(x.amount||0);r.push([e.id,e.name,x.date,'ADVANCE',x.id,'Advance Given',x.amount,'','',b])});db.bills.filter(x=>x.empId===e.id).forEach(x=>{if(x.status==='Approved'){b-=Number(x.amount||0);r.push([e.id,e.name,x.date,'BILL',x.id,x.description||x.category,'',x.amount,'',b])}else r.push([e.id,e.name,x.date,'BILL',x.id,`${x.description||x.category} (${x.status||'Pending'} - NOT COUNTING)`,'',x.amount,'',''])});return r})]};const xml=`<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">${sheetXML(name,rows[0],rows.slice(1))}</Workbook>`;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([xml],{type:'application/vnd.ms-excel'}));a.download=name+'.xls';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
-function importBulkFile(file){const reader=new FileReader();reader.onload=()=>{try{const text=reader.result;if(file.name.toLowerCase().endsWith('.csv')){importCSVText(text);return}const xml=new DOMParser().parseFromString(text,'application/xml');if(xml.querySelector('parsererror'))throw new Error('Please upload the Excel-compatible .xls template exported by this app.');const sheets=[...xml.getElementsByTagName('Worksheet')];let counts={employees:0,advances:0,bills:0};sheets.forEach(ws=>{const name=(ws.getAttribute('ss:Name')||ws.getAttribute('Name')||'').toLowerCase();const rows=[...ws.getElementsByTagName('Row')].map(r=>[...r.getElementsByTagName('Data')].map(d=>d.textContent));if(!rows.length)return;const h=rows[0].map(v=>String(v).trim().toLowerCase());const data=rows.slice(1).filter(r=>r.some(v=>String(v).trim()!==''));if(name.includes('employee')){data.forEach(r=>{const get=k=>r[h.indexOf(k)]||'';const id=get('emp id');if(!id)return;const obj={id:String(id).trim(),name:get('employee').trim(),designation:get('designation').trim(),opening:Number(get('opening balance')||0),openingPaid:Number(get('paid amount')||0)};const i=db.employees.findIndex(e=>e.id===obj.id);if(i>=0)db.employees[i]={...db.employees[i],...obj};else db.employees.push(obj);counts.employees++})}else if(name.includes('advance')){data.forEach(r=>{const get=k=>r[h.indexOf(k)]||'';const id=get('advance id');if(!id||!get('emp id'))return;const obj={id:String(id).trim(),empId:String(get('emp id')).trim(),date:get('date'),amount:Number(get('amount')||0),remarks:get('remarks')};const i=db.advances.findIndex(x=>x.id===obj.id);if(i>=0)db.advances[i]={...db.advances[i],...obj};else db.advances.push(obj);counts.advances++})}else if(name.includes('bill')){data.forEach(r=>{const get=k=>r[h.indexOf(k)]||'';const id=get('bill id');if(!id||!get('emp id'))return;const obj={id:String(id).trim(),empId:String(get('emp id')).trim(),date:get('date'),category:get('category'),vendor:get('vendor'),invoice:get('invoice'),amount:Number(get('amount')||0),status:get('status')||'Pending',description:get('description')};const i=db.bills.findIndex(x=>x.id===obj.id);if(i>=0)db.bills[i]={...db.bills[i],...obj};else db.bills.push(obj);counts.bills++})}});save();alert(`Bulk upload completed. Employees: ${counts.employees}, Advances: ${counts.advances}, Bills: ${counts.bills}`)}catch(err){alert('Upload failed: '+err.message)}};reader.readAsText(file)}
-function importCSVText(text){const lines=text.split(/\r?\n/).filter(Boolean);const rows=lines.map(line=>line.split(',').map(v=>v.replace(/^"|"$/g,'').replace(/""/g,'"')));const h=rows[0].map(v=>v.toLowerCase().trim());if(h.includes('emp id')&&h.includes('employee')){rows.slice(1).forEach(r=>{const get=k=>r[h.indexOf(k)]||'';const id=get('emp id');if(!id)return;const obj={id,name:get('employee'),designation:get('designation'),opening:Number(get('opening balance')||0),openingPaid:Number(get('paid amount')||0)};const i=db.employees.findIndex(e=>e.id===id);if(i>=0)db.employees[i]={...db.employees[i],...obj};else db.employees.push(obj)})}else if(h.includes('advance id')){rows.slice(1).forEach(r=>{const get=k=>r[h.indexOf(k)]||'';const id=get('advance id');if(!id)return;db.advances.push({id,empId:get('emp id'),date:get('date'),amount:Number(get('amount')||0),remarks:get('remarks')})})}else if(h.includes('bill id')){rows.slice(1).forEach(r=>{const get=k=>r[h.indexOf(k)]||'';const id=get('bill id');if(!id)return;db.bills.push({id,empId:get('emp id'),date:get('date'),category:get('category'),vendor:get('vendor'),invoice:get('invoice'),amount:Number(get('amount')||0),status:get('status')||'Pending',description:get('description')})})}else throw new Error('CSV headers not recognized.');save();alert('CSV bulk upload completed.')}
-function openModal(type,index=null){$('modal').classList.remove('hidden');const body=$('modalBody');if(type==='employee'){const employeeId=index===null?null:String(index);const employeeIndex=employeeId===null?null:db.employees.findIndex(e=>String(e.id)===employeeId);const e=employeeIndex===null?null:(employeeIndex>=0?db.employees[employeeIndex]:null);$('modalTitle').textContent=e?'Edit Employee':'Add Employee';body.innerHTML=`<div class="formgrid"><div class="field"><label>Employee ID</label><input id="f_id" value="${e?esc(e.id):''}"></div><div class="field"><label>Employee Name</label><input id="f_name" value="${e?esc(e.name):''}"></div><div class="field"><label>Designation</label><input id="f_des" value="${e?esc(e.designation):''}"></div><div class="field"><label>Opening Balance</label><input id="f_open" type="number" step="0.01" value="${e?e.opening:0}"></div><div class="field"><label>Paid Amount</label><input id="f_paid" type="number" step="0.01" value="${e?e.openingPaid:0}"></div></div><br><button class="btn primary" id="saveEmployee">${e?'Update':'Save'} Employee</button>`;$('saveEmployee').onclick=()=>saveEmployee(employeeId)}else if(type==='advance'){const x=index===null?null:db.advances[index];$('modalTitle').textContent=x?'Edit Advance':'Add Advance';body.innerHTML=formAdvance(x);$('saveAdvance').onclick=()=>saveAdvance(index);bindEmployeeLookup(x?x.empId:'');if(x){$('f_emp').value=x.empId;bindEmployeeLookup(x.empId);$('deleteAdvance').onclick=()=>{if(confirm('Delete this advance?')){db.advances.splice(index,1);closeModal();save()}}}}else if(type==='settlement'){openSettlementModal(index);return}else{const x=index===null?null:db.bills[index];$('modalTitle').textContent=x?'Edit Expense Bill':'Submit Expense Bill';body.innerHTML=formBill(x);$('saveBill').onclick=()=>saveBill(index);bindEmployeeLookup(x?x.empId:'');if(x){$('f_emp').value=x.empId;bindEmployeeLookup(x.empId);$('deleteBill').onclick=()=>{if(confirm('Delete this bill?')){db.bills.splice(index,1);closeModal();save()}}}}}
+function buildEmptyTemplate(){return `<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">${sheetXML('Employees',['Emp ID','Employee','Designation','Opening Balance','Paid Amount','Advance Limit'],[])}${sheetXML('Advances',['Advance ID','Emp ID','Date','Amount','Remarks'],[])}${sheetXML('Bills',['Bill ID','Emp ID','Bill Date','Submission Date','Category','Vendor','Invoice','Amount','Status','Description'],[])}</Workbook>`}
+function downloadExcelSheet(kind){let rows=[];let name='';if(kind==='employees'){name='Employee_Master';rows=[['Emp ID','Employee','Designation','Opening Balance','Paid Amount','Advance','Approved Bills','Net Balance','Status','Advance Limit'],...db.employees.map(e=>{const t=totals(e.id);return[e.id,e.name,e.designation||'',t.opening,t.paid,t.adv,t.bills,t.balance,status(t),e.advanceLimit||'']})]}else if(kind==='advances'){name='Advance_Register';rows=[['Advance ID','Emp ID','Employee','Date','Amount','Remarks'],...db.advances.map(x=>[x.id,x.empId,emp(x.empId)?.name||'',x.date,x.amount,x.remarks||''])]}else if(kind==='bills'){name='Bill_Register';rows=[['Bill ID','Emp ID','Employee','Bill Date','Submission Date','Category','Vendor','Invoice','Amount','Status','Description'],...db.bills.map(x=>[x.id,x.empId,emp(x.empId)?.name||'',x.date,x.submissionDate||x.date,x.category||'',x.vendor||'',x.invoice||'',x.amount,x.status||'Pending',x.description||''])]}else if(kind==='settlements'){name='Settlement_Register';rows=[['Settlement ID','Emp ID','Employee','Date','Type','Amount','Remark'],...(db.settlements||[]).map(x=>[x.id,x.empId,emp(x.empId)?.name||'',x.date,x.type,x.amount,x.remark||''])]}else if(kind==='dashboard'){name='Dashboard';rows=[['Metric','Value'],['Employees',db.employees.length],['Total Advances',db.advances.reduce((s,x)=>s+Number(x.amount||0),0)],['Approved Bills',db.bills.filter(x=>x.status==='Approved').reduce((s,x)=>s+Number(x.amount||0),0)],['Pending Bills',db.bills.filter(x=>x.status==='Pending').length],['Pending Bill Amount',db.bills.filter(x=>x.status==='Pending').reduce((s,x)=>s+Number(x.amount||0),0)],['Paid Amount',db.employees.reduce((s,e)=>s+Number(e.openingPaid||0),0)]]}else{name='Full_Ledger';rows=[['Emp ID','Employee','Date','Type','Reference','Description','Advance','Bill','Paid','Running Balance'],...db.employees.flatMap(e=>{const t=totals(e.id),r=[];let b=t.opening;r.push([e.id,e.name,'','OPENING','','Opening Balance','','','',b]);if(t.paid){b+=(t.opening<0?t.paid:-t.paid);r.push([e.id,e.name,'','PAYMENT','','Paid Amount','','',t.paid,b])}db.advances.filter(x=>x.empId===e.id).forEach(x=>{b+=Number(x.amount||0);r.push([e.id,e.name,x.date,'ADVANCE',x.id,'Advance Given',x.amount,'','',b])});db.bills.filter(x=>x.empId===e.id).forEach(x=>{if(x.status==='Approved'){b-=Number(x.amount||0);r.push([e.id,e.name,x.date,'BILL',x.id,x.description||x.category,'',x.amount,'',b])}else r.push([e.id,e.name,x.date,'BILL',x.id,`${x.description||x.category} (${x.status||'Pending'} - NOT COUNTING)`,'',x.amount,'',''])});return r})]};const xml=`<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">${sheetXML(name,rows[0],rows.slice(1))}</Workbook>`;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([xml],{type:'application/vnd.ms-excel'}));a.download=name+'.xls';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+function importBulkFile(file){const reader=new FileReader();reader.onload=()=>{try{const text=reader.result;if(file.name.toLowerCase().endsWith('.csv')){importCSVText(text);return}const xml=new DOMParser().parseFromString(text,'application/xml');if(xml.querySelector('parsererror'))throw new Error('Please upload the Excel-compatible .xls template exported by this app.');const sheets=[...xml.getElementsByTagName('Worksheet')];let counts={employees:0,advances:0,bills:0};sheets.forEach(ws=>{const name=(ws.getAttribute('ss:Name')||ws.getAttribute('Name')||'').toLowerCase();const rows=[...ws.getElementsByTagName('Row')].map(r=>[...r.getElementsByTagName('Data')].map(d=>d.textContent));if(!rows.length)return;const h=rows[0].map(v=>String(v).trim().toLowerCase());const data=rows.slice(1).filter(r=>r.some(v=>String(v).trim()!==''));if(name.includes('employee')){data.forEach(r=>{const get=k=>r[h.indexOf(k)]||'';const id=get('emp id');if(!id)return;const obj={id:String(id).trim(),name:get('employee').trim(),designation:get('designation').trim(),opening:Number(get('opening balance')||0),openingPaid:Number(get('paid amount')||0),...(h.indexOf('advance limit')>=0&&String(get('advance limit')).trim()!==''?{advanceLimit:Math.max(0,Number(String(get('advance limit')).replace(/[₹,\s]/g,''))||0)}:{})};const i=db.employees.findIndex(e=>e.id===obj.id);if(i>=0)db.employees[i]={...db.employees[i],...obj};else db.employees.push(obj);counts.employees++})}else if(name.includes('advance')){data.forEach(r=>{const get=k=>r[h.indexOf(k)]||'';const id=get('advance id');if(!id||!get('emp id'))return;const obj={id:String(id).trim(),empId:String(get('emp id')).trim(),date:get('date'),amount:Number(get('amount')||0),remarks:get('remarks')};const i=db.advances.findIndex(x=>x.id===obj.id);if(i>=0)db.advances[i]={...db.advances[i],...obj};else db.advances.push(obj);counts.advances++})}else if(name.includes('bill')){data.forEach(r=>{const get=k=>r[h.indexOf(k)]||'';const id=get('bill id');if(!id||!get('emp id'))return;const obj={id:String(id).trim(),empId:String(get('emp id')).trim(),date:get('date'),category:get('category'),vendor:get('vendor'),invoice:get('invoice'),amount:Number(get('amount')||0),status:get('status')||'Pending',description:get('description')};const i=db.bills.findIndex(x=>x.id===obj.id);if(i>=0)db.bills[i]={...db.bills[i],...obj};else db.bills.push(obj);counts.bills++})}});save();alert(`Bulk upload completed. Employees: ${counts.employees}, Advances: ${counts.advances}, Bills: ${counts.bills}`)}catch(err){alert('Upload failed: '+err.message)}};reader.readAsText(file)}
+function importCSVText(text){const lines=text.split(/\r?\n/).filter(Boolean);const rows=lines.map(line=>line.split(',').map(v=>v.replace(/^"|"$/g,'').replace(/""/g,'"')));const h=rows[0].map(v=>v.toLowerCase().trim());if(h.includes('emp id')&&h.includes('employee')){rows.slice(1).forEach(r=>{const get=k=>r[h.indexOf(k)]||'';const id=get('emp id');if(!id)return;const obj={id,name:get('employee'),designation:get('designation'),opening:Number(get('opening balance')||0),openingPaid:Number(get('paid amount')||0),...(h.indexOf('advance limit')>=0&&String(get('advance limit')).trim()!==''?{advanceLimit:Math.max(0,Number(String(get('advance limit')).replace(/[₹,\s]/g,''))||0)}:{})};const i=db.employees.findIndex(e=>e.id===id);if(i>=0)db.employees[i]={...db.employees[i],...obj};else db.employees.push(obj)})}else if(h.includes('advance id')){rows.slice(1).forEach(r=>{const get=k=>r[h.indexOf(k)]||'';const id=get('advance id');if(!id)return;db.advances.push({id,empId:get('emp id'),date:get('date'),amount:Number(get('amount')||0),remarks:get('remarks')})})}else if(h.includes('bill id')){rows.slice(1).forEach(r=>{const get=k=>r[h.indexOf(k)]||'';const id=get('bill id');if(!id)return;db.bills.push({id,empId:get('emp id'),date:get('date'),category:get('category'),vendor:get('vendor'),invoice:get('invoice'),amount:Number(get('amount')||0),status:get('status')||'Pending',description:get('description')})})}else throw new Error('CSV headers not recognized.');save();alert('CSV bulk upload completed.')}
+function openModal(type,index=null){$('modal').classList.remove('hidden');const body=$('modalBody');if(type==='employee'){const employeeId=index===null?null:String(index);const employeeIndex=employeeId===null?null:db.employees.findIndex(e=>String(e.id)===employeeId);const e=employeeIndex===null?null:(employeeIndex>=0?db.employees[employeeIndex]:null);$('modalTitle').textContent=e?'Edit Employee':'Add Employee';body.innerHTML=`<div class="formgrid"><div class="field"><label>Employee ID</label><input id="f_id" value="${e?esc(e.id):''}"></div><div class="field"><label>Employee Name</label><input id="f_name" value="${e?esc(e.name):''}"></div><div class="field"><label>Designation</label><input id="f_des" value="${e?esc(e.designation):''}"></div><div class="field"><label>Opening Balance</label><input id="f_open" type="number" step="0.01" value="${e?e.opening:0}"></div><div class="field"><label>Paid Amount</label><input id="f_paid" type="number" step="0.01" value="${e?e.openingPaid:0}"></div><div class="field"><label>Advance Limit (₹)</label><input id="f_limit" type="number" min="0" step="1" placeholder="e.g. 50000 (blank = no limit)" value="${e&&e.advanceLimit?e.advanceLimit:''}"></div></div><br><button class="btn primary" id="saveEmployee">${e?'Update':'Save'} Employee</button>`;$('saveEmployee').onclick=()=>saveEmployee(employeeId)}else if(type==='advance'){const x=index===null?null:db.advances[index];$('modalTitle').textContent=x?'Edit Advance':'Add Advance';body.innerHTML=formAdvance(x);$('saveAdvance').onclick=()=>saveAdvance(index);bindEmployeeLookup(x?x.empId:'');if(x){$('f_emp').value=x.empId;bindEmployeeLookup(x.empId);$('deleteAdvance').onclick=()=>{if(confirm('Delete this advance?')){db.advances.splice(index,1);closeModal();save()}}}}else if(type==='settlement'){openSettlementModal(index);return}else{const x=index===null?null:db.bills[index];$('modalTitle').textContent=x?'Edit Expense Bill':'Submit Expense Bill';body.innerHTML=formBill(x);$('saveBill').onclick=()=>saveBill(index);bindEmployeeLookup(x?x.empId:'');if(x){$('f_emp').value=x.empId;bindEmployeeLookup(x.empId);$('deleteBill').onclick=()=>{if(confirm('Delete this bill?')){db.bills.splice(index,1);closeModal();save()}}}}}
 function opts(){return db.employees.map(e=>`<option value="${esc(e.id)}">${esc(e.id)} - ${esc(e.name)}</option>`).join('')}
 function formAdvance(x=null){return `<div class="employee-lookup"><div class="field"><label>Employee ID</label><input id="f_emp" list="employeeIds" value="${x?esc(x.empId):''}" placeholder="Enter Employee ID"></div><div class="field"><label>Employee Name</label><input id="f_emp_name" class="auto-field" readonly value="${x?esc(emp(x.empId)?.name||''):''}"></div><div class="field"><label>Designation</label><input id="f_emp_des" class="auto-field" readonly value="${x?esc(emp(x.empId)?.designation||''):''}"></div></div><datalist id="employeeIds">${db.employees.map(e=>`<option value="${esc(e.id)}">${esc(e.name)} — ${esc(e.designation||'')}</option>`).join('')}</datalist><div class="formgrid" style="margin-top:12px"><div class="field"><label>Advance ID</label><input id="f_aid" value="${x?esc(x.id):'AVD'+String(db.advances.length+1).padStart(3,'0')}"></div><div class="field"><label>Date</label><input id="f_date" type="date" value="${x?x.date:new Date().toISOString().slice(0,10)}"></div><div class="field"><label>Amount</label><input id="f_amt" type="number" step="0.01" value="${x?x.amount:''}"></div><div class="field wide"><label>Remarks</label><textarea id="f_rem">${x?esc(x.remarks):''}</textarea></div></div><br><button class="btn primary" id="saveAdvance">${x?'Update':'Save'} Advance</button>${x?'<button class="btn" id="deleteAdvance" style="margin-left:8px">Delete</button>':''}`}
 function nextBillId(){const nums=db.bills.map(x=>{const m=String(x.id||'').match(/^BL(\d+)$/i);return m?Number(m[1]):0});const next=(nums.length?Math.max(...nums):0)+1;return 'BL'+String(next).padStart(3,'0')}
@@ -1215,7 +1215,7 @@ function formBill(x=null){return `<div class="employee-lookup"><div class="field
 function bindEmployeeLookup(initialId=''){const input=$('f_emp');const name=$('f_emp_name');const des=$('f_emp_des');if(!input)return;const sync=()=>{const e=emp(input.value.trim());if(e){name.value=e.name||'';des.value=e.designation||'';input.setCustomValidity('')}else{name.value='';des.value='';input.setCustomValidity(input.value.trim()?'Employee ID not found in Employee Master':'')}};input.addEventListener('input',sync);input.addEventListener('change',sync);sync()}
 function val(id){return $(id)?.value||''}
 function addEmployee(){saveEmployee(null)}
-function saveEmployee(index){const id=val('f_id').trim(),name=val('f_name').trim();if(!id||!name)return alert('Employee ID and Name required');const oldId=index===null?null:String(index);const employeeIndex=oldId===null?null:db.employees.findIndex(e=>String(e.id)===oldId);if(employeeIndex!==null&&employeeIndex<0)return alert('Employee record not found.');const duplicate=db.employees.some((e,i)=>String(e.id).trim()===id&&(employeeIndex===null||i!==employeeIndex));if(duplicate)return alert('Employee ID already exists. Please use a unique Employee ID.');const obj={id,name,designation:val('f_des').trim(),opening:Number(val('f_open')||0),openingPaid:Number(val('f_paid')||0)};if(employeeIndex===null){db.employees.push(obj)}else{db.employees[employeeIndex]=obj;if(oldId!==id){db.advances.forEach(x=>{if(String(x.empId)===oldId)x.empId=id});db.bills.forEach(x=>{if(String(x.empId)===oldId)x.empId=id});if(Array.isArray(db.settlements))db.settlements.forEach(x=>{if(String(x.empId)===oldId)x.empId=id})}}closeModal();save()}
+function saveEmployee(index){const id=val('f_id').trim(),name=val('f_name').trim();if(!id||!name)return alert('Employee ID and Name required');const oldId=index===null?null:String(index);const employeeIndex=oldId===null?null:db.employees.findIndex(e=>String(e.id)===oldId);if(employeeIndex!==null&&employeeIndex<0)return alert('Employee record not found.');const duplicate=db.employees.some((e,i)=>String(e.id).trim()===id&&(employeeIndex===null||i!==employeeIndex));if(duplicate)return alert('Employee ID already exists. Please use a unique Employee ID.');const obj={id,name,designation:val('f_des').trim(),opening:Number(val('f_open')||0),openingPaid:Number(val('f_paid')||0),advanceLimit:Math.max(0,Number(val('f_limit')||0))};if(employeeIndex===null){db.employees.push(obj)}else{db.employees[employeeIndex]=obj;if(oldId!==id){db.advances.forEach(x=>{if(String(x.empId)===oldId)x.empId=id});db.bills.forEach(x=>{if(String(x.empId)===oldId)x.empId=id});if(Array.isArray(db.settlements))db.settlements.forEach(x=>{if(String(x.empId)===oldId)x.empId=id})}}closeModal();save()}
 function addAdvance(){saveAdvance(null)}
 function saveAdvance(index){if(!val('f_emp')||!emp(val('f_emp')))return alert('Please enter a valid Employee ID from Employee Master.');if(!val('f_amt'))return alert('Amount required');const obj={id:val('f_aid'),empId:val('f_emp'),date:val('f_date'),amount:Number(val('f_amt')||0),remarks:val('f_rem')};if(index===null)db.advances.push(obj);else db.advances[index]=obj;closeModal();save()}
 function addBill(){saveBill(null)}
@@ -1224,7 +1224,7 @@ function closeModal(){$('modal').classList.add('hidden')}
 function backup(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(db,null,2)],{type:'application/json'}));a.download='Expense_Advance_Backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)}
 function restore(){$('restoreFile').click()}
 $('restoreFile').onchange=e=>{const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=()=>{try{db=JSON.parse(r.result);save();alert('Backup restored successfully.')}catch(err){alert('Invalid backup file.')}};r.readAsText(file)}
-function downloadCSV(kind){let rows=[];if(kind==='employees')rows=[['Emp ID','Employee','Designation','Opening Balance','Paid Amount','Advance','Approved Bills','Net Balance','Status'],...db.employees.map(e=>{const t=totals(e.id);return[e.id,e.name,e.designation,t.opening,t.paid,t.adv,t.bills,t.balance,status(t)]})];else if(kind==='bills')rows=[['Bill ID','Emp ID','Employee','Bill Date','Submission Date','Category','Vendor','Invoice','Amount','Status'],...db.bills.map(x=>[x.id,x.empId,emp(x.empId)?.name||'',x.date,x.submissionDate||x.date,x.category,x.vendor,x.invoice,x.amount,x.status])];else if(kind==='advances')rows=[['Advance ID','Emp ID','Employee','Date','Amount','Remarks'],...db.advances.map(x=>[x.id,x.empId,emp(x.empId)?.name||'',x.date,x.amount,x.remarks])];else if(kind==='settlements')rows=[['Settlement ID','Emp ID','Employee','Date','Type','Amount','Remark'],...(db.settlements||[]).map(x=>[x.id,x.empId,emp(x.empId)?.name||'',x.date,x.type,x.amount,x.remark||''])];else rows=[['Emp ID','Employee','Date','Type','Reference','Description','Advance','Bill','Paid','Running Balance'],...db.employees.flatMap(e=>{const t=totals(e.id),r=[];let b=t.opening;r.push([e.id,e.name,'','OPENING','','Opening Balance','','','',b]);if(t.paid){b+=(t.opening<0?t.paid:-t.paid);r.push([e.id,e.name,'','PAYMENT','','Paid Amount','','',t.paid,b])}db.advances.filter(x=>x.empId===e.id).forEach(x=>{b+=Number(x.amount||0);r.push([e.id,e.name,x.date,'ADVANCE',x.id,'Advance Given',x.amount,'','',b])});db.bills.filter(x=>x.empId===e.id&&x.status==='Approved').forEach(x=>{b-=Number(x.amount||0);r.push([e.id,e.name,x.date,'BILL',x.id,x.description||x.category,'',x.amount,'',b])});return r})];const csv=rows.map(r=>r.map(v=>'"'+String(v??'').replaceAll('"','""')+'"').join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=kind+'.csv';a.click()}
+function downloadCSV(kind){let rows=[];if(kind==='employees')rows=[['Emp ID','Employee','Designation','Opening Balance','Paid Amount','Advance','Approved Bills','Net Balance','Status','Advance Limit'],...db.employees.map(e=>{const t=totals(e.id);return[e.id,e.name,e.designation,t.opening,t.paid,t.adv,t.bills,t.balance,status(t),e.advanceLimit||'']})];else if(kind==='bills')rows=[['Bill ID','Emp ID','Employee','Bill Date','Submission Date','Category','Vendor','Invoice','Amount','Status'],...db.bills.map(x=>[x.id,x.empId,emp(x.empId)?.name||'',x.date,x.submissionDate||x.date,x.category,x.vendor,x.invoice,x.amount,x.status])];else if(kind==='advances')rows=[['Advance ID','Emp ID','Employee','Date','Amount','Remarks'],...db.advances.map(x=>[x.id,x.empId,emp(x.empId)?.name||'',x.date,x.amount,x.remarks])];else if(kind==='settlements')rows=[['Settlement ID','Emp ID','Employee','Date','Type','Amount','Remark'],...(db.settlements||[]).map(x=>[x.id,x.empId,emp(x.empId)?.name||'',x.date,x.type,x.amount,x.remark||''])];else rows=[['Emp ID','Employee','Date','Type','Reference','Description','Advance','Bill','Paid','Running Balance'],...db.employees.flatMap(e=>{const t=totals(e.id),r=[];let b=t.opening;r.push([e.id,e.name,'','OPENING','','Opening Balance','','','',b]);if(t.paid){b+=(t.opening<0?t.paid:-t.paid);r.push([e.id,e.name,'','PAYMENT','','Paid Amount','','',t.paid,b])}db.advances.filter(x=>x.empId===e.id).forEach(x=>{b+=Number(x.amount||0);r.push([e.id,e.name,x.date,'ADVANCE',x.id,'Advance Given',x.amount,'','',b])});db.bills.filter(x=>x.empId===e.id&&x.status==='Approved').forEach(x=>{b-=Number(x.amount||0);r.push([e.id,e.name,x.date,'BILL',x.id,x.description||x.category,'',x.amount,'',b])});return r})];const csv=rows.map(r=>r.map(v=>'"'+String(v??'').replaceAll('"','""')+'"').join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=kind+'.csv';a.click()}
 $('nav').addEventListener('click',e=>{const b=e.target.closest('button[data-page]');if(b)nav(b.dataset.page)});$('backupBtn').onclick=backup;$('restoreBtn').onclick=restore;$('topAdvance').onclick=()=>openModal('advance');$('topBill').onclick=()=>openModal('bill');$('closeModal').onclick=closeModal;$('modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal()});document.addEventListener('click',e=>{const b=e.target.closest('.ledgerBtn');if(b){selectedEmp=b.dataset.id;nav('ledger')}});
 // Local app login/security (client-side access control for this offline HTML app).
 const AUTH_KEY='expenseAdvanceManager.auth.v1';
@@ -4634,6 +4634,247 @@ html[data-theme=dark] .krn-clear-x{background:rgba(148,163,184,.22);color:#e2e8f
   if(pg&&window.MutationObserver)new MutationObserver(go).observe(pg,{childList:true,subtree:true});
   if(mq.addEventListener)mq.addEventListener('change',go);
   cards();mark();
+})();
+</script>
+<style id="krn-limit-v1">
+.krn-lim-chip{display:inline-flex;align-items:center;gap:4px;font:800 10.5px/1 system-ui,Arial,sans-serif;padding:3px 8px;border-radius:999px;margin-left:8px;vertical-align:middle;white-space:nowrap;letter-spacing:.2px}
+.krn-lim-chip.ok{background:#e7f7ee;color:#0f7a43}
+.krn-lim-chip.near{background:#fff1cc;color:#8a5600}
+.krn-lim-chip.over{background:#fde2e2;color:#b42318}
+/* advance popup box */
+#krnAdvLimit{margin:14px 0 4px;padding:12px 14px;border-radius:14px;border:1px solid #dbe4f0;background:#f6f9fd;font:600 13px/1.4 system-ui,Arial,sans-serif;color:#334155}
+#krnAdvLimit.ok{border-color:#9ddbb8;background:#effaf3}
+#krnAdvLimit.near{border-color:#f4c95d;background:#fff8e1}
+#krnAdvLimit.over{border-color:#f0a3a3;background:#fff0f0}
+#krnAdvLimit .al-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+#krnAdvLimit .al-grid small{display:block;font:700 10px/1.2 system-ui;letter-spacing:.5px;text-transform:uppercase;color:#64748b;margin-bottom:2px}
+#krnAdvLimit .al-grid b{font-size:15px;color:#0f2c52}
+#krnAdvLimit .al-bar{height:9px;border-radius:99px;background:#e2e8f0;overflow:hidden;margin-bottom:8px}
+#krnAdvLimit .al-bar i{display:block;height:100%;border-radius:99px;background:#22a05a;transition:width .25s}
+#krnAdvLimit.near .al-bar i{background:#f0a500}
+#krnAdvLimit.over .al-bar i{background:#e03131}
+#krnAdvLimit .al-msg{font-weight:800}
+#krnAdvLimit.ok .al-msg{color:#0f7a43}
+#krnAdvLimit.near .al-msg{color:#8a5600}
+#krnAdvLimit.over .al-msg{color:#b42318}
+#krnAdvLimit.none{color:#64748b;font-weight:600}
+/* dashboard alerts panel */
+#krnLimitPanel{margin:16px 0 18px}
+#krnLimitPanel .lp-head{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between;margin-bottom:12px}
+#krnLimitPanel h3{margin:0;font-size:18px}
+#krnLimitPanel .lp-sub{font:600 12px/1.3 system-ui;color:#64748b}
+#krnLimitPanel .lp-sum{display:flex;gap:6px;flex-wrap:wrap}
+#krnLimitPanel .lp-list{display:grid;gap:8px;max-height:380px;overflow:auto}
+#krnLimitPanel .lp-row{display:grid;grid-template-columns:minmax(120px,1.2fr) 2fr minmax(130px,1fr);gap:12px;align-items:center;width:100%;text-align:left;padding:10px 14px;border-radius:14px;border:1px solid #dbe4f0;background:#fff;cursor:pointer;font:inherit;color:inherit}
+#krnLimitPanel .lp-row.over{border-color:#f0a3a3;background:#fff6f6}
+#krnLimitPanel .lp-row.near{border-color:#f4c95d;background:#fffbee}
+#krnLimitPanel .lp-row:hover{box-shadow:0 4px 14px rgba(15,35,70,.12)}
+#krnLimitPanel .lp-row b{display:block;font-size:14px;color:#0f2c52}
+#krnLimitPanel .lp-row small{display:block;font:600 11.5px/1.3 system-ui;color:#64748b}
+#krnLimitPanel .lp-bar{height:9px;border-radius:99px;background:#e2e8f0;overflow:hidden}
+#krnLimitPanel .lp-bar i{display:block;height:100%;border-radius:99px;background:#f0a500}
+#krnLimitPanel .lp-row.over .lp-bar i{background:#e03131}
+#krnLimitPanel .lp-amt{text-align:right}
+#krnLimitPanel .lp-row.over .lp-amt small{color:#b42318;font-weight:800}
+#krnLimitPanel .lp-row.near .lp-amt small{color:#8a5600;font-weight:800}
+#krnLimitPanel .lp-ok{font:700 13px/1.4 system-ui;color:#0f7a43;padding:6px 2px}
+#krnLimitPanel .lp-hint{font:600 13px/1.4 system-ui;color:#64748b;padding:6px 2px}
+.krn-lim-ledger{margin-top:8px!important;padding:8px 12px;border-radius:12px;font-weight:700!important}
+.krn-lim-ledger.ok{background:#effaf3;color:#0f7a43!important}
+.krn-lim-ledger.near{background:#fff8e1;color:#8a5600!important}
+.krn-lim-ledger.over{background:#fff0f0;color:#b42318!important}
+#krnLimToast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);z-index:100700;max-width:min(440px,calc(100vw - 24px));padding:12px 16px;border-radius:14px;font:700 13px/1.4 system-ui,Arial,sans-serif;color:#fff;box-shadow:0 14px 40px rgba(0,0,0,.3);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}
+#krnLimToast.show{opacity:1;transform:translate(-50%,0)}
+#krnLimToast.near{background:#a86500}
+#krnLimToast.over{background:#c0262d}
+#krnLimToast small{display:block;font-weight:600;opacity:.92;margin-top:2px}
+html[data-theme=dark] #krnAdvLimit,html[data-theme=dark] #krnLimitPanel .lp-row{background:#111c33;border-color:#263449;color:#cbd5e1}
+html[data-theme=dark] #krnAdvLimit .al-grid b,html[data-theme=dark] #krnLimitPanel .lp-row b{color:#e5edf7}
+@media (max-width:760px){
+  #krnLimitPanel .lp-row{grid-template-columns:1fr auto;gap:6px 10px}
+  #krnLimitPanel .lp-bar{grid-column:1/-1;order:3}
+  #krnAdvLimit .al-grid{grid-template-columns:1fr 1fr 1fr;gap:6px}
+  #krnAdvLimit .al-grid b{font-size:13px}
+  #krnLimToast{bottom:calc(86px + env(safe-area-inset-bottom,0px))}
+}
+@media print{#krnLimitPanel,#krnLimToast,.krn-lim-chip{display:none!important}}
+</style>
+<script id="krn-limit-v1-script">
+(function(){
+  var NEAR=0.8;                       /* warn when 80% or more of the limit is used */
+  var $=function(id){return document.getElementById(id)};
+  var m=function(n){return typeof money==='function'?money(n):'\u20B9'+Number(n||0).toLocaleString('en-IN')};
+  var E=function(s){return typeof esc==='function'?esc(s):String(s==null?'':s)};
+
+  /* limit applies to the amount an employee currently holds (balance due from employee) */
+  function info(id,extra){
+    var e=typeof emp==='function'?emp(id):null;if(!e)return null;
+    var lim=Number(e.advanceLimit||0),t=totals(id);
+    var cur=Math.max(t.balance,0),after=Math.max(t.balance+(extra||0),0);
+    var lvl='none',pct=0;
+    if(lim>0){pct=after/lim;lvl=after>lim+0.005?'over':(pct>=NEAR?'near':'ok')}
+    return {e:e,limit:lim,cur:cur,after:after,pct:pct,level:lvl,left:lim-after,over:after-lim};
+  }
+  window.krnLimitInfo=info;
+  function pctTxt(p){return Math.round(p*100)+'%'}
+
+  /* ---------- small toast ---------- */
+  var tt,tmr;
+  function toast(level,title,sub){
+    if(!tt){tt=document.createElement('div');tt.id='krnLimToast';document.body.appendChild(tt)}
+    tt.className=level;tt.innerHTML='<div>'+E(title)+'</div><small>'+E(sub)+'</small>';
+    requestAnimationFrame(function(){tt.classList.add('show')});
+    clearTimeout(tmr);tmr=setTimeout(function(){tt.classList.remove('show')},6500);
+  }
+
+  /* ---------- Advance popup: live limit box ---------- */
+  function advExtra(id,amt,index){
+    var old=(index!=null&&index!==''&&db.advances[index])?db.advances[index]:null;
+    return amt-(old&&old.empId===id?Number(old.amount||0):0);
+  }
+  function injectAdv(index){
+    var amt=$('f_amt');if(!amt||$('krnAdvLimit'))return;
+    var grid=amt.closest('.formgrid');if(!grid)return;
+    var box=document.createElement('div');box.id='krnAdvLimit';box.className='none';
+    grid.insertAdjacentElement('afterend',box);
+    var upd=function(){
+      var id=(($('f_emp')||{}).value||'').trim(),a=Number(amt.value||0);
+      if(!id||!(typeof emp==='function'&&emp(id))){box.style.display='none';return}
+      box.style.display='';
+      var i=info(id,advExtra(id,a,index));
+      if(i.level==='none'){box.className='none';box.innerHTML='No advance limit is set for this employee. (Set it in Employee Master \u2192 Edit.)';return}
+      var msg;
+      if(i.level==='over')msg='\u26D4 Limit crossed \u2014 '+m(i.over)+' above the limit.';
+      else if(i.level==='near')msg='\u26A0 Close to the limit \u2014 only '+m(i.left)+' left ('+pctTxt(i.pct)+' used).';
+      else msg='\u2714 Within limit \u2014 '+m(i.left)+' still available.';
+      box.className=i.level;
+      box.innerHTML='<div class="al-grid"><div><small>Advance limit</small><b>'+m(i.limit)+'</b></div>'
+        +'<div><small>With employee now</small><b>'+m(i.cur)+'</b></div>'
+        +'<div><small>'+(a>0?'After this advance':'Used')+'</small><b>'+m(i.after)+'</b></div></div>'
+        +'<div class="al-bar"><i style="width:'+Math.min(100,i.pct*100)+'%"></i></div><div class="al-msg">'+msg+'</div>';
+    };
+    ['input','change'].forEach(function(ev){amt.addEventListener(ev,upd);var f=$('f_emp');if(f)f.addEventListener(ev,upd)});
+    upd();
+  }
+  var _om=window.openModal;
+  if(typeof _om==='function'){
+    window.openModal=function(type,index){
+      var r=_om.apply(this,arguments);
+      if(type==='advance')try{injectAdv(index)}catch(e){console.error(e)}
+      return r;
+    };
+  }
+
+  /* ---------- Save advance: ask before crossing the limit, flag when close ---------- */
+  var _sa=window.saveAdvance;
+  if(typeof _sa==='function'){
+    window.saveAdvance=function(index){
+      var raw=($('f_emp')||{}).value||'',amt=Number(($('f_amt')||{}).value||0),i=null;
+      if(raw&&emp(raw)&&amt>0)i=info(raw,advExtra(raw,amt,index));
+      if(i&&i.level==='over'){
+        var ok=confirm('\u26A0 ADVANCE LIMIT WILL BE CROSSED\n\nEmployee: '+i.e.name+' ('+i.e.id+')\nAdvance limit: '+m(i.limit)+'\nWith employee after this advance: '+m(i.after)+'\nOver the limit by: '+m(i.over)+'\n\nSave this advance anyway?');
+        if(!ok)return;
+      }
+      var r=_sa.apply(this,arguments);
+      var saved=$('modal')&&$('modal').classList.contains('hidden');
+      if(saved&&i&&(i.level==='over'||i.level==='near')){
+        toast(i.level,i.level==='over'?'Advance limit crossed: '+i.e.name:'Close to advance limit: '+i.e.name,
+          i.level==='over'?m(i.after)+' with employee vs limit '+m(i.limit)+' ('+m(i.over)+' over)':pctTxt(i.pct)+' of '+m(i.limit)+' used \u2014 '+m(i.left)+' left');
+      }
+      return r;
+    };
+  }
+
+  /* ---------- Chips in Dashboard / Employee Master / Pending summary tables ---------- */
+  function chip(i){
+    if(!i||i.level==='none')return null;
+    var s=document.createElement('span');s.className='krn-lim-chip '+i.level;
+    s.textContent=i.level==='over'?'\u26D4 Over limit':(i.level==='near'?'\u26A0 Limit '+pctTxt(i.pct):'Limit '+pctTxt(i.pct));
+    s.title='Advance limit '+m(i.limit)+' \u00B7 with employee '+m(i.cur)+' \u00B7 '+(i.level==='over'?m(i.over)+' over':m(Math.max(i.left,0))+' left');
+    return s;
+  }
+  function decorateTables(){
+    document.querySelectorAll('#page table').forEach(function(t){
+      var ths=t.querySelectorAll('thead th');
+      if(ths.length<2||!/id$/i.test(ths[0].textContent.trim())||!/^employee/i.test(ths[1].textContent.trim()))return;
+      t.querySelectorAll('tbody tr').forEach(function(tr){
+        var idc=tr.children[0],nc=tr.children[1];if(!idc||!nc)return;
+        var id=idc.textContent.trim();if(!(typeof emp==='function'&&emp(id)))return;
+        var i=info(id,0),c=chip(i),old=nc.querySelector('.krn-lim-chip');
+        if(!c){if(old)old.remove();return}
+        if(old){if(old.className===c.className&&old.textContent===c.textContent)return;old.remove()}
+        nc.appendChild(c);
+      });
+    });
+  }
+
+  /* ---------- Dashboard alert panel ---------- */
+  function panelHtml(){
+    var set=0,over=[],near=[],ok=0;
+    db.employees.forEach(function(e){
+      var i=info(e.id,0);if(!i||i.level==='none')return;set++;
+      if(i.level==='over')over.push(i);else if(i.level==='near')near.push(i);else ok++;
+    });
+    over.sort(function(a,b){return b.over-a.over});near.sort(function(a,b){return b.pct-a.pct});
+    var head='<div class="lp-head"><div><h3>Advance Limit Alerts</h3><div class="lp-sub">Amount currently with each employee vs. their advance limit (alert at '+Math.round(NEAR*100)+'%)</div></div><div class="lp-sum">'
+      +(set?'<span class="krn-lim-chip over" style="margin:0">'+over.length+' over</span><span class="krn-lim-chip near" style="margin:0">'+near.length+' near</span><span class="krn-lim-chip ok" style="margin:0">'+ok+' within</span>':'')+'</div></div>';
+    var body;
+    if(!set)body='<div class="lp-hint">No advance limits are set yet. Open <b>Employee Master \u2192 Edit</b> and fill <b>Advance Limit</b> for each employee (or add an <b>Advance Limit</b> column in Excel upload).</div>';
+    else if(!over.length&&!near.length)body='<div class="lp-ok">\u2714 All '+set+' employees with a limit are within their advance limits.</div>';
+    else body='<div class="lp-list">'+over.concat(near).map(function(i){
+      return '<button type="button" class="lp-row '+i.level+'" data-id="'+E(i.e.id)+'"><div><b>'+E(i.e.name)+'</b><small>'+E(i.e.id)+(i.e.designation?' \u00B7 '+E(i.e.designation):'')+'</small></div>'
+        +'<div class="lp-bar"><i style="width:'+Math.min(100,i.pct*100)+'%"></i></div>'
+        +'<div class="lp-amt"><b>'+m(i.cur)+' / '+m(i.limit)+'</b><small>'+(i.level==='over'?'OVER by '+m(i.over):pctTxt(i.pct)+' used \u00B7 '+m(Math.max(i.left,0))+' left')+'</small></div></button>';
+    }).join('')+'</div>';
+    return head+body;
+  }
+  function decoratePanel(){
+    var wrap=$('dashboardTableWrap'),pnl=$('krnLimitPanel');
+    if(!wrap){if(pnl)pnl.remove();return}
+    var cards=document.querySelector('#page .cards');
+    var host=(cards&&cards.parentElement)||(wrap.closest('.panel')||wrap.parentElement).parentElement;
+    var ref=cards?cards.nextSibling:(wrap.closest('.panel')||wrap.parentElement);
+    if(!pnl){pnl=document.createElement('section');pnl.id='krnLimitPanel';pnl.className='panel';host.insertBefore(pnl,ref)}
+    else if(cards&&pnl.previousElementSibling!==cards)host.insertBefore(pnl,cards.nextSibling);
+    var h=panelHtml();if(pnl.getAttribute('data-h')!==h){pnl.innerHTML=h;pnl.setAttribute('data-h',h)}
+  }
+  document.addEventListener('click',function(e){
+    var r=e.target.closest&&e.target.closest('#krnLimitPanel .lp-row');if(!r)return;
+    selectedEmp=r.getAttribute('data-id');nav('ledger');
+  });
+
+  /* ---------- Ledger: limit line under the search box (screen only) ---------- */
+  function decorateLedger(){
+    var s=$('ledgerSearch'),old=document.querySelector('.krn-lim-ledger');
+    if(!s||typeof selectedEmp==='undefined'||!selectedEmp||!emp(selectedEmp)){if(old)old.remove();return}
+    var i=info(selectedEmp,0),txt,cls;
+    if(i.level==='none'){txt='No advance limit set for this employee.';cls=''}
+    else{cls=i.level;txt='Advance limit '+m(i.limit)+' \u00B7 with employee '+m(i.cur)+' ('+pctTxt(i.pct)+')'+(i.level==='over'?' \u00B7 \u26D4 over by '+m(i.over):' \u00B7 '+m(Math.max(i.left,0))+' left')}
+    if(!old){
+      old=document.createElement('div');old.className='ledger-search-hint krn-lim-ledger';
+      var host=document.querySelector('.ledger-search-hint')||s.closest('.ledger-toolbar')||s.parentElement;
+      host.insertAdjacentElement('afterend',old);
+    }
+    var c='ledger-search-hint krn-lim-ledger '+cls;
+    if(old.className!==c)old.className=c;
+    if(old.textContent!==txt)old.textContent=txt;
+  }
+
+  var q=0,obs;
+  function run(){
+    if(obs)obs.disconnect();
+    try{decorateTables();decoratePanel();decorateLedger()}catch(e){console.error(e)}
+    if(obs&&$('page'))obs.observe($('page'),{childList:true,subtree:true});
+  }
+  function schedule(){if(q)return;q=requestAnimationFrame(function(){q=0;run()})}
+  if($('page')&&window.MutationObserver){obs=new MutationObserver(schedule);}
+  var _r=window.render;
+  if(typeof _r==='function'){window.render=function(){var r=_r.apply(this,arguments);schedule();return r}}
+  var _sv=window.save;
+  if(typeof _sv==='function'){window.save=function(){var r=_sv.apply(this,arguments);schedule();return r}}
+  /* safety net (cloud sync etc.): only touches the page if something actually changed */
+  setInterval(function(){if(!document.hidden)schedule()},2000);
+  run();
 })();
 </script>
 </body></html>
