@@ -1088,6 +1088,8 @@ const SEED={"company": "KRN HVAC Products Pvt. Ltd.", "employees": [{"id": "BAC0
 const KEY='expenseAdvanceManager.v2';
 let db=JSON.parse(localStorage.getItem(KEY)||'null')||SEED;
 if(!Array.isArray(db.settlements)) db.settlements=[];
+function nextAdvanceId(){const used=new Set((db.advances||[]).map(x=>String(x.id)));let n=1;while(used.has('AVD'+String(n).padStart(3,'0')))n++;return 'AVD'+String(n).padStart(3,'0')}
+(function fixDupAdvanceIds(){const seen=new Set();let changed=false;(db.advances||[]).forEach(x=>{if(!x.id||seen.has(String(x.id))){let n=1;while(seen.has('AVD'+String(n).padStart(3,'0'))||db.advances.some(y=>y!==x&&String(y.id)==='AVD'+String(n).padStart(3,'0')))n++;x.id='AVD'+String(n).padStart(3,'0');changed=true}seen.add(String(x.id))});if(changed){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){}}})();
 function nextSettlementId(){const used=new Set((db.settlements||[]).map(x=>String(x.id)));let n=1;while(used.has('SET'+String(n).padStart(3,'0')))n++;return 'SET'+String(n).padStart(3,'0')}
 (function fixDupSettlementIds(){const seen=new Set();let changed=false;db.settlements.forEach(x=>{if(!x.id||seen.has(String(x.id))){let n=1;while(seen.has('SET'+String(n).padStart(3,'0'))||db.settlements.some(y=>y!==x&&String(y.id)==='SET'+String(n).padStart(3,'0')))n++;x.id='SET'+String(n).padStart(3,'0');changed=true}seen.add(String(x.id))});if(changed){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){}}})();
 let page='dashboard', selectedEmp='', dashboardFilter='', dashboardQuery='';
@@ -1214,7 +1216,7 @@ function importBulkFile(file){const reader=new FileReader();reader.onload=()=>{t
 function importCSVText(text){const lines=text.split(/\r?\n/).filter(Boolean);const rows=lines.map(line=>line.split(',').map(v=>v.replace(/^"|"$/g,'').replace(/""/g,'"')));const h=rows[0].map(v=>v.toLowerCase().trim());if(h.includes('emp id')&&h.includes('employee')){rows.slice(1).forEach(r=>{const get=k=>r[h.indexOf(k)]||'';const id=get('emp id');if(!id)return;const obj={id,name:get('employee'),designation:get('designation'),opening:Number(get('opening balance')||0),openingPaid:Number(get('paid amount')||0),...(h.indexOf('advance limit')>=0&&String(get('advance limit')).trim()!==''?{advanceLimit:Math.max(0,Number(String(get('advance limit')).replace(/[₹,\s]/g,''))||0)}:{})};const i=db.employees.findIndex(e=>e.id===id);if(i>=0)db.employees[i]={...db.employees[i],...obj};else db.employees.push(obj)})}else if(h.includes('advance id')){rows.slice(1).forEach(r=>{const get=k=>r[h.indexOf(k)]||'';const id=get('advance id');if(!id)return;db.advances.push({id,empId:get('emp id'),date:get('date'),amount:Number(get('amount')||0),remarks:get('remarks')})})}else if(h.includes('bill id')){rows.slice(1).forEach(r=>{const get=k=>r[h.indexOf(k)]||'';const id=get('bill id');if(!id)return;db.bills.push({id,empId:get('emp id'),date:get('date'),category:get('category'),vendor:get('vendor'),invoice:get('invoice'),amount:Number(get('amount')||0),status:get('status')||'Pending',description:get('description'),...(h.indexOf('bill type')>=0&&String(get('bill type')).trim()!==''?{billType:/oth/i.test(String(get('bill type')))?'Other':'Travelling'}:{})})})}else throw new Error('CSV headers not recognized.');save();alert('CSV bulk upload completed.')}
 function openModal(type,index=null){$('modal').classList.remove('hidden');const body=$('modalBody');if(type==='employee'){const employeeId=index===null?null:String(index);const employeeIndex=employeeId===null?null:db.employees.findIndex(e=>String(e.id)===employeeId);const e=employeeIndex===null?null:(employeeIndex>=0?db.employees[employeeIndex]:null);$('modalTitle').textContent=e?'Edit Employee':'Add Employee';body.innerHTML=`<div class="formgrid"><div class="field"><label>Employee ID</label><input id="f_id" value="${e?esc(e.id):''}"></div><div class="field"><label>Employee Name</label><input id="f_name" value="${e?esc(e.name):''}"></div><div class="field"><label>Designation</label><input id="f_des" value="${e?esc(e.designation):''}"></div><div class="field"><label>Opening Balance</label><input id="f_open" type="number" step="0.01" value="${e?e.opening:0}"></div><div class="field"><label>Paid Amount</label><input id="f_paid" type="number" step="0.01" value="${e?e.openingPaid:0}"></div><div class="field"><label>Advance Limit (₹)</label><input id="f_limit" type="number" min="0" step="1" placeholder="e.g. 50000 (blank = no limit)" value="${e&&e.advanceLimit?e.advanceLimit:''}"></div></div><br><button class="btn primary" id="saveEmployee">${e?'Update':'Save'} Employee</button>`;$('saveEmployee').onclick=()=>saveEmployee(employeeId)}else if(type==='advance'){const x=index===null?null:db.advances[index];$('modalTitle').textContent=x?'Edit Advance':'Add Advance';body.innerHTML=formAdvance(x);$('saveAdvance').onclick=()=>saveAdvance(index);bindEmployeeLookup(x?x.empId:'');if(x){$('f_emp').value=x.empId;bindEmployeeLookup(x.empId);$('deleteAdvance').onclick=()=>{if(confirm('Delete this advance?')){if(window.krnEmiRemove)krnEmiRemove(db.advances[index]);db.advances.splice(index,1);closeModal();save()}}}}else if(type==='settlement'){openSettlementModal(index);return}else{const x=index===null?null:db.bills[index];$('modalTitle').textContent=x?'Edit Expense Bill':'Submit Expense Bill';body.innerHTML=formBill(x);$('saveBill').onclick=()=>saveBill(index);bindEmployeeLookup(x?x.empId:'');if(x){$('f_emp').value=x.empId;bindEmployeeLookup(x.empId);$('deleteBill').onclick=()=>{if(confirm('Delete this bill?')){db.bills.splice(index,1);closeModal();save()}}}}}
 function opts(){return db.employees.map(e=>`<option value="${esc(e.id)}">${esc(e.id)} - ${esc(e.name)}</option>`).join('')}
-function formAdvance(x=null){return `<div class="employee-lookup"><div class="field"><label>Employee ID</label><input id="f_emp" list="employeeIds" value="${x?esc(x.empId):''}" placeholder="Enter Employee ID"></div><div class="field"><label>Employee Name</label><input id="f_emp_name" class="auto-field" readonly value="${x?esc(emp(x.empId)?.name||''):''}"></div><div class="field"><label>Designation</label><input id="f_emp_des" class="auto-field" readonly value="${x?esc(emp(x.empId)?.designation||''):''}"></div></div><datalist id="employeeIds">${db.employees.map(e=>`<option value="${esc(e.id)}">${esc(e.name)} — ${esc(e.designation||'')}</option>`).join('')}</datalist><div class="formgrid" style="margin-top:12px"><div class="field"><label>Advance ID</label><input id="f_aid" value="${x?esc(x.id):'AVD'+String(db.advances.length+1).padStart(3,'0')}"></div><div class="field"><label>Date</label><input id="f_date" type="date" value="${x?x.date:new Date().toISOString().slice(0,10)}"></div><div class="field"><label>Amount</label><input id="f_amt" type="number" step="0.01" value="${x?x.amount:''}"></div><div class="field"><label>Recovery</label><select id="f_emi_mode"><option value="0">One time / No EMI</option><option value="1" ${x&&x.emi?'selected':''}>EMI (monthly instalments)</option></select></div><div class="field" data-emi><label>Number of EMI months</label><input id="f_emi_months" type="number" min="1" max="60" step="1" value="${x&&x.emi?x.emi.months:6}"></div><div class="field" data-emi><label>First EMI month</label><input id="f_emi_start" type="month" value="${x&&x.emi?x.emi.start:(()=>{const d=new Date(new Date().getFullYear(),new Date().getMonth()+1,1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')})()}"></div><div class="field wide" data-emi><div id="emiPreview" style="font-weight:800;color:#1d5fd1"></div></div><div class="field wide"><label>Remarks</label><textarea id="f_rem">${x?esc(x.remarks):''}</textarea></div></div><br><button class="btn primary" id="saveAdvance">${x?'Update':'Save'} Advance</button>${x?'<button class="btn" id="deleteAdvance" style="margin-left:8px">Delete</button>':''}`}
+function formAdvance(x=null){return `<div class="employee-lookup"><div class="field"><label>Employee ID</label><input id="f_emp" list="employeeIds" value="${x?esc(x.empId):''}" placeholder="Enter Employee ID"></div><div class="field"><label>Employee Name</label><input id="f_emp_name" class="auto-field" readonly value="${x?esc(emp(x.empId)?.name||''):''}"></div><div class="field"><label>Designation</label><input id="f_emp_des" class="auto-field" readonly value="${x?esc(emp(x.empId)?.designation||''):''}"></div></div><datalist id="employeeIds">${db.employees.map(e=>`<option value="${esc(e.id)}">${esc(e.name)} — ${esc(e.designation||'')}</option>`).join('')}</datalist><div class="formgrid" style="margin-top:12px"><div class="field"><label>Advance ID</label><input id="f_aid" value="${x?esc(x.id):nextAdvanceId()}"></div><div class="field"><label>Date</label><input id="f_date" type="date" value="${x?x.date:new Date().toISOString().slice(0,10)}"></div><div class="field"><label>Amount</label><input id="f_amt" type="number" step="0.01" value="${x?x.amount:''}"></div><div class="field"><label>Recovery</label><select id="f_emi_mode"><option value="0">One time / No EMI</option><option value="1" ${x&&x.emi?'selected':''}>EMI (monthly instalments)</option></select></div><div class="field" data-emi><label>Number of EMI months</label><input id="f_emi_months" type="number" min="1" max="60" step="1" value="${x&&x.emi?x.emi.months:6}"></div><div class="field" data-emi><label>First EMI month</label><input id="f_emi_start" type="month" value="${x&&x.emi?x.emi.start:(()=>{const d=new Date(new Date().getFullYear(),new Date().getMonth()+1,1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')})()}"></div><div class="field wide" data-emi><div id="emiPreview" style="font-weight:800;color:#1d5fd1"></div></div><div class="field wide"><label>Remarks</label><textarea id="f_rem">${x?esc(x.remarks):''}</textarea></div></div><br><button class="btn primary" id="saveAdvance">${x?'Update':'Save'} Advance</button>${x?'<button class="btn" id="deleteAdvance" style="margin-left:8px">Delete</button>':''}`}
 function billTypeOf(x){if(x&&(x.billType==='Travelling'||x.billType==='Other'))return x.billType;const t=[x&&x.category,x&&x.description,x&&x.vendor].join(' ');return /\b(travel\w*|trip|journey|fuel|petrol|diesel|toll|taxi|cab|bus|train|flight|ticket|fare|conveyance|lodging|hotel)\b/i.test(t)?'Travelling':'Other'}
 const BILL_PREFIX={Travelling:'TRV',Other:'OTH'};
 function nextBillId(type){const pre=BILL_PREFIX[type]||'BL';const re=new RegExp('^'+pre+'(\\d+)$','i');const nums=db.bills.map(x=>{const m=String(x.id||'').match(re);return m?Number(m[1]):0});const next=(nums.length?Math.max(...nums):0)+1;return pre+String(next).padStart(3,'0')}
@@ -5099,4 +5101,413 @@ html[data-theme=dark] #krnLimitPanel .lc-bar{background:#263449}
 html[data-theme=dark] #krnLimitPanel .lp-list .lc-foot b{color:#e5edf7}
 @media (max-width:760px){#krnLimitPanel{padding:14px}#krnLimitPanel .lp-list{grid-template-columns:1fr}}
 </style>
+<style id="krn-pack-css">
+/* KRN Productivity Pack styles */
+.krn-dd{position:fixed;z-index:100002;display:none;background:#fff;border:1px solid #cfd8e8;border-radius:12px;box-shadow:0 14px 34px rgba(7,19,38,.25);overflow:auto;padding:4px}
+.krn-dd.show{display:block}
+.krn-dd-i{display:flex;gap:10px;align-items:baseline;padding:8px 10px;border-radius:8px;cursor:pointer;color:#13233f;font-size:13px}
+.krn-dd-i b{min-width:56px}.krn-dd-i span{color:#53627c}
+.krn-dd-i:hover,.krn-dd-i.on{background:#dbeafe}
+.krn-dd-n{padding:10px;color:#6b7890;font-size:13px}
+.krn-hint{margin-top:6px;font-size:12px;color:#53627c;line-height:1.35}
+.krn-hint.bad{color:#b91c1c;font-weight:600}
+.krn-tf{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:10px 0 8px}
+.krn-tf input{flex:1;min-width:200px;max-width:380px;padding:9px 12px;border:1px solid #cfd8e8;border-radius:10px;font-size:13px;background:#fff;color:#13233f}
+.krn-tf-n{font-size:12px;color:#6b7890}
+th.krn-sortable{cursor:pointer;user-select:none;white-space:nowrap}
+th.krn-sortable::after{content:' \2195';opacity:.35;font-size:.85em}
+th.krn-sortable.asc::after{content:' \25B2';opacity:1}
+th.krn-sortable.desc::after{content:' \25BC';opacity:1}
+.krn-gs{position:fixed;inset:0;z-index:100001;background:rgba(7,19,38,.55);display:none;align-items:flex-start;justify-content:center;padding:6vh 12px 12px}
+.krn-gs.show{display:flex}
+.krn-gs-box{width:min(720px,100%);max-height:86vh;display:flex;flex-direction:column;background:#fff;color:#13233f;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.35);overflow:hidden}
+.krn-gs-top{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #e3e9f4}
+.krn-gs-top input{flex:1;border:0;outline:0;font-size:16px;background:transparent;color:inherit;min-width:0}
+.krn-gs-x{border:0;background:#eef3fb;border-radius:8px;width:30px;height:30px;cursor:pointer;color:#13233f}
+.krn-gs-res{overflow:auto;padding:10px 12px;flex:1}
+.krn-gs-empty,.krn-gs-more{padding:14px;color:#6b7890;font-size:13px}
+.krn-gs-card{border:1px solid #e3e9f4;border-radius:12px;padding:10px;margin-bottom:10px}
+.krn-gs-eh{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:flex-start}
+.krn-gs-id{background:#eef3fb;border-radius:6px;padding:1px 7px;font-size:12px;margin-left:4px}
+.krn-gs-sub{font-size:12px;color:#6b7890;margin-top:2px}
+.krn-gs-btns{display:flex;gap:6px}
+.krn-gs-act{border:1px solid #cfd8e8;background:#fff;border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer;color:#13233f}
+.krn-gs-sec{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#6b7890;margin:10px 0 4px}
+.krn-gs-row{display:grid;grid-template-columns:1.6fr 1fr auto;gap:8px;width:100%;text-align:left;border:0;background:transparent;padding:7px 8px;border-radius:8px;cursor:pointer;font-size:13px;color:#13233f}
+.krn-gs-row:hover,.krn-gs-row:focus,.krn-gs-act:focus{background:#dbeafe;outline:2px solid #087cf5}
+.krn-gs-foot{padding:8px 14px;border-top:1px solid #e3e9f4;font-size:11px;color:#6b7890}
+.krn-gs-foot kbd{background:#eef3fb;border-radius:4px;padding:1px 5px}
+html[data-theme=dark] .krn-dd,html[data-theme=dark] .krn-gs-box{background:#0f1e36;color:#e6eefc;border-color:#25395c}
+html[data-theme=dark] .krn-dd-i,html[data-theme=dark] .krn-gs-row,html[data-theme=dark] .krn-gs-act{color:#e6eefc}
+html[data-theme=dark] .krn-dd-i span,html[data-theme=dark] .krn-gs-sub,html[data-theme=dark] .krn-gs-sec,html[data-theme=dark] .krn-gs-empty,html[data-theme=dark] .krn-gs-more,html[data-theme=dark] .krn-gs-foot,html[data-theme=dark] .krn-tf-n,html[data-theme=dark] .krn-hint{color:#9fb2d4}
+html[data-theme=dark] .krn-dd-i:hover,html[data-theme=dark] .krn-dd-i.on,html[data-theme=dark] .krn-gs-row:hover,html[data-theme=dark] .krn-gs-row:focus{background:#1d3b6b}
+html[data-theme=dark] .krn-gs-card,html[data-theme=dark] .krn-gs-top,html[data-theme=dark] .krn-gs-foot{border-color:#25395c}
+html[data-theme=dark] .krn-gs-id,html[data-theme=dark] .krn-gs-x,html[data-theme=dark] .krn-gs-foot kbd{background:#1a2f52;color:#e6eefc}
+html[data-theme=dark] .krn-gs-act{background:#14284a;border-color:#2a4270}
+html[data-theme=dark] .krn-tf input{background:#0f1e36;color:#e6eefc;border-color:#25395c}
+html[data-theme=dark] .krn-hint.bad{color:#fca5a5}
+@media(max-width:700px){.krn-gs{padding:2vh 6px}.krn-gs-row{grid-template-columns:1fr auto}.krn-gs-row span:nth-child(2){display:none}.krn-tf input{max-width:100%}.krn-gs-foot{display:none}}
+@media print{.krn-dd,.krn-gs,.krn-tf{display:none!important}}
+</style>
+<script id="krn-pack-js">
+/* ===== KRN Productivity Pack: duplicate warning, rich delete confirm, balance check,
+   employee picker (arrow keys), Enter/Ctrl+S in forms, global search, table sort/filter, PDF statement ===== */
+(function(){
+'use strict';
+const G=id=>document.getElementById(id);
+const E=s=>esc(s);
+const num=v=>Number(v||0);
+const today=()=>new Date().toISOString().slice(0,10);
+let ctx=null; /* what the open popup / clicked button refers to */
+
+/* ---------- remember what is being edited ---------- */
+const _om=window.openModal;
+window.openModal=function(type,index){ctx={type:type,index:index===undefined?null:index};return _om.apply(this,arguments)};
+const _os=window.openSettlementModal;
+window.openSettlementModal=function(id){ctx={type:'settlement',id:id||null};return _os.apply(this,arguments)};
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.deleteSettlement');if(b)ctx={type:'settlement',id:b.dataset.id}},true);
+
+/* ---------- 1. Delete confirm with details ---------- */
+const _confirm=window.confirm.bind(window);
+function detailFor(msg){
+  try{
+    if(!ctx)return null;
+    if(msg==='Delete this advance?'&&ctx.type==='advance'){
+      const x=db.advances[ctx.index];if(!x)return null;const e=emp(x.empId)||{};
+      return 'Delete this ADVANCE?\n\nEmployee : '+(e.name||'?')+' ('+x.empId+')\nAdvance ID: '+x.id+'\nDate     : '+fmt(x.date)+'\nAmount   : '+money(x.amount)+(x.remarks?'\nRemarks  : '+x.remarks:'')+(x.emi?'\n\nIts EMI schedule ('+x.emi.months+' months) and paid EMI entries will also be removed.':'')+'\n\nThis cannot be undone.';
+    }
+    if(msg==='Delete this bill?'&&ctx.type==='bill'){
+      const x=db.bills[ctx.index];if(!x)return null;const e=emp(x.empId)||{};
+      return 'Delete this BILL?\n\nEmployee : '+(e.name||'?')+' ('+x.empId+')\nBill ID  : '+x.id+'\nDate     : '+fmt(x.date)+'\nAmount   : '+money(x.amount)+'\nStatus   : '+(x.status||'Pending')+(x.vendor?'\nVendor   : '+x.vendor:'')+'\n\nThis cannot be undone.';
+    }
+    if(msg==='Delete this settlement entry?'&&ctx.type==='settlement'){
+      const x=(db.settlements||[]).find(s=>s.id===ctx.id);if(!x)return null;const e=emp(x.empId)||{};
+      return 'Delete this SETTLEMENT entry?\n\nEmployee : '+(e.name||'?')+' ('+x.empId+')\nEntry ID : '+x.id+'\nDate     : '+fmt(x.date)+'\nType     : '+x.type+'\nAmount   : '+money(x.amount)+(x.remark?'\nRemark   : '+x.remark:'')+(x.emiRef?'\n\n(This is an auto EMI entry.)':'')+'\n\nThis cannot be undone.';
+    }
+  }catch(err){}
+  return null;
+}
+window.confirm=function(m){if(typeof m==='string'){const d=detailFor(m);if(d)m=d}return _confirm(m)};
+
+/* ---------- 2. Duplicate warning ---------- */
+function dupAsk(label,list){
+  return _confirm('\u26A0 POSSIBLE DUPLICATE\n\nAn entry with the same Employee, Date and Amount already exists in '+label+' records:\n\n'+list.map(l=>'\u2022 '+l).join('\n')+'\n\nOK = save anyway\nCancel = go back and check');
+}
+const _sa=window.saveAdvance;
+window.saveAdvance=function(index){
+  const aid=val('f_aid').trim();
+  if(aid&&db.advances.some((x,i)=>(index==null||String(i)!==String(index))&&String(x.id).trim().toLowerCase()===aid.toLowerCase()))return alert('Advance ID "'+aid+'" already exists. Please use a unique Advance ID.');
+  const id=val('f_emp'),amt=num(val('f_amt')),d=val('f_date');
+  if(id&&emp(id)&&amt>0){
+    const same=db.advances.filter((x,i)=>(index==null||String(i)!==String(index))&&x.empId===id&&x.date===d&&num(x.amount)===amt);
+    if(same.length&&!dupAsk('Advance',same.map(x=>x.id+' \u2014 '+fmt(x.date)+' \u2014 '+money(x.amount))))return;
+  }
+  return _sa.apply(this,arguments);
+};
+const _sb=window.saveBill;
+window.saveBill=function(index){
+  const id=val('f_emp'),amt=num(val('f_amt')),d=val('f_date');
+  if(id&&emp(id)&&amt>0){
+    const same=db.bills.filter((x,i)=>(index==null||String(i)!==String(index))&&x.empId===id&&x.date===d&&num(x.amount)===amt);
+    if(same.length&&!dupAsk('Bill',same.map(x=>x.id+' \u2014 '+fmt(x.date)+' \u2014 '+money(x.amount)+' ('+(x.status||'Pending')+')')))return;
+  }
+  return _sb.apply(this,arguments);
+};
+
+/* ---------- 3. Settlement: balance check + duplicate ---------- */
+const effect=s=>String(s.type||'').toLowerCase().includes('deduct')?-num(s.amount):num(s.amount);
+const isDeduct=t=>String(t||'').toLowerCase().includes('deduct');
+function balExcl(empId,exId){let b=totals(empId).balance;if(exId){const o=(db.settlements||[]).find(x=>x.id===exId&&x.empId===empId);if(o)b-=effect(o)}return b}
+function maxFor(type,b){return isDeduct(type)?Math.max(0,b):Math.max(0,-b)}
+function balText(b){return Math.abs(b)<.005?'Settled':(b>0?'employee owes '+money(b):'you owe employee '+money(-b))}
+const _ss=window.saveSettlement;
+window.saveSettlement=function(id){
+  const eid=val('f_emp'),amt=num(val('f_settlement_amt')),type=val('f_settlement_type'),d=val('f_settlement_date')||today();
+  if(eid&&emp(eid)&&amt>0){
+    const b=balExcl(eid,id),mx=maxFor(type,b);
+    if(amt>mx+.005){
+      const e=emp(eid);
+      const ok=_confirm('\u26A0 AMOUNT IS MORE THAN THE BALANCE\n\nEmployee : '+e.name+' ('+e.id+')\nCurrent balance: '+money(b)+' ('+balText(b)+')\nThis entry: '+type+' '+money(amt)+'\nMaximum for this entry: '+money(mx)+'\n\nOK = save anyway\nCancel = correct the amount');
+      if(!ok)return;
+    }
+    const same=(db.settlements||[]).filter(x=>x.id!==id&&x.empId===eid&&x.date===d&&num(x.amount)===amt&&x.type===type);
+    if(same.length&&!dupAsk('Settlement',same.map(x=>x.id+' \u2014 '+x.type+' \u2014 '+money(x.amount))))return;
+  }
+  return _ss.apply(this,arguments);
+};
+function settleHint(){
+  const amt=G('f_settlement_amt');if(!amt)return;
+  let h=G('krnSetHint');
+  if(!h){h=document.createElement('div');h.id='krnSetHint';h.className='krn-hint';amt.parentNode.appendChild(h);
+    ['f_emp','f_settlement_type','f_settlement_amt'].forEach(i=>{const el=G(i);if(el){el.addEventListener('input',settleHint);el.addEventListener('change',settleHint)}})}
+  const eid=val('f_emp');
+  if(!eid||!emp(eid)){h.textContent='Select an employee to see the balance.';h.className='krn-hint';return}
+  const exId=ctx&&ctx.type==='settlement'?ctx.id:null,b=balExcl(eid,exId),type=val('f_settlement_type'),mx=maxFor(type,b),a=num(val('f_settlement_amt'));
+  const over=a>mx+.005;
+  h.className='krn-hint'+(over?' bad':'');
+  h.textContent='Balance: '+money(b)+' ('+balText(b)+') \u2022 Max for "'+type+'": '+money(mx)+(over?' \u2014 amount is higher!':'');
+}
+
+/* ---------- 4. Employee picker with arrow keys (all forms) ---------- */
+let dd=null,ddInput=null,ddIdx=-1,ddItems=[];
+function ddEnsure(){if(dd)return;dd=document.createElement('div');dd.className='krn-dd';dd.addEventListener('mousedown',e=>{e.preventDefault();const it=e.target.closest('.krn-dd-i');if(it)ddPick(Number(it.dataset.k),false)});document.body.appendChild(dd)}
+function ddPos(){if(!dd||!ddInput)return;const r=ddInput.getBoundingClientRect();dd.style.left=Math.max(8,r.left)+'px';dd.style.top=(r.bottom+4)+'px';dd.style.width=Math.max(r.width,300)+'px';const room=window.innerHeight-r.bottom-16;dd.style.maxHeight=Math.max(120,Math.min(260,room))+'px'}
+function ddClose(){if(dd)dd.classList.remove('show');ddIdx=-1}
+function ddShow(input){
+  ddEnsure();ddInput=input;
+  const v=input.value.trim().toLowerCase();
+  const exact=db.employees.some(e=>String(e.id).toLowerCase()===v);
+  ddItems=db.employees.filter(e=>!v||exact||[e.id,e.name,e.designation].some(f=>String(f||'').toLowerCase().includes(v)));
+  dd.innerHTML=ddItems.length?ddItems.map((e,k)=>'<div class="krn-dd-i" data-k="'+k+'"><b>'+E(e.id)+'</b><span>'+E(e.name)+(e.designation?' \u2014 '+E(e.designation):'')+'</span></div>').join(''):'<div class="krn-dd-n">No employee found</div>';
+  ddIdx=exact?ddItems.findIndex(e=>String(e.id).toLowerCase()===v):-1;
+  ddMark();ddPos();dd.classList.add('show');
+}
+function ddMark(){if(!dd)return;[...dd.querySelectorAll('.krn-dd-i')].forEach((el,k)=>{el.classList.toggle('on',k===ddIdx);if(k===ddIdx)el.scrollIntoView({block:'nearest'})})}
+function ddPick(k,focusNext){
+  const e=ddItems[k];if(!e||!ddInput)return;const inp=ddInput;
+  inp.value=e.id;inp.dispatchEvent(new Event('input',{bubbles:true}));inp.dispatchEvent(new Event('change',{bubbles:true}));
+  ddClose();if(focusNext!==false)focusNext_(inp);
+}
+function focusables(root){return [...root.querySelectorAll('input,select,textarea,button')].filter(el=>!el.disabled&&!el.readOnly&&el.type!=='hidden'&&el.offsetParent!==null&&!el.classList.contains('auto-field'))}
+function focusNext_(el){
+  const root=G('modalBody');if(!root)return;
+  const list=focusables(root),i=list.indexOf(el);
+  const nx=list[i+1];
+  if(nx&&nx.tagName!=='BUTTON'){nx.focus();if(nx.select&&nx.tagName==='INPUT'&&nx.type!=='date'&&nx.type!=='month')try{nx.select()}catch(_){}}
+  else{const p=root.querySelector('.btn.primary');if(p)p.focus()}
+}
+function enhancePickers(){
+  document.querySelectorAll('#modalBody input#f_emp,#modalBody input[list="employeeIds"]').forEach(inp=>{
+    if(inp.dataset.krnDd)return;inp.dataset.krnDd='1';inp.removeAttribute('list');inp.setAttribute('autocomplete','off');
+    inp.addEventListener('focus',()=>ddShow(inp));
+    inp.addEventListener('input',()=>{ddShow(inp);ddIdx=ddItems.length?0:-1;ddMark()});
+    inp.addEventListener('blur',()=>setTimeout(()=>{if(ddInput===inp)ddClose()},120));
+    inp.addEventListener('keydown',e=>{
+      const open=dd&&dd.classList.contains('show')&&ddInput===inp;
+      if(e.key==='ArrowDown'||e.key==='ArrowUp'){
+        e.preventDefault();if(!open)ddShow(inp);if(!ddItems.length)return;
+        ddIdx=e.key==='ArrowDown'?(ddIdx+1)%ddItems.length:(ddIdx<=0?ddItems.length-1:ddIdx-1);ddMark();return}
+      if(e.key==='Enter'&&open&&ddItems.length){
+        let k=ddIdx;if(k<0){const v=inp.value.trim().toLowerCase();const ex=ddItems.findIndex(x=>String(x.id).toLowerCase()===v);k=ex>=0?ex:(ddItems.length===1?0:-1)}
+        if(k>=0){e.preventDefault();e.stopPropagation();ddPick(k,true)}return}
+      if(e.key==='Escape'&&open){e.preventDefault();e.stopPropagation();ddClose()}
+    });
+  });
+}
+window.addEventListener('resize',ddPos);window.addEventListener('scroll',ddPos,true);
+/* Esc: close the picker / search first, before the app's own Esc handler closes the popup */
+window.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(dd&&dd.classList.contains('show')){e.preventDefault();e.stopImmediatePropagation();ddClose();return}if(gs&&gs.classList.contains('show')){e.preventDefault();e.stopImmediatePropagation();gsClose()}},true);
+
+/* ---------- 5. Enter = next field, Ctrl+S = save (inside popups) ---------- */
+document.addEventListener('keydown',e=>{
+  const m=G('modal');if(!m||m.classList.contains('hidden'))return;
+  if((e.ctrlKey||e.metaKey)&&String(e.key).toLowerCase()==='s'){
+    e.preventDefault();const p=G('modalBody').querySelector('.btn.primary');if(p)p.click();return}
+  if(e.key==='Enter'&&!e.defaultPrevented&&!e.shiftKey&&!e.ctrlKey){
+    const t=e.target;if(!t||!G('modalBody').contains(t))return;
+    const ok=t.tagName==='SELECT'||(t.tagName==='INPUT'&&!/^(button|submit|checkbox|radio|file)$/.test(t.type));
+    if(!ok)return;e.preventDefault();
+    const list=focusables(G('modalBody')),i=list.indexOf(t),nx=list[i+1];
+    if(nx&&nx.tagName!=='BUTTON'){nx.focus();if(nx.tagName==='INPUT'&&nx.select&&nx.type!=='date'&&nx.type!=='month')try{nx.select()}catch(_){}}
+    else{const p=G('modalBody').querySelector('.btn.primary');if(p)p.click()}
+  }
+});
+
+/* ---------- 6. Table sort + filter ---------- */
+const TS={};
+const MON={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+function parseVal(t){
+  t=String(t).trim();
+  const n=t.replace(/[\u20B9,\s]/g,'');
+  if(/^-?\d+(\.\d+)?$/.test(n))return{k:'n',v:Number(n)};
+  let m=t.match(/^(\d{1,2})[\s-]([A-Za-z]{3})[a-z]*[\s-,]*(\d{4})$/);if(m&&MON[m[2].toLowerCase()]!=null)return{k:'d',v:new Date(+m[3],MON[m[2].toLowerCase()],+m[1]).getTime()};
+  m=t.match(/^([A-Za-z]{3})[a-z]*[\s-]+(\d{4})$/);if(m&&MON[m[1].toLowerCase()]!=null)return{k:'d',v:new Date(+m[2],MON[m[1].toLowerCase()],1).getTime()};
+  m=t.match(/^(\d{4})-(\d{2})-(\d{2})$/);if(m)return{k:'d',v:new Date(+m[1],+m[2]-1,+m[3]).getTime()};
+  m=t.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/);if(m)return{k:'d',v:new Date(+m[3],+m[2]-1,+m[1]).getTime()};
+  return{k:'s',v:t.toLowerCase()};
+}
+function cmp(a,b){const x=parseVal(a),y=parseVal(b);if(x.k===y.k&&x.k!=='s')return x.v-y.v;if(x.k!=='s'&&y.k==='s')return -1;if(x.k==='s'&&y.k!=='s')return 1;return String(x.v).localeCompare(String(y.v),undefined,{numeric:true})}
+function enhanceTables(){
+  const pg=G('page');if(!pg)return;const p0=(typeof page==='string'?page:'p');
+  pg.querySelectorAll('table').forEach((t,ti)=>{
+    if(t.dataset.krnSf)return;t.dataset.krnSf='1';
+    if(t.closest('#ledgerArea'))return;
+    const tb=t.tBodies[0],hd=t.tHead&&t.tHead.rows[0];if(!tb||!hd||tb.rows.length<2)return;
+    const key=p0+':'+ti,st=TS[key]||(TS[key]={col:-1,dir:1,q:''});
+    [...tb.rows].forEach((r,i)=>{r.dataset.krnI=i});
+    const heads=[...hd.cells];
+    heads.forEach((th,ci)=>{
+      const tx=th.textContent.trim();if(!tx||/^(actions?|#|sr\.?|sl\.?)$/i.test(tx))return;
+      th.classList.add('krn-sortable');th.title='Click to sort';
+      th.addEventListener('click',()=>{if(st.col===ci){if(st.dir===1)st.dir=-1;else{st.col=-1;st.dir=1}}else{st.col=ci;st.dir=1}apply()});
+    });
+    let bar=null,inp=null,cnt=null;
+    const pn=t.closest('.panel');
+    const hasOwn=pn&&pn.querySelector('input[placeholder*="earch"],input.search');
+    if(!hasOwn&&tb.rows.length>=5){
+      bar=document.createElement('div');bar.className='krn-tf';
+      bar.innerHTML='<input type="search" class="krn-tf-in" placeholder="Filter rows\u2026 (type any text)"><span class="krn-tf-n"></span>';
+      inp=bar.querySelector('input');cnt=bar.querySelector('span');inp.value=st.q;
+      inp.addEventListener('input',()=>{st.q=inp.value;apply()});
+      const anchor=t.closest('.tablewrap')||t;anchor.parentNode.insertBefore(bar,anchor);
+    }
+    function apply(){
+      const all=[...tb.rows],fixed=all.filter(r=>[...r.cells].some(c=>c.colSpan>1)),data=all.filter(r=>fixed.indexOf(r)<0);
+      if(st.col>=0)data.sort((a,b)=>cmp(a.cells[st.col]?a.cells[st.col].textContent:'',b.cells[st.col]?b.cells[st.col].textContent:'')*st.dir);
+      else data.sort((a,b)=>a.dataset.krnI-b.dataset.krnI);
+      data.concat(fixed).forEach(r=>tb.appendChild(r));
+      const q=st.q.trim().toLowerCase();let shown=0;
+      data.forEach(r=>{const ok=!q||r.textContent.toLowerCase().includes(q);r.style.display=ok?'':'none';if(ok)shown++});
+      if(cnt)cnt.textContent=q?('Showing '+shown+' of '+data.length):(data.length+' rows');
+      heads.forEach((th,ci)=>{th.classList.remove('asc','desc');th.removeAttribute('aria-sort');if(ci===st.col){th.classList.add(st.dir===1?'asc':'desc');th.setAttribute('aria-sort',st.dir===1?'ascending':'descending')}});
+    }
+    apply();
+  });
+}
+
+/* ---------- 7. PDF statement / slip (print to PDF) ---------- */
+const PCSS='*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}html,body{margin:0}body{font-family:"Segoe UI",Calibri,Arial,sans-serif;color:#1b2a47;font-size:10.5px;line-height:1.3}'+
+'.band{background:linear-gradient(135deg,#071326 0%,#0b2a52 60%,#087cf5 140%);color:#fff;padding:16px 20px;border-radius:10px;display:flex;justify-content:space-between;align-items:center}'+
+'.bl{display:flex;align-items:center;gap:14px}.logo{background:#fff;border-radius:9px;padding:7px 11px;display:flex;align-items:center}.logo img{height:30px;width:auto;display:block}.band h1{margin:0;font-size:18px;letter-spacing:.2px}.band .sub{opacity:.8;font-size:10px;letter-spacing:.14em;text-transform:uppercase;margin-top:3px}.band .r{text-align:right;font-size:10px;opacity:.9}.band .r b{display:block;font-size:13px;opacity:1}'+
+'.emp{display:grid;grid-template-columns:1.6fr 1fr 1.2fr;gap:8px;margin:10px 0}.emp div{border:1px solid #dbe3f1;border-radius:8px;padding:7px 10px;background:#f8fafd}.emp small{display:block;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:#6b7890;margin-bottom:2px}.emp b{font-size:12px}'+
+'.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:2px 0 8px}.kpi{border:1px solid #dbe3f1;border-radius:8px;padding:7px 10px}.kpi small{display:block;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:#6b7890}.kpi b{font-size:13px;display:block;margin-top:2px;white-space:nowrap}.kpi.net{background:#071326;border-color:#071326;color:#fff}.kpi.net small{color:#9fb7dd}'+
+'.pill{display:inline-block;padding:4px 12px;border-radius:99px;font-weight:700;font-size:11px;margin:2px 0 4px}.pill.recv{background:#fff1e0;color:#b45309}.pill.pay{background:#dcfce7;color:#047857}.pill.ok{background:#e0f2fe;color:#0369a1}'+
+'h2{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#087cf5;margin:12px 0 5px;display:flex;align-items:center;gap:8px}h2::after{content:"";flex:1;height:1px;background:#dbe3f1}'+
+'table{width:100%;border-collapse:collapse;font-size:9.5px}thead{display:table-header-group}tr{page-break-inside:avoid}th{background:#0b2a52;color:#fff;text-align:left;padding:5px 6px;font-size:8.5px;letter-spacing:.06em;text-transform:uppercase;font-weight:600}td{padding:3px 6px;border-bottom:1px solid #e6ecf6;vertical-align:top}tbody tr:nth-child(even) td{background:#f7f9fd}'+
+'.r{text-align:right}.nw{white-space:nowrap}td.desc{width:100%}'+
+'.t{display:inline-block;font-size:8px;font-weight:700;letter-spacing:.05em;padding:1px 6px;border-radius:4px;background:#eef2f9;color:#475569}.t.ADVANCE{background:#dbeafe;color:#1d4ed8}.t.BILL{background:#fef3c7;color:#92400e}.t.SETTLEMENT{background:#ede9fe;color:#6d28d9}'+
+'.nc td{color:#9aa6bb;font-style:italic}.pos{color:#b45309}.neg{color:#047857}tfoot td{border-top:2px solid #0b2a52;font-weight:700;background:#eef2f9!important}'+
+'.note{font-size:8.5px;color:#6b7890;margin-top:5px}.sig{display:flex;justify-content:space-between;gap:30px;margin-top:46px}.sig div{flex:1;border-top:1px solid #1b2a47;text-align:center;padding-top:4px;font-size:9.5px;color:#475569}'+
+'.foot{margin-top:14px;padding-top:6px;border-top:1px solid #dbe3f1;font-size:8.5px;color:#8794ab;display:flex;justify-content:space-between}'+
+'.slipbox{border:1px solid #dbe3f1;border-radius:10px;overflow:hidden;margin-top:10px}.slipbox .row{display:flex;border-bottom:1px solid #e6ecf6}.slipbox .row:last-child{border:0}.slipbox .row>div{padding:8px 12px}.slipbox .k{width:30%;background:#f3f6fb;color:#6b7890;font-size:9px;letter-spacing:.08em;text-transform:uppercase}.amt{font-size:24px;font-weight:700;color:#071326}'+
+'@page{size:A4;margin:10mm}';
+function printHTML(title,body){
+  const f=document.createElement('iframe');f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0';document.body.appendChild(f);
+  const d=f.contentWindow.document;d.open();d.write('<!doctype html><html><head><meta charset="utf-8"><title>'+E(title)+'</title><style>'+PCSS+'</style></head><body>'+body+'</body></html>');d.close();
+  setTimeout(()=>{try{f.contentWindow.focus();f.contentWindow.print()}catch(err){alert('Print failed: '+err.message)}setTimeout(()=>f.remove(),90000)},350);
+}
+function dueText(b){return Math.abs(b)<.005?'Settled / No Amount Due':b>0?'Amount to Receive from Employee':'Amount to Pay to Employee'}
+const sm=n=>(num(n)<0?'-':'')+money(Math.abs(num(n)));
+function head(title,sub){const lg=document.querySelector('.brand-logo');const logo=lg&&lg.src?'<div class="logo"><img alt="" src="'+lg.src+'"></div>':'';return '<div class="band"><div class="bl">'+logo+'<div><h1>'+E(db.company||'Company')+'</h1><div class="sub">'+E(title)+'</div></div></div><div class="r"><b>'+E(sub)+'</b>Generated '+fmt(today())+'</div></div>'}
+function foot(){return '<div class="foot"><span>Expense Advance Manager \u2022 computer generated statement</span><span>'+E(db.company||'')+' \u2022 '+fmt(today())+'</span></div>'}
+window.krnStatement=function(empId){
+  const e=emp(empId);if(!e)return alert('Employee not found.');
+  const t=totals(empId);let bal=t.opening;const rows=[['','OPENING','','Opening Balance','','','',bal,'']];
+  if(t.paid){bal+=(t.opening<0?t.paid:-t.paid);rows.push(['','PAYMENT','','Paid Amount','','',t.paid,bal,''])}
+  const tx=[];
+  db.advances.filter(x=>x.empId===empId).forEach(x=>tx.push({d:x.date||'',o:0,f:()=>{bal+=num(x.amount);rows.push([x.date,'ADVANCE',x.id,'Advance Given'+(x.emi?' \u2014 EMI '+x.emi.months+' months':''),x.amount,'','',bal,''])}}));
+  db.bills.filter(x=>x.empId===empId).forEach(x=>tx.push({d:x.date||'',o:1,f:()=>{const st=String(x.status||'Pending');if(st==='Approved'){bal-=num(x.amount);rows.push([x.date,'BILL',x.id,x.description||x.category||'','',x.amount,'',bal,''])}else rows.push([x.date,'BILL',x.id,(x.description||x.category||'')+' ('+st+' \u2014 not counted)','',x.amount,'','','nc'])}}));
+  (db.settlements||[]).filter(x=>x.empId===empId).forEach(x=>tx.push({d:x.date||'',o:2,f:()=>{bal+=effect(x);rows.push([x.date,'SETTLEMENT',x.id,x.type+(x.remark?' \u2014 '+x.remark:''),'','',num(x.amount),bal,''])}}));
+  tx.sort((a,b)=>String(a.d).localeCompare(String(b.d))||a.o-b.o).forEach(x=>x.f());
+  const pend=db.bills.filter(x=>x.empId===empId&&String(x.status||'Pending').toLowerCase()==='pending').reduce((s,x)=>s+num(x.amount),0);
+  const emis=db.advances.filter(x=>x.empId===empId&&x.emi);
+  const emiRows=emis.map(x=>{const pl=(db.settlements||[]).filter(s=>s.emiRef&&String(s.emiRef).indexOf(x.emi.uid+'#')===0);const paid=pl.reduce((s,y)=>s+num(y.amount),0);return '<tr><td class="nw">'+E(x.id)+'</td><td class="r nw">'+money(x.amount)+'</td><td>'+x.emi.months+' months from '+E(x.emi.start)+'</td><td class="r nw">'+pl.length+' / '+x.emi.months+'</td><td class="r nw">'+money(paid)+'</td><td class="r nw">'+money(Math.max(0,num(x.amount)-paid))+'</td></tr>'}).join('');
+  const cls=Math.abs(t.balance)<.005?'ok':t.balance>0?'recv':'pay';
+  const advTot=rows.reduce((s,r)=>s+(r[4]!==''?num(r[4]):0),0),billTot=rows.reduce((s,r)=>s+(r[5]!==''&&r[8]!=='nc'?num(r[5]):0),0),setTot=rows.reduce((s,r)=>s+(r[1]==='SETTLEMENT'?num(r[6]):0),0);
+  const body=head('Employee Account Statement',e.name+' \u2022 '+e.id)+
+  '<div class="emp"><div><small>Employee</small><b>'+E(e.name)+'</b></div><div><small>Employee ID</small><b>'+E(e.id)+'</b></div><div><small>Designation</small><b>'+E(e.designation||'\u2014')+'</b></div></div>'+
+  '<div class="kpis"><div class="kpi"><small>Opening</small><b>'+sm(t.opening)+'</b></div><div class="kpi"><small>Advances</small><b>'+sm(t.adv)+'</b></div><div class="kpi"><small>Approved bills</small><b>'+sm(t.bills)+'</b></div><div class="kpi"><small>Settlement adj.</small><b>'+sm(t.settlementEffect)+'</b></div><div class="kpi net"><small>Net balance</small><b>'+sm(t.balance)+'</b></div></div>'+
+  '<span class="pill '+cls+'">'+E(dueText(t.balance))+(Math.abs(t.balance)<.005?'':' \u2014 '+money(Math.abs(t.balance)))+'</span>'+(pend?' <span class="note">Pending bills not yet counted: '+money(pend)+'</span>':'')+
+  '<h2>Ledger</h2><table><thead><tr><th>Date</th><th>Type</th><th>Ref</th><th>Description</th><th class="r">Advance</th><th class="r">Bill</th><th class="r">Settlement</th><th class="r">Balance</th></tr></thead><tbody>'+
+  rows.map(r=>'<tr class="'+(r[8]||'')+'"><td class="nw">'+(r[0]?fmt(r[0]):'')+'</td><td><span class="t '+r[1]+'">'+r[1]+'</span></td><td class="nw">'+E(r[2])+'</td><td class="desc">'+E(r[3])+'</td><td class="r nw">'+(r[4]!==''?money(r[4]):'')+'</td><td class="r nw">'+(r[5]!==''?money(r[5]):'')+'</td><td class="r nw">'+(r[6]!==''?money(r[6]):'')+'</td><td class="r nw '+(r[7]!==''?(num(r[7])>0?'pos':'neg'):'')+'"><b>'+(r[7]!==''?sm(r[7]):'')+'</b></td></tr>').join('')+
+  '</tbody><tfoot><tr><td colspan="4">Total (counted entries)</td><td class="r nw">'+money(advTot)+'</td><td class="r nw">'+money(billTot)+'</td><td class="r nw">'+money(setTot)+'</td><td class="r nw">'+sm(t.balance)+'</td></tr></tfoot></table>'+
+  '<div class="note">Balance: positive (orange) = employee owes the company \u2022 negative (green) = company owes the employee \u2022 greyed rows are not counted.</div>'+
+  (emiRows?'<h2>EMI Plans</h2><table><thead><tr><th>Advance</th><th class="r">Amount</th><th>Plan</th><th class="r">Paid</th><th class="r">Recovered</th><th class="r">Remaining</th></tr></thead><tbody>'+emiRows+'</tbody></table>':'')+
+  '<div class="sig"><div>Prepared by</div><div>Checked by</div><div>Employee signature</div></div>'+foot();
+  printHTML('Statement - '+e.name+' ('+e.id+')',body);
+};
+window.krnSlip=function(id){
+  const x=(db.settlements||[]).find(s=>s.id===id);if(!x)return alert('Settlement entry not found.');
+  const e=emp(x.empId)||{name:x.empId,id:x.empId},t=totals(x.empId);const cls=Math.abs(t.balance)<.005?'ok':t.balance>0?'recv':'pay';
+  const body=head('Settlement Slip','Slip No: '+x.id)+
+  '<div class="emp"><div><small>Employee</small><b>'+E(e.name)+'</b></div><div><small>Employee ID</small><b>'+E(e.id)+'</b></div><div><small>Date</small><b>'+fmt(x.date)+'</b></div></div>'+
+  '<div class="slipbox"><div class="row"><div class="k">Entry type</div><div><b>'+E(x.type)+'</b></div></div><div class="row"><div class="k">Amount</div><div class="amt">'+money(x.amount)+'</div></div><div class="row"><div class="k">Remark / purpose</div><div>'+E(x.remark||'\u2014')+'</div></div><div class="row"><div class="k">Net balance now</div><div><b>'+sm(t.balance)+'</b> &nbsp;<span class="pill '+cls+'">'+E(dueText(t.balance))+'</span></div></div></div>'+
+  '<div class="sig"><div>Prepared by</div><div>Approved by</div><div>Employee signature</div></div>'+foot();
+  printHTML('Settlement Slip - '+x.id,body);
+};
+
+/* ---------- 8. Global search ---------- */
+let gs=null;
+function gsBuild(){
+  if(gs)return;gs=document.createElement('div');gs.className='krn-gs';gs.innerHTML='<div class="krn-gs-box"><div class="krn-gs-top"><span>\uD83D\uDD0E</span><input id="krnGsIn" type="text" autocomplete="off" placeholder="Search employee, ID, bill no., vendor, remark\u2026"><button type="button" class="krn-gs-x" aria-label="Close">\u2715</button></div><div class="krn-gs-res" id="krnGsRes"></div><div class="krn-gs-foot">\u2191\u2193 move \u2022 Enter open \u2022 Esc close \u2022 open anytime with <kbd>/</kbd> or <kbd>Ctrl+Shift+F</kbd></div></div>';
+  document.body.appendChild(gs);
+  gs.addEventListener('mousedown',e=>{if(e.target===gs)gsClose()});
+  gs.querySelector('.krn-gs-x').onclick=gsClose;
+  const inp=G('krnGsIn');inp.addEventListener('input',gsRun);
+  inp.addEventListener('keydown',e=>{
+    const items=[...gs.querySelectorAll('.krn-gs-row,.krn-gs-act')];
+    if(e.key==='ArrowDown'){e.preventDefault();if(items[0])items[0].focus()}
+    else if(e.key==='Enter'){e.preventDefault();const r=gs.querySelector('.krn-gs-row');if(r)r.click()}
+    else if(e.key==='Escape'){gsClose()}
+  });
+  gs.addEventListener('keydown',e=>{
+    if(e.target.id==='krnGsIn')return;
+    const items=[...gs.querySelectorAll('.krn-gs-row,.krn-gs-act')],i=items.indexOf(document.activeElement);
+    if(e.key==='ArrowDown'){e.preventDefault();(items[i+1]||items[0]).focus()}
+    else if(e.key==='ArrowUp'){e.preventDefault();if(i<=0)inp.focus();else items[i-1].focus()}
+    else if(e.key==='Escape'){gsClose()}
+  });
+  gs.addEventListener('click',e=>{
+    const b=e.target.closest('[data-gs]');if(!b)return;const a=b.dataset.gs,k=b.dataset.k;gsClose();
+    if(a==='adv')openModal('advance',Number(k));else if(a==='bill')openModal('bill',Number(k));
+    else if(a==='set')openSettlementModal(k);else if(a==='emi')nav('emi');
+    else if(a==='ledger'){selectedEmp=k;nav('ledger')}else if(a==='stmt')krnStatement(k);
+  });
+}
+function gsOpen(){gsBuild();gs.classList.add('show');const i=G('krnGsIn');i.value='';gsRun();setTimeout(()=>i.focus(),20)}
+function gsClose(){if(gs)gs.classList.remove('show')}
+function gsRun(){
+  const q=G('krnGsIn').value.trim().toLowerCase(),out=G('krnGsRes');
+  if(!q){out.innerHTML='<div class="krn-gs-empty">Type a name or ID. You will see that employee\u2019s advances, EMI, bills and settlements together.</div>';return}
+  const has=(...f)=>f.some(v=>String(v==null?'':v).toLowerCase().includes(q));
+  const cards=[];
+  db.employees.forEach(e=>{
+    const own=has(e.id,e.name,e.designation);
+    const adv=db.advances.map((x,i)=>({x,i})).filter(o=>o.x.empId===e.id&&(own||has(o.x.id,o.x.remarks,o.x.date,fmt(o.x.date),o.x.amount)));
+    const emi=db.advances.map((x,i)=>({x,i})).filter(o=>o.x.empId===e.id&&o.x.emi&&(own||has(o.x.id,'emi','installment')));
+    const bil=db.bills.map((x,i)=>({x,i})).filter(o=>o.x.empId===e.id&&(own||has(o.x.id,o.x.category,o.x.vendor,o.x.invoice,o.x.description,o.x.status,o.x.date,fmt(o.x.date),o.x.amount)));
+    const set=(db.settlements||[]).filter(x=>x.empId===e.id&&(own||has(x.id,x.type,x.remark,x.date,fmt(x.date),x.amount)));
+    if(own||adv.length||emi.length||bil.length||set.length)cards.push({e,adv,emi,bil,set,own});
+  });
+  if(!cards.length){out.innerHTML='<div class="krn-gs-empty">No results for \u201C'+E(q)+'\u201D.</div>';return}
+  const L=8;
+  const sec=(title,arr,fn)=>arr.length?'<div class="krn-gs-sec">'+title+' <small>('+arr.length+')</small></div>'+arr.slice(0,L).map(fn).join('')+(arr.length>L?'<div class="krn-gs-more">+ '+(arr.length-L)+' more \u2014 refine your search</div>':''):'';
+  out.innerHTML=cards.slice(0,8).map(c=>{
+    const t=totals(c.e.id);
+    return '<div class="krn-gs-card"><div class="krn-gs-eh"><div><b>'+E(c.e.name)+'</b> <span class="krn-gs-id">'+E(c.e.id)+'</span><div class="krn-gs-sub">'+E(c.e.designation||'')+' \u2022 Balance '+money(t.balance)+' \u2022 '+E(dueText(t.balance))+'</div></div><div class="krn-gs-btns"><button type="button" class="krn-gs-act" data-gs="ledger" data-k="'+E(c.e.id)+'">Ledger</button><button type="button" class="krn-gs-act" data-gs="stmt" data-k="'+E(c.e.id)+'">\uD83D\uDCC4 PDF</button></div></div>'+
+    sec('Advances',c.adv,o=>'<button type="button" class="krn-gs-row" data-gs="adv" data-k="'+o.i+'"><span>'+E(o.x.id)+'</span><span>'+fmt(o.x.date)+'</span><b>'+money(o.x.amount)+'</b></button>')+
+    sec('EMI plans',c.emi,o=>{const p=(db.settlements||[]).filter(s=>s.emiRef&&String(s.emiRef).indexOf(o.x.emi.uid+'#')===0).length;return '<button type="button" class="krn-gs-row" data-gs="emi" data-k="'+o.i+'"><span>'+E(o.x.id)+' \u2022 '+o.x.emi.months+' months</span><span>Paid '+p+' / '+o.x.emi.months+'</span><b>'+money(o.x.amount)+'</b></button>'})+
+    sec('Bills',c.bil,o=>'<button type="button" class="krn-gs-row" data-gs="bill" data-k="'+o.i+'"><span>'+E(o.x.id)+' \u2022 '+E(o.x.status||'Pending')+'</span><span>'+fmt(o.x.date)+'</span><b>'+money(o.x.amount)+'</b></button>')+
+    sec('Settlements',c.set,x=>'<button type="button" class="krn-gs-row" data-gs="set" data-k="'+E(x.id)+'"><span>'+E(x.type)+'</span><span>'+fmt(x.date)+'</span><b>'+money(x.amount)+'</b></button>')+'</div>';
+  }).join('')+(cards.length>8?'<div class="krn-gs-more">+ '+(cards.length-8)+' more employees \u2014 refine your search</div>':'');
+}
+document.addEventListener('keydown',e=>{
+  const t=e.target,typing=t&&(t.matches&&t.matches('input,textarea,select')||t.isContentEditable);
+  const modalOpen=G('modal')&&!G('modal').classList.contains('hidden');
+  if((e.ctrlKey||e.metaKey)&&e.shiftKey&&String(e.key).toLowerCase()==='f'){e.preventDefault();gsOpen();return}
+  if(e.key==='/'&&!typing&&!modalOpen&&!e.ctrlKey&&!e.altKey&&!e.metaKey){const a=G('authOverlay');if(a&&!a.classList.contains('hidden'))return;e.preventDefault();gsOpen()}
+});
+
+/* ---------- injected buttons ---------- */
+function injectButtons(){
+  const act=document.querySelector('.top .actions');
+  if(act&&!G('krnGsBtn')){const b=document.createElement('button');b.type='button';b.id='krnGsBtn';b.className='btn';b.textContent='\uD83D\uDD0E';b.title='Global search ( / )';b.setAttribute('aria-label','Global search');b.onclick=gsOpen;act.insertBefore(b,act.firstChild)}
+  const pl=G('printLedger');
+  if(pl&&!G('krnStmtBtn')){const b=document.createElement('button');b.type='button';b.id='krnStmtBtn';b.className='btn';b.textContent='\uD83D\uDCC4 Statement PDF';b.onclick=()=>{if(!selectedEmp)return alert('Select an employee first.');krnStatement(selectedEmp)};pl.parentNode.insertBefore(b,pl.nextSibling)}
+  document.querySelectorAll('#page .btn.pay[data-id]').forEach(p=>{if(p.dataset.krnS)return;p.dataset.krnS='1';const b=document.createElement('button');b.type='button';b.className='btn krn-stmt';b.dataset.stmt=p.dataset.id;b.textContent='\uD83D\uDCC4 Statement';p.parentNode.appendChild(document.createTextNode(' '));p.parentNode.appendChild(b)});
+  document.querySelectorAll('#page .btn.deleteSettlement').forEach(p=>{if(p.dataset.krnS)return;p.dataset.krnS='1';const b=document.createElement('button');b.type='button';b.className='btn krn-slip';b.dataset.slip=p.dataset.id;b.textContent='\uD83D\uDCC4 Slip';p.parentNode.appendChild(document.createTextNode(' '));p.parentNode.appendChild(b)});
+}
+document.addEventListener('click',e=>{
+  const s=e.target.closest&&e.target.closest('.krn-stmt');if(s){krnStatement(s.dataset.stmt);return}
+  const l=e.target.closest&&e.target.closest('.krn-slip');if(l)krnSlip(l.dataset.slip);
+});
+
+/* ---------- scan loop ---------- */
+let raf=0;
+function scan(){raf=0;try{enhancePickers();settleHint();enhanceTables();injectButtons()}catch(err){console.error('[krn pack]',err)}}
+function sched(){if(!raf)raf=setTimeout(scan,120)}
+new MutationObserver(sched).observe(document.body,{childList:true,subtree:true});
+scan();
+})();
+</script>
 </body></html>
