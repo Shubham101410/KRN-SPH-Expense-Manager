@@ -5767,11 +5767,12 @@ html[data-theme=dark] .krn-nb{box-shadow:0 0 0 2px #0b1220}
     });
     return out;
   }
-  /* everything that has a bill submitted, a due date and is not paid yet */
+  /* everything not paid yet: submitted bills + (current/previous month) bills not yet submitted, e.g. rent */
   function toPay(){
     var out=[];
     instances().forEach(function(r){
-      if(r.state==='pending')out.push({kind:'mon',name:typeIcon(r.t.type)+' '+r.t.name,party:r.t.party||'',ym:r.ym,due:r.due,amount:r.amount,a:r.ti+'|'+r.ym});
+      var recent=r.ym>=addMonth(curMonth(),-1);
+      if(r.state==='pending'||(r.state==='notsub'&&recent))out.push({kind:'mon',ns:r.state==='notsub',name:typeIcon(r.t.type)+' '+r.t.name,party:r.t.party||'',ym:r.ym,due:r.due,amount:r.amount,a:r.ti+'|'+r.ym});
     });
     list().forEach(function(x,i){
       if(statusOf(x)==='Submitted'&&x.dueDate)out.push({kind:'inv',name:'Invoice '+x.no,party:x.party||'',ym:String(x.dueDate).slice(0,7),due:x.dueDate,amount:Number(x.amount||0),a:String(i)});
@@ -5838,6 +5839,39 @@ html[data-theme=dark] .krn-nb{box-shadow:0 0 0 2px #0b1220}
     });
   }
   setTimeout(badge,1500);setInterval(badge,4000);
+
+  /* ---------- popup banner when app opens: overdue / due within 3 days ---------- */
+  var BANNER_SHOWN=false;
+  function openInvoicesMon(){
+    TAB='mon';
+    var b=document.querySelector('.side .nav button[data-page="invoices"]')||document.querySelector('#mNav button[data-p="invoices"]')||document.querySelector('[data-rail-target="invoices"]');
+    if(b)b.click();else if(window.invoicesPage)window.invoicesPage();
+  }
+  function showDueBanner(){
+    var items=toPay().filter(function(it){return diffDays(today(),it.due)<=3});
+    if(!items.length)return false;
+    var old=document.getElementById('krnDueBanner');if(old)old.remove();
+    var total=items.reduce(function(s,it){return s+it.amount},0);
+    var rows=items.slice(0,4).map(function(it){
+      var d=diffDays(today(),it.due);
+      var t=d<0?'Overdue by '+plural(-d,'day'):(d===0?'Due today':'Due in '+plural(d,'day'));
+      return '<div style="display:flex;justify-content:space-between;gap:12px;padding:3px 0"><span>'+it.name+'</span><b style="color:'+(d<=0?'#b91c1c':'#92400e')+'">'+t+'</b></div>';
+    }).join('')+(items.length>4?'<div style="padding-top:3px;color:#6b7280">+ '+(items.length-4)+' more\u2026</div>':'');
+    var el=document.createElement('div');
+    el.id='krnDueBanner';
+    el.style.cssText='position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:99999;width:min(420px,calc(100% - 24px));background:#fff;border:1px solid #fca5a5;border-left:5px solid #dc2626;border-radius:12px;box-shadow:0 12px 34px rgba(0,0,0,.22);padding:12px 14px;font-size:13px;color:#111827';
+    el.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><b>\uD83D\uDCB8 '+plural(items.length,'payment')+' pending \u2022 '+money(total)+'</b><button type="button" id="krnDueX" style="border:0;background:transparent;font-size:18px;cursor:pointer;line-height:1">\u00D7</button></div>'+rows+
+      '<div style="margin-top:8px;text-align:right"><button type="button" id="krnDueGo" class="btn primary">View payments</button></div>';
+    document.body.appendChild(el);
+    document.getElementById('krnDueX').onclick=function(){el.remove()};
+    document.getElementById('krnDueGo').onclick=function(){el.remove();openInvoicesMon()};
+    return true;
+  }
+  function tryDueBanner(){
+    if(BANNER_SHOWN)return;
+    try{if(showDueBanner())BANNER_SHOWN=true}catch(e){}
+  }
+  setTimeout(tryDueBanner,2500);setTimeout(tryDueBanner,6000);setTimeout(tryDueBanner,12000);
 
   /* =====================================================================
      PAGE SHELL
@@ -6073,7 +6107,7 @@ html[data-theme=dark] .krn-nb{box-shadow:0 0 0 2px #0b1220}
   }
 
   function alertHtml(items,ro){
-    if(!items.length)return '<div class="inv-alert ok"><b>\u2705 All clear</b><span>No pending payments for submitted bills.</span></div>';
+    if(!items.length)return '<div class="inv-alert ok"><b>\u2705 All clear</b><span>No pending payments.</span></div>';
     var groups={},order=[],total=0,bad=0;
     items.forEach(function(it){
       if(!groups[it.ym]){groups[it.ym]=[];order.push(it.ym)}
@@ -6085,7 +6119,7 @@ html[data-theme=dark] .krn-nb{box-shadow:0 0 0 2px #0b1220}
       var g=groups[ym],sum=g.reduce(function(s,it){return s+it.amount},0);
       h+='<div class="inv-agh"><span>'+esc(monthLabel(ym))+'</span><span>'+g.length+' \u2022 '+money(sum)+'</span></div>';
       g.forEach(function(it){
-        h+='<div class="inv-ar"><div class="l"><b>'+esc(it.name)+'</b><small>'+esc(it.party)+(it.party?' \u2022 ':'')+(it.kind==='inv'?'Invoice':'Monthly payment')+'</small></div>'+
+        h+='<div class="inv-ar"><div class="l"><b>'+esc(it.name)+'</b><small>'+esc(it.party)+(it.party?' \u2022 ':'')+(it.kind==='inv'?'Invoice':'Monthly payment')+(it.ns?' \u2022 Bill not submitted':'')+'</small></div>'+
            '<div class="m">'+money(it.amount)+'</div>'+
            '<div class="d">'+fmt(it.due)+chipHtml(it.due)+'</div>'+
            '<div class="a">'+(ro?'':'<button type="button" class="btn invPay" data-k="'+it.kind+'" data-a="'+esc(it.a)+'">Mark Paid</button>')+'</div></div>';
