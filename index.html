@@ -5661,7 +5661,7 @@ scan();
 .inv-tpl .t3{font-size:12.5px;font-weight:700;color:#334155}
 .inv-tpl .btn{align-self:flex-start;margin-top:6px;padding:6px 12px;font-size:12.5px}
 /* nav badge */
-.krn-nb{position:absolute;top:1px;right:1px;min-width:17px;height:17px;padding:0 4px;border-radius:99px;background:#ef4444;color:#fff;font:800 10px/17px system-ui,sans-serif;text-align:center;box-shadow:0 0 0 2px rgba(255,255,255,.9);pointer-events:none;letter-spacing:0;text-indent:0}
+button>.krn-nb,.nav .krn-nb,#mNav .krn-nb{position:absolute;top:1px;right:1px;min-width:17px;height:17px;padding:0 4px;border-radius:99px;background:#ef4444;color:#fff;font:800 10px/17px system-ui,sans-serif;text-align:center;box-shadow:0 0 0 2px rgba(255,255,255,.9);pointer-events:none;letter-spacing:0;text-indent:0}
 @media(max-width:900px){.inv-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.inv-ar{grid-template-columns:1fr auto}.inv-ar .d{grid-column:1/-1}}
 @media(max-width:760px){
   .inv-toolbar{flex-direction:column;align-items:stretch}
@@ -5694,7 +5694,7 @@ html[data-theme=dark] .inv-ar{border-bottom-color:rgba(251,146,60,.15)}
 html[data-theme=dark] .inv-tpl{background:#101a2e;border-color:#1f2e4a}
 html[data-theme=dark] .inv-tpl .t3{color:#cbd5e1}
 html[data-theme=dark] .inv-ar .l small,html[data-theme=dark] .inv-tpl small,html[data-theme=dark] .mon-gh span,html[data-theme=dark] .inv-sm{color:#8fa3bf}
-html[data-theme=dark] .krn-nb{box-shadow:0 0 0 2px #0b1220}
+html[data-theme=dark] button>.krn-nb{box-shadow:0 0 0 2px #0b1220}
 </style>
 <script id="krn-invoices-v2-script">
 (function(){
@@ -5935,13 +5935,14 @@ html[data-theme=dark] .krn-nb{box-shadow:0 0 0 2px #0b1220}
         '<th>Invoice No.</th><th>Invoice Date</th><th>Submitted On</th><th>Party / Client</th><th>GST No.</th><th>Description</th><th>GST</th><th>Amount</th><th>Status</th><th>Due / Payment</th><th>Action</th>'+
       '</tr></thead><tbody id="invBody"></tbody></table></div>';
     $('invSearch').value=F.q;$('invStatus').value=F.st;
-    $('invSearch').oninput=function(){F.q=this.value;invPaint()};
+    var __t;$('invSearch').oninput=function(){F.q=this.value;clearTimeout(__t);__t=setTimeout(invPaint,120)};
     $('invStatus').onchange=function(){F.st=this.value;invPaint()};
     $('invExport').onclick=exportInvoices;
     if($('addInvoice'))$('addInvoice').onclick=function(){openInvoiceModal(null)};
     invPaint();
   }
 
+  function setH(el,h){if(el.__h===h)return;el.__h=h;el.innerHTML=h}
   function invPaint(){
     var rows=invFiltered(),ro=readOnly(),total=0,pendAmt=0,pendN=0,recAmt=0,recN=0,nsN=0,gstSum=0;
     rows.forEach(function(r){
@@ -5949,11 +5950,11 @@ html[data-theme=dark] .krn-nb{box-shadow:0 0 0 2px #0b1220}
       if(s==='Payment Received'){recAmt+=a;recN++}else if(s==='Submitted'){pendAmt+=a;pendN++}else nsN++;
     });
     var filt=(F.q.trim()||F.st!=='all');
-    $('invCards').innerHTML=
+    setH($('invCards'),
       card('Invoices',rows.length,(filt?'Matching filter':'All invoices')+(nsN?' \u2022 '+nsN+' not submitted':''))+
       card('Total Amount',money(total),(filt?'Matching current filter':'All invoices')+(gstSum?' \u2022 incl. GST '+money(gstSum):''))+
       card('Payment Pending',money(pendAmt),plural(pendN,'invoice'))+
-      card('Paid',money(recAmt),plural(recN,'invoice'));
+      card('Paid',money(recAmt),plural(recN,'invoice')));
     var body;
     if(rows.length){
       body=rows.map(function(r){
@@ -5981,8 +5982,7 @@ html[data-theme=dark] .krn-nb{box-shadow:0 0 0 2px #0b1220}
       body='<tr><td colspan="11" class="m-nolabel m-full"><div class="empty" style="padding:28px">'+
         (list().length?'No invoices match your search.':'No invoices added yet. Click \u201C+ Add Invoice\u201D to record the first one.')+'</div></td></tr>';
     }
-    $('invBody').innerHTML=body;
-    document.querySelectorAll('.invEdit').forEach(function(b){b.onclick=function(){openInvoiceModal(Number(b.dataset.i))}});
+    if($('invBody').__h!==body){setH($('invBody'),body);document.querySelectorAll('.invEdit').forEach(function(b){b.onclick=function(){openInvoiceModal(Number(b.dataset.i))}})}
   }
 
   function exportInvoices(){
@@ -6406,148 +6406,6 @@ html[data-theme=dark] .krn-rip{border-color:rgba(125,211,252,.7);background:radi
 html[data-theme=dark] .gstno-chip{background:#13213b;border-color:#25375c;color:#bcd2ff}
 .inv-gstno{white-space:nowrap}
 </style>
-<style id="krn-holo-cursor-style">
-/* ===== Holographic glass cursor (arrow + hand) with trailing shadow ===== */
-@media (hover:hover) and (pointer:fine){
-  html.krn-hc{--krn-c-arrow:none!important;--krn-c-point:none!important}
-  #krnHC{position:fixed;left:0;top:0;width:0;height:0;z-index:2147483647;pointer-events:none;contain:layout style}
-  #krnHC .hc{position:absolute;left:0;top:0;width:28px;height:28px;margin:-3.5px 0 0 -3.5px;will-change:transform;pointer-events:none;opacity:0;transition:opacity .18s ease}
-  #krnHC.on .hc{opacity:1}
-  #krnHC .hc svg{display:block;width:100%;height:100%;overflow:visible}
-  #krnHC .hc-main .l{position:absolute;inset:0;transform-origin:3.5px 2.2px;transition:transform .24s cubic-bezier(.34,1.56,.64,1),opacity .14s ease}
-  #krnHC .hc-main .h{opacity:0;transform:scale(.55) rotate(-14deg)}
-  #krnHC.hot .hc-main .a{opacity:0;transform:scale(.55) rotate(10deg)}
-  #krnHC.hot .hc-main .h{opacity:1;transform:scale(1.08) rotate(-4deg)}
-  #krnHC.hot .hc-main .h svg{filter:drop-shadow(0 0 5px rgba(168,120,255,.65))}
-  #krnHC.down.hot .hc-main .h{transform:scale(.9) rotate(0deg)}
-  #krnHC.down .hc-main .a{transform:scale(.9)}
-  #krnHC .hc-shadow svg{filter:blur(3.5px)}
-  #krnHC .hc-shadow{margin:0 0 0 0}
-  #krnHC .hc-tr svg{filter:blur(.8px)}
-  #krnHC.hide .hc{opacity:0!important}
-}
-@media (hover:none),(pointer:coarse){#krnHC{display:none!important}}
-@media print{#krnHC{display:none!important}}
-</style>
-<script id="krn-holo-cursor-script">
-(function(){
-  'use strict';
-  if(window.__krnHoloCursor)return;
-  if(!window.matchMedia||!matchMedia('(hover:hover) and (pointer:fine)').matches)return;
-  window.__krnHoloCursor=true;
-  var reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
-
-  var P='M4 2.4 L4 21.2 L8.7 16.8 L12.1 24.5 L15.7 23 L12.3 15.4 L18.9 15.2 Z';
-  var H='M8.6 4.4 C8.6 3 9.6 2 10.9 2 C12.2 2 13.2 3 13.2 4.4 L13.2 10.6 C13.5 10.4 13.9 10.3 14.3 10.3 C15.2 10.3 16 10.9 16.2 11.7 C16.5 11.4 17 11.2 17.5 11.2 C18.4 11.2 19.2 11.8 19.4 12.6 C19.7 12.4 20.1 12.3 20.5 12.3 C21.6 12.3 22.4 13.1 22.4 14.2 L22.4 19.6 C22.4 22.8 20.4 25 17.2 25 L14.2 25 C11.6 25 10.1 23.9 8.6 22 L4.6 16.8 C3.9 16 4 14.9 4.7 14.2 C5.4 13.5 6.5 13.5 7.3 14.2 L8.6 15.4 Z';
-  var HT='translate(-6.9 .4)';
-  /* apply scale+translate to every coordinate pair of a path (used for the see-through middle) */
-  function xf(d,sc,tx,ty){return d.replace(/(-?\d*\.?\d+)\s+(-?\d*\.?\d+)/g,function(m,x,y){return (+x*sc+tx).toFixed(2)+' '+(+y*sc+ty).toFixed(2)})}
-  var PI=xf(P,.7,2.9,4), HI=xf(H,.74,3.6,3.7);
-
-  var DEFS=
-   '<defs>'+
-    '<linearGradient id="hcBody" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#34d3b5"/><stop offset=".45" stop-color="#5b6cf0"/><stop offset="1" stop-color="#b24fe0"/></linearGradient>'+
-    '<linearGradient id="hcSide" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0f766e"/><stop offset=".55" stop-color="#4338ca"/><stop offset="1" stop-color="#6b21a8"/></linearGradient>'+
-    '<linearGradient id="hcRim" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e0fbff" stop-opacity=".95"/><stop offset=".5" stop-color="#c7b8ff" stop-opacity=".6"/><stop offset="1" stop-color="#ffd1f7" stop-opacity=".95"/></linearGradient>'+
-    '<linearGradient id="hcGlass" x1=".1" y1="0" x2=".9" y2="1"><stop offset="0" stop-color="#bff3ff" stop-opacity=".30"/><stop offset=".55" stop-color="#e9d5ff" stop-opacity=".10"/><stop offset="1" stop-color="#f9a8e8" stop-opacity=".22"/></linearGradient>'+
-    '<mask id="hcHoleA" maskUnits="userSpaceOnUse" x="-12" y="-12" width="70" height="70"><rect x="-12" y="-12" width="70" height="70" fill="#fff"/><path d="'+PI+'" fill="#000"/></mask>'+
-    '<mask id="hcHoleH" maskUnits="userSpaceOnUse" x="-20" y="-12" width="70" height="70"><rect x="-20" y="-12" width="70" height="70" fill="#fff"/><path d="'+HI+'" fill="#000"/></mask>'+
-   '</defs>';
-  var ARROW=
-   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">'+DEFS+
-   '<g mask="url(#hcHoleA)">'+
-    '<path d="'+P+'" transform="translate(1.7 2.1)" fill="url(#hcSide)" stroke="#2a1458" stroke-width="1.1" stroke-linejoin="round"/>'+
-    '<path d="'+P+'" transform="translate(.85 1.05)" fill="url(#hcSide)" stroke="#3b1d7a" stroke-width=".9" stroke-linejoin="round"/>'+
-    '<path d="'+P+'" fill="url(#hcBody)" stroke="url(#hcRim)" stroke-width="1.15" stroke-linejoin="round"/>'+
-   '</g>'+
-   /* glass middle: only a faint tint + bright inner edge, background shows through */
-   '<path d="'+PI+'" fill="url(#hcGlass)" stroke="rgba(255,255,255,.8)" stroke-width=".7" stroke-linejoin="round"/>'+
-   '<path d="M6.2 5.8 L6.2 12.4" stroke="#fff" stroke-opacity=".8" stroke-width="1" stroke-linecap="round" fill="none"/>'+
-   '</svg>';
-  var HAND=
-   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><g transform="'+HT+'">'+
-   '<g mask="url(#hcHoleH)">'+
-    '<path d="'+H+'" transform="translate(1.6 2)" fill="url(#hcSide)" stroke="#2a1458" stroke-width="1.1" stroke-linejoin="round"/>'+
-    '<path d="'+H+'" transform="translate(.8 1)" fill="url(#hcSide)" stroke="#3b1d7a" stroke-width=".9" stroke-linejoin="round"/>'+
-    '<path d="'+H+'" fill="url(#hcBody)" stroke="url(#hcRim)" stroke-width="1.15" stroke-linejoin="round"/>'+
-   '</g>'+
-   '<path d="'+HI+'" fill="url(#hcGlass)" stroke="rgba(255,255,255,.8)" stroke-width=".7" stroke-linejoin="round"/>'+
-   '<path d="M16.2 12.4 L16.2 17.2 M19.4 13.4 L19.4 17.2" stroke="#fff" stroke-opacity=".5" stroke-width=".6" stroke-linecap="round" fill="none"/>'+
-   '<path d="M10.2 5 L10.2 10.6" stroke="#fff" stroke-opacity=".85" stroke-width="1" stroke-linecap="round" fill="none"/>'+
-   '</g></svg>';
-  /* shadow / trail shapes are rings too (so no dark blob shows through the glass middle) */
-  function sil(fill,hand){
-    var d=hand?(H+' '+HI):(P+' '+PI),t=hand?'translate(-5.9 2)':'translate(1 1.6)';
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><path d="'+d+'" fill-rule="evenodd" transform="'+t+'" fill="'+fill+'"/></svg>';
-  }
-
-  var root=document.createElement('div');root.id='krnHC';
-  var nodes=[],mainNode=null;
-  function add(cls,html,lerp,col){
-    var d=document.createElement('div');d.className='hc '+cls;d.innerHTML=html;
-    root.appendChild(d);
-    var n={el:d,k:lerp,x:-100,y:-100,col:col,main:cls==='hc-main'};nodes.push(n);if(n.main)mainNode=n;return d;
-  }
-  var trailCols=['#8b6bff','#c07bff','#6ee7d8'];
-  var trailLerp=[.5,.38,.28];
-  add('hc-shadow',sil('rgba(40,18,95,.55)',false),.22,'rgba(40,18,95,.55)');
-  for(var i=trailCols.length-1;i>=0;i--)add('hc-tr',sil(trailCols[i],false),trailLerp[i],trailCols[i]);
-  add('hc-main','<div class="l a">'+ARROW+'</div><div class="l h">'+HAND+'</div>',1,null);
-  document.documentElement.appendChild(root);
-  document.documentElement.classList.add('krn-hc');
-
-  var mx=-100,my=-100,raf=0,seen=false,lastx=0,lasty=0,isHot=false,lastT=null;
-  var trailEls=root.querySelectorAll('.hc-tr'),shadowSvg=nodes[0].el.firstChild;
-
-  function setShape(hand){
-    for(var i=0;i<nodes.length;i++){var n=nodes[i];if(!n.main)n.el.innerHTML=sil(n.col,hand)}
-    shadowSvg=nodes[0].el.firstChild;
-  }
-  var NATIVE='input:not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]):not([type=range]):not([type=file]):not([type=color]),textarea,[contenteditable=""],[contenteditable="true"],canvas,:disabled';
-  var HOT='a,button,select,summary,label,[role=button],[onclick],.btn,[data-page],.ledgerBtn,th,.krn-sortable,.inv-tab,.inv-strip,input[type=checkbox],input[type=radio],input[type=button],input[type=submit],input[type=range],input[type=file],input[type=color],.nav button,#mNav button';
-  function probe(t){
-    var native=false,hot=false;
-    try{native=!!(t&&t.closest&&t.closest(NATIVE));hot=!native&&!!(t&&t.closest&&t.closest(HOT))}catch(e){}
-    root.classList.toggle('hide',native);
-    if(hot!==isHot){isHot=hot;root.classList.toggle('hot',hot);setShape(hot)}
-  }
-
-  function tick(){
-    raf=0;var busy=false;
-    var vx=mx-lastx,vy=my-lasty;lastx=mx;lasty=my;
-    var speed=Math.min(1,Math.sqrt(vx*vx+vy*vy)/40);
-    if(lastT){probe(lastT);lastT=null}
-    for(var i=0;i<nodes.length;i++){
-      var n=nodes[i];if(n.main)continue;
-      n.x+=(mx-n.x)*n.k;n.y+=(my-n.y)*n.k;
-      if(Math.abs(mx-n.x)>.2||Math.abs(my-n.y)>.2)busy=true;
-      n.el.style.transform='translate3d('+n.x.toFixed(1)+'px,'+n.y.toFixed(1)+'px,0)';
-    }
-    if(!reduce){
-      if(shadowSvg)shadowSvg.style.opacity=(.3+speed*.5).toFixed(2);
-      var hide=root.classList.contains('hide');
-      for(var j=0;j<trailEls.length;j++)trailEls[j].style.opacity=hide?0:(speed*(.42-j*.1)).toFixed(3);
-    }
-    if(busy||speed>.01)raf=requestAnimationFrame(tick);
-    else{for(var q=0;q<trailEls.length;q++)trailEls[q].style.opacity=0}
-  }
-  function kick(){if(!raf)raf=requestAnimationFrame(tick)}
-
-  /* the cursor itself is moved inside the event, so it never trails the real mouse by a frame */
-  document.addEventListener('mousemove',function(e){
-    mx=e.clientX;my=e.clientY;
-    mainNode.el.style.transform='translate3d('+mx+'px,'+my+'px,0)';
-    if(!seen){seen=true;for(var i=0;i<nodes.length;i++){nodes[i].x=mx;nodes[i].y=my}lastx=mx;lasty=my;root.classList.add('on')}
-    lastT=e.target;kick();
-  },{passive:true,capture:true});
-  document.addEventListener('mousedown',function(){root.classList.add('down')},true);
-  document.addEventListener('mouseup',function(){root.classList.remove('down')},true);
-  document.addEventListener('mouseleave',function(){root.classList.remove('on')});
-  document.addEventListener('mouseenter',function(){if(seen)root.classList.add('on')});
-  window.addEventListener('blur',function(){root.classList.remove('on')});
-  window.addEventListener('focus',function(){if(seen)root.classList.add('on')});
-})();
-</script>
 <script id="krn-audit-pdf-script">
 (function(){
 if(window.__krnAudit)return;window.__krnAudit=1;
@@ -6669,4 +6527,19 @@ document.addEventListener('change',function(e){
   r.readAsDataURL(file)},true);
 })();
 </script>
+
+<style id="krn-single-cursor-fix">
+/* ONE cursor only: real OS cursor image (holographic design). No JS overlay => no double cursor, no lag. */
+@media (hover:hover) and (pointer:fine){
+  html,html[data-theme=dark]{--krn-c-arrow:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%2232%22%20height=%2232%22%20viewBox=%220%200%2032%2032%22%3E%3Cdefs%3E%3ClinearGradient%20id=%22ba%22%20x1=%220%22%20y1=%220%22%20x2=%221%22%20y2=%221%22%3E%3Cstop%20offset=%220%22%20stop-color=%22%2334d3b5%22/%3E%3Cstop%20offset=%22.45%22%20stop-color=%22%235b6cf0%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23b24fe0%22/%3E%3C/linearGradient%3E%3ClinearGradient%20id=%22sa%22%20x1=%220%22%20y1=%220%22%20x2=%221%22%20y2=%221%22%3E%3Cstop%20offset=%220%22%20stop-color=%22%230f766e%22/%3E%3Cstop%20offset=%22.55%22%20stop-color=%22%234338ca%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%236b21a8%22/%3E%3C/linearGradient%3E%3ClinearGradient%20id=%22ra%22%20x1=%220%22%20y1=%220%22%20x2=%221%22%20y2=%221%22%3E%3Cstop%20offset=%220%22%20stop-color=%22%23fff%22/%3E%3Cstop%20offset=%22.5%22%20stop-color=%22%23d9ccff%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23ffd1f7%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Cg%20%3E%3Cpath%20d=%22M4%202.4%20L4%2021.2%20L8.7%2016.8%20L12.1%2024.5%20L15.7%2023%20L12.3%2015.4%20L18.9%2015.2%20Z%20M5.70%205.68%20L5.70%2018.84%20L8.99%2015.76%20L11.37%2021.15%20L13.89%2020.10%20L11.51%2014.78%20L16.13%2014.64%20Z%22%20fill-rule=%22evenodd%22%20transform=%22translate%281.4%201.8%29%22%20fill=%22url%28%23sa%29%22%20stroke=%22%232a1458%22%20stroke-width=%221%22/%3E%3Cpath%20d=%22M4%202.4%20L4%2021.2%20L8.7%2016.8%20L12.1%2024.5%20L15.7%2023%20L12.3%2015.4%20L18.9%2015.2%20Z%20M5.70%205.68%20L5.70%2018.84%20L8.99%2015.76%20L11.37%2021.15%20L13.89%2020.10%20L11.51%2014.78%20L16.13%2014.64%20Z%22%20fill-rule=%22evenodd%22%20fill=%22url%28%23ba%29%22%20stroke=%22url%28%23ra%29%22%20stroke-width=%221.1%22%20stroke-linejoin=%22round%22/%3E%3C/g%3E%3C/svg%3E") 4 2,auto;--krn-c-point:url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%2232%22%20height=%2232%22%20viewBox=%220%200%2032%2032%22%3E%3Cdefs%3E%3ClinearGradient%20id=%22bh%22%20x1=%220%22%20y1=%220%22%20x2=%221%22%20y2=%221%22%3E%3Cstop%20offset=%220%22%20stop-color=%22%2334d3b5%22/%3E%3Cstop%20offset=%22.45%22%20stop-color=%22%235b6cf0%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23b24fe0%22/%3E%3C/linearGradient%3E%3ClinearGradient%20id=%22sh%22%20x1=%220%22%20y1=%220%22%20x2=%221%22%20y2=%221%22%3E%3Cstop%20offset=%220%22%20stop-color=%22%230f766e%22/%3E%3Cstop%20offset=%22.55%22%20stop-color=%22%234338ca%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%236b21a8%22/%3E%3C/linearGradient%3E%3ClinearGradient%20id=%22rh%22%20x1=%220%22%20y1=%220%22%20x2=%221%22%20y2=%221%22%3E%3Cstop%20offset=%220%22%20stop-color=%22%23fff%22/%3E%3Cstop%20offset=%22.5%22%20stop-color=%22%23d9ccff%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23ffd1f7%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Cg%20transform=%22translate%28-6.9%20.4%29%22%3E%3Cpath%20d=%22M8.6%204.4%20C8.6%203%209.6%202%2010.9%202%20C12.2%202%2013.2%203%2013.2%204.4%20L13.2%2010.6%20C13.5%2010.4%2013.9%2010.3%2014.3%2010.3%20C15.2%2010.3%2016%2010.9%2016.2%2011.7%20C16.5%2011.4%2017%2011.2%2017.5%2011.2%20C18.4%2011.2%2019.2%2011.8%2019.4%2012.6%20C19.7%2012.4%2020.1%2012.3%2020.5%2012.3%20C21.6%2012.3%2022.4%2013.1%2022.4%2014.2%20L22.4%2019.6%20C22.4%2022.8%2020.4%2025%2017.2%2025%20L14.2%2025%20C11.6%2025%2010.1%2023.9%208.6%2022%20L4.6%2016.8%20C3.9%2016%204%2014.9%204.7%2014.2%20C5.4%2013.5%206.5%2013.5%207.3%2014.2%20L8.6%2015.4%20Z%20M9.96%206.96%20C9.96%205.92%2010.70%205.18%2011.67%205.18%20C12.63%205.18%2013.37%205.92%2013.37%206.96%20L13.37%2011.54%20C13.59%2011.40%2013.89%2011.32%2014.18%2011.32%20C14.85%2011.32%2015.44%2011.77%2015.59%2012.36%20C15.81%2012.14%2016.18%2011.99%2016.55%2011.99%20C17.22%2011.99%2017.81%2012.43%2017.96%2013.02%20C18.18%2012.88%2018.47%2012.80%2018.77%2012.80%20C19.58%2012.80%2020.18%2013.39%2020.18%2014.21%20L20.18%2018.20%20C20.18%2020.57%2018.70%2022.20%2016.33%2022.20%20L14.11%2022.20%20C12.18%2022.20%2011.07%2021.39%209.96%2019.98%20L7.00%2016.13%20C6.49%2015.54%206.56%2014.73%207.08%2014.21%20C7.60%2013.69%208.41%2013.69%209.00%2014.21%20L9.96%2015.10%20Z%22%20fill-rule=%22evenodd%22%20transform=%22translate%281.4%201.8%29%22%20fill=%22url%28%23sh%29%22%20stroke=%22%232a1458%22%20stroke-width=%221%22/%3E%3Cpath%20d=%22M8.6%204.4%20C8.6%203%209.6%202%2010.9%202%20C12.2%202%2013.2%203%2013.2%204.4%20L13.2%2010.6%20C13.5%2010.4%2013.9%2010.3%2014.3%2010.3%20C15.2%2010.3%2016%2010.9%2016.2%2011.7%20C16.5%2011.4%2017%2011.2%2017.5%2011.2%20C18.4%2011.2%2019.2%2011.8%2019.4%2012.6%20C19.7%2012.4%2020.1%2012.3%2020.5%2012.3%20C21.6%2012.3%2022.4%2013.1%2022.4%2014.2%20L22.4%2019.6%20C22.4%2022.8%2020.4%2025%2017.2%2025%20L14.2%2025%20C11.6%2025%2010.1%2023.9%208.6%2022%20L4.6%2016.8%20C3.9%2016%204%2014.9%204.7%2014.2%20C5.4%2013.5%206.5%2013.5%207.3%2014.2%20L8.6%2015.4%20Z%20M9.96%206.96%20C9.96%205.92%2010.70%205.18%2011.67%205.18%20C12.63%205.18%2013.37%205.92%2013.37%206.96%20L13.37%2011.54%20C13.59%2011.40%2013.89%2011.32%2014.18%2011.32%20C14.85%2011.32%2015.44%2011.77%2015.59%2012.36%20C15.81%2012.14%2016.18%2011.99%2016.55%2011.99%20C17.22%2011.99%2017.81%2012.43%2017.96%2013.02%20C18.18%2012.88%2018.47%2012.80%2018.77%2012.80%20C19.58%2012.80%2020.18%2013.39%2020.18%2014.21%20L20.18%2018.20%20C20.18%2020.57%2018.70%2022.20%2016.33%2022.20%20L14.11%2022.20%20C12.18%2022.20%2011.07%2021.39%209.96%2019.98%20L7.00%2016.13%20C6.49%2015.54%206.56%2014.73%207.08%2014.21%20C7.60%2013.69%208.41%2013.69%209.00%2014.21%20L9.96%2015.10%20Z%22%20fill-rule=%22evenodd%22%20fill=%22url%28%23bh%29%22%20stroke=%22url%28%23rh%29%22%20stroke-width=%221.1%22%20stroke-linejoin=%22round%22/%3E%3C/g%3E%3C/svg%3E") 4 3,pointer}
+}
+/* ---- anti-flicker + lighter rendering ---- */
+#krnGlow{display:none!important}
+.panel,.card,.tablewrap,.top,.toolbar,.dashboard-filter-summary,.filter-summary-card{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+.card:hover,.kpi:hover,.stat-card:hover,.summary-card:hover,.inv-cards .card:hover{transform:none!important}
+tbody tr:hover{transform:none!important}
+tbody tr,.card,.btn,.quick-filter button{transition-property:background-color,border-color,box-shadow,color!important}
+.btn:hover,.quick-filter button:hover{transform:none!important}
+#invBody,#invCards{contain:layout paint}
+</style>
 </body></html>
