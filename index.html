@@ -1213,8 +1213,8 @@ function downloadExcelWorkbook(filename,template=false){let xml=buildWorkbook();
 function buildEmptyTemplate(){return `<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">${sheetXML('Employees',['Emp ID','Employee','Designation','Opening Balance','Paid Amount','Advance Limit'],[])}${sheetXML('Advances',['Advance ID','Emp ID','Date','Amount','Remarks'],[])}${sheetXML('Bills',['Bill ID','Emp ID','Bill Date','Submission Date','Category','Vendor','Invoice','Amount','Status','Description','Bill Type'],[])}${sheetXML('Invoices',krnInvHead(),[])}${sheetXML('Monthly Payments',krnMonHead(),[])}${sheetXML('Instructions',['Sheet','Column','What to enter'],krnInstrRows())}</Workbook>`}
 function downloadExcelSheet(kind){let rows=[];let name='';if(kind==='employees'){name='Employee_Master';rows=[['Emp ID','Employee','Designation','Opening Balance','Paid Amount','Advance','Approved Bills','Net Balance','Status','Advance Limit'],...db.employees.map(e=>{const t=totals(e.id);return[e.id,e.name,e.designation||'',t.opening,t.paid,t.adv,t.bills,t.balance,status(t),e.advanceLimit||'']})]}else if(kind==='advances'){name='Advance_Register';rows=[['Advance ID','Emp ID','Employee','Date','Amount','Remarks'],...db.advances.map(x=>[x.id,x.empId,emp(x.empId)?.name||'',x.date,x.amount,x.remarks||''])]}else if(kind==='bills'){name='Bill_Register';rows=[['Bill ID','Emp ID','Employee','Bill Date','Submission Date','Category','Vendor','Invoice','Amount','Status','Description','Bill Type'],...db.bills.map(x=>[x.id,x.empId,emp(x.empId)?.name||'',x.date,x.submissionDate||'',x.category||'',x.vendor||'',x.invoice||'',x.amount,x.status||'Pending',x.description||'',billTypeOf(x)])]}else if(kind==='invoices'){name='Invoice_Register';rows=[krnInvHead(),...krnInvRows()]}else if(kind==='monthly'){name='Monthly_Payments';rows=[krnMonHead(),...krnMonRows()]}else if(kind==='settlements'){name='Settlement_Register';rows=[['Settlement ID','Emp ID','Employee','Date','Type','Amount','Remark'],...(db.settlements||[]).map(x=>[x.id,x.empId,emp(x.empId)?.name||'',x.date,x.type,x.amount,x.remark||''])]}else if(kind==='dashboard'){name='Dashboard';rows=[['Metric','Value'],['Employees',db.employees.length],['Total Advances',db.advances.reduce((s,x)=>s+Number(x.amount||0),0)],['Approved Bills',db.bills.filter(x=>x.status==='Approved').reduce((s,x)=>s+Number(x.amount||0),0)],['Pending Bills',db.bills.filter(x=>x.status==='Pending').length],['Pending Bill Amount',db.bills.filter(x=>x.status==='Pending').reduce((s,x)=>s+Number(x.amount||0),0)],['Paid Amount',db.employees.reduce((s,e)=>s+Number(e.openingPaid||0),0)]]}else{name='Full_Ledger';rows=[['Emp ID','Employee','Date','Type','Reference','Description','Advance','Bill','Paid','Running Balance'],...db.employees.flatMap(e=>{const t=totals(e.id),r=[];let b=t.opening;r.push([e.id,e.name,'','OPENING','','Opening Balance','','','',b]);if(t.paid){b+=(t.opening<0?t.paid:-t.paid);r.push([e.id,e.name,'','PAYMENT','','Paid Amount','','',t.paid,b])}db.advances.filter(x=>x.empId===e.id).forEach(x=>{b+=Number(x.amount||0);r.push([e.id,e.name,x.date,'ADVANCE',x.id,'Advance Given',x.amount,'','',b])});db.bills.filter(x=>x.empId===e.id).forEach(x=>{if(x.status==='Approved'){b-=Number(x.amount||0);r.push([e.id,e.name,x.date,'BILL',x.id,x.description||x.category,'',x.amount,'',b])}else r.push([e.id,e.name,x.date,'BILL',x.id,`${x.description||x.category} (${x.status||'Pending'} - NOT COUNTING)`,'',x.amount,'',''])});return r})];rows=krnSplitLedger(rows)};const xml=`<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">${sheetXML(name,rows[0],rows.slice(1))}</Workbook>`;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([xml],{type:'application/vnd.ms-excel'}));a.download=name+'.xls';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 /* ===== Invoices + Monthly Payments in Reports / Bulk Upload ===== */
-function krnInvHead(){return['Invoice No','Party / Client','GST No','Invoice Date','Submitted On','Due Date','Taxable Amount','GST %','Description','Status','Payment Date']}
-function krnInvRows(){return(Array.isArray(db.invoices)?db.invoices:[]).map(x=>{const tot=Number(x.amount||0),gst=Number(x.gstAmt||0),base=(x.baseAmt!=null&&x.baseAmt!=='')?Number(x.baseAmt):Math.round((tot-gst)*100)/100;const st=x.status==='Payment Received'?'Payment Received':(x.status==='Not Submitted'?'Not Submitted':'Submitted');return[x.no||'',x.party||'',x.gstNo||'',x.date||'',st==='Not Submitted'?'':(x.submittedOn||''),x.dueDate||'',base,Number(x.gstRate||0),x.desc||'',st,st==='Payment Received'?(x.paidOn||''):'']})}
+function krnInvHead(){return['Invoice No','Party / Client','GST No','Invoice Date','Submitted On','Due Date','Taxable Amount','GST %','Description','Status','Paid On']}
+function krnInvRows(){return(Array.isArray(db.invoices)?db.invoices:[]).map(x=>{const tot=Number(x.amount||0),gst=Number(x.gstAmt||0),base=(x.baseAmt!=null&&x.baseAmt!=='')?Number(x.baseAmt):Math.round((tot-gst)*100)/100;const st=x.status==='Payment Received'?'Payment Received':(x.status==='Not Submitted'?'Not Submitted':'Submitted');return[x.no||'',x.party||'',x.gstNo||'',x.date||'',st==='Not Submitted'?'':(x.submittedOn||''),x.dueDate||'',base,Number(x.gstRate||0),x.desc||'',st==='Payment Received'?'Paid':st,st==='Payment Received'?(x.paidOn||''):'']})}
 function krnMonHead(){return['Payment ID','Bill Type','Name / Location','Pay To (Party)','GST No','Taxable Amount','GST %','Pay By Day','Starting Month','Last Month','Notes']}
 function krnMonRows(){return(Array.isArray(db.monthly)?db.monthly:[]).map(t=>{const ty=t.type||'Other';let nm=String(t.name||'');if(ty!=='Other'){if(nm.indexOf(ty+' \u2014 ')===0)nm=nm.slice((ty+' \u2014 ').length);else if(nm===ty)nm=''}const tot=Number(t.amount||0),rate=Number(t.gstRate||0),gst=(t.gstAmt!=null&&t.gstAmt!=='')?Number(t.gstAmt):0,base=(t.baseAmt!=null&&t.baseAmt!=='')?Number(t.baseAmt):Math.round((tot-gst)*100)/100;return[t.id||'',ty,nm,t.party||'',t.gstNo||'',base,rate,Number(t.dueDay||0),t.startMonth||'',t.endMonth||'',t.notes||'']})}
 function krnInstrRows(){return[
@@ -1222,7 +1222,7 @@ function krnInstrRows(){return[
 ['Invoices','GST No','15-character GSTIN of the party (optional).'],
 ['Invoices','GST %','0, 5, 12, 18, 28 or any custom % (blank = 0). GST amount and total are calculated automatically.'],
 ['Invoices','Invoice Date, Submitted On, Due Date, Payment Date','Use YYYY-MM-DD (e.g. 2026-10-23) or DD-MM-YYYY.'],
-['Invoices','Status','Not Submitted, Submitted (payment pending) or Payment Received. Blank = Submitted.'],
+['Invoices','Status','Not Submitted, Submitted (payment pending) or Paid. Blank = Submitted.'],
 ['Monthly Payments','Payment ID','Leave blank for a new payment. Keep the same ID to update an existing one.'],
 ['Monthly Payments','Bill Type','Rent, Electricity, WiFi / Internet, Water, Mobile / Phone or Other.'],
 ['Monthly Payments','Name / Location','Optional (e.g. Office, Godown). Required when Bill Type is Other.'],
@@ -5785,7 +5785,7 @@ html[data-theme=dark] .krn-nb{box-shadow:0 0 0 2px #0b1220}
   function markPaid(kind,a){
     if(kind==='inv'){
       var x=list()[+a];
-      if(!x||!confirm('Mark invoice '+x.no+' as payment received?'))return;
+      if(!x||!confirm('Mark invoice '+x.no+' as paid?'))return;
       x.status='Payment Received';x.paidOn=today();
     }else{
       var p=String(a).split('|'),t=mlist()[+p[0]];
@@ -5925,7 +5925,7 @@ html[data-theme=dark] .krn-nb{box-shadow:0 0 0 2px #0b1220}
         '<input class="search" id="invSearch" placeholder="Search invoice no / party / GST no / description...">'+
         '<select id="invStatus" aria-label="Status filter">'+
           '<option value="all">All status</option><option value="notsub">Not submitted</option>'+
-          '<option value="pending">Payment pending</option><option value="overdue">Overdue</option><option value="received">Payment received</option>'+
+          '<option value="pending">Payment pending</option><option value="overdue">Overdue</option><option value="received">Paid</option>'+
         '</select>'+
         '<button type="button" class="btn" id="invExport">\u2B07 Export CSV</button>'+
         (ro?'':'<button type="button" class="btn primary" id="addInvoice">+ Add Invoice</button>')+
@@ -5953,7 +5953,7 @@ html[data-theme=dark] .krn-nb{box-shadow:0 0 0 2px #0b1220}
       card('Invoices',rows.length,(filt?'Matching filter':'All invoices')+(nsN?' \u2022 '+nsN+' not submitted':''))+
       card('Total Amount',money(total),(filt?'Matching current filter':'All invoices')+(gstSum?' \u2022 incl. GST '+money(gstSum):''))+
       card('Payment Pending',money(pendAmt),plural(pendN,'invoice'))+
-      card('Payment Received',money(recAmt),plural(recN,'invoice'));
+      card('Paid',money(recAmt),plural(recN,'invoice'));
     var body;
     if(rows.length){
       body=rows.map(function(r){
@@ -5989,7 +5989,7 @@ html[data-theme=dark] .krn-nb{box-shadow:0 0 0 2px #0b1220}
     var rows=invFiltered().map(function(r){return r.x});
     download('Invoices',['Invoice No','Invoice Date','Submitted On','Due Date','Party / Client','GST No','Description','Taxable Amount','GST %','GST Amount','Total Amount','Status','Payment Date'],
       rows.map(function(x){var st=statusOf(x),tot=Number(x.amount||0),gst=Number(x.gstAmt||0),base=(x.baseAmt!=null&&x.baseAmt!=='')?Number(x.baseAmt):Math.round((tot-gst)*100)/100;
-        return [csvCell(x.no,true),csvCell(x.date||'',false),csvCell(st==='Not Submitted'?'':(x.submittedOn||''),false),csvCell(x.dueDate||'',false),csvCell(x.party,true),csvCell(x.gstNo||'',true),csvCell(x.desc||'',true),csvCell(base,false),csvCell(Number(x.gstRate||0),false),csvCell(gst,false),csvCell(tot,false),csvCell(st,false),csvCell(st==='Payment Received'?(x.paidOn||''):'',false)]}));
+        return [csvCell(x.no,true),csvCell(x.date||'',false),csvCell(st==='Not Submitted'?'':(x.submittedOn||''),false),csvCell(x.dueDate||'',false),csvCell(x.party,true),csvCell(x.gstNo||'',true),csvCell(x.desc||'',true),csvCell(base,false),csvCell(Number(x.gstRate||0),false),csvCell(gst,false),csvCell(tot,false),csvCell(st==='Payment Received'?'Paid':st,false),csvCell(st==='Payment Received'?(x.paidOn||''):'',false)]}));
   }
 
   function partyGst(name){
@@ -6029,8 +6029,8 @@ html[data-theme=dark] .krn-nb{box-shadow:0 0 0 2px #0b1220}
         '<div class="field"><label>Status</label><select id="inv_status">'+
           '<option value="Not Submitted"'+(s==='Not Submitted'?' selected':'')+'>Not submitted yet</option>'+
           '<option value="Submitted"'+(s==='Submitted'?' selected':'')+'>Submitted (payment pending)</option>'+
-          '<option value="Payment Received"'+(s==='Payment Received'?' selected':'')+'>Payment Received</option></select></div>'+
-        '<div class="field" id="inv_paid_wrap"'+(s==='Payment Received'?'':' style="display:none"')+'><label>Payment Received On</label><input id="inv_paid" type="date" value="'+(x&&x.paidOn?esc(x.paidOn):(s==='Payment Received'?today():''))+'"></div>'+
+          '<option value="Payment Received"'+(s==='Payment Received'?' selected':'')+'>Paid</option></select></div>'+
+        '<div class="field" id="inv_paid_wrap"'+(s==='Payment Received'?'':' style="display:none"')+'><label>Paid On</label><input id="inv_paid" type="date" value="'+(x&&x.paidOn?esc(x.paidOn):(s==='Payment Received'?today():''))+'"></div>'+
         '<div class="field wide"><label>Description / Remarks</label><textarea id="inv_desc" rows="3" placeholder="Work / project / PO reference, notes...">'+(x?esc(x.desc):'')+'</textarea></div>'+
       '</div>'+
       '<datalist id="invPartyList">'+parties().map(function(p){return '<option value="'+esc(p)+'"></option>'}).join('')+'</datalist>'+
@@ -6546,6 +6546,127 @@ html[data-theme=dark] .gstno-chip{background:#13213b;border-color:#25375c;color:
   document.addEventListener('mouseenter',function(){if(seen)root.classList.add('on')});
   window.addEventListener('blur',function(){root.classList.remove('on')});
   window.addEventListener('focus',function(){if(seen)root.classList.add('on')});
+})();
+</script>
+<script id="krn-audit-pdf-script">
+(function(){
+if(window.__krnAudit)return;window.__krnAudit=1;
+var MAX=3000,snap,last;
+function flat(o,p,out,d){if(o!==null&&typeof o==='object'&&d<4){Object.keys(o).forEach(function(k){flat(o[k],p?p+'.'+k:k,out,d+1)})}else out[p]=o;return out}
+function take(){var m={};Object.keys(db||{}).forEach(function(c){if(c==='audit'||!Array.isArray(db[c]))return;db[c].forEach(function(x,i){if(x&&typeof x==='object')m[c+'|'+(x.id||x.no||x.name||i)]=flat(x,'',{},0)})});return m}
+function who(){try{return(cloudUser&&cloudUser.email)||'local'}catch(e){return'local'}}
+function nm2(f){var e=f.empId&&emp(f.empId);return f.name||f.party||(e&&e.name)||f.vendor||''}
+function sh(v){v=String(v==null?'':v);return v.length>28?v.slice(0,28)+'…':v}
+function push(L){db.audit=(db.audit||[]).concat(L).slice(-MAX)}
+function run(){
+  var cur=take(),ev=[],t=new Date().toISOString(),u=who();
+  function add(a,k,f,d){var p=k.split('|');ev.push({t:t,u:u,a:a,c:p[0],k:p.slice(1).join('|'),n:nm2(f),d:d})}
+  Object.keys(cur).forEach(function(k){var a=snap[k],b=cur[k];
+    if(!a){add('Added',k,b,['amount','status','date'].filter(function(f){return b[f]!=null&&b[f]!==''}).map(function(f){return f+': '+sh(b[f])}).join(', '));return}
+    var ch=[];Object.keys(b).concat(Object.keys(a)).forEach(function(f){if(ch.indexOf(f)<0&&String(a[f])!==String(b[f]))ch.push(f)});
+    if(ch.length)add('Edited',k,b,ch.slice(0,5).map(function(f){return f+': '+sh(a[f])+' → '+sh(b[f])}).join('; ')+(ch.length>5?' (+'+(ch.length-5)+' more)':''))});
+  Object.keys(snap).forEach(function(k){if(!cur[k])add('Deleted',k,snap[k],['amount','status','date'].filter(function(f){return snap[k][f]!=null&&snap[k][f]!==''}).map(function(f){return f+': '+sh(snap[k][f])}).join(', '))});
+  if(ev.length>80)ev=[{t:t,u:u,a:'Bulk change',c:'',k:'',n:'',d:ev.length+' records changed in one save'}];
+  if(ev.length)push(ev);
+}
+snap=take();last=db;
+var s0=save;
+save=function(){
+  try{if(db!==last){last=db;push([{t:new Date().toISOString(),u:who(),a:'Data replaced',c:'',k:'',n:'',d:'Restore / full data load'}])}else run()}catch(e){}
+  var r=s0.apply(this,arguments);try{snap=take()}catch(e){}return r};
+function vis(){var b=document.getElementById('krnPdfBtn');if(b)b.style.display=(typeof page==='string'&&page==='dashboard')?'none':''}
+var r0=render;
+render=function(){var r=r0.apply(this,arguments);try{if(db!==last){last=db;snap=take()}}catch(e){}try{vis()}catch(e){}return r};
+
+function E(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function fdt(t){try{return new Date(t).toLocaleString('en-IN',{hour12:false})}catch(e){return t}}
+
+/* ---------- PDF export: prints what is on screen (filters included) ---------- */
+window.krnPdf=function(html,title){
+  title=title||($('title')&&$('title').textContent)||'Report';
+  if(html==null){
+    var c=$('page').cloneNode(true);
+    c.querySelectorAll('button,input,select,textarea,script,style,canvas,svg,.toolbar,.pager,.krn-fx,#krnUltraBanner,[class*=spark],[class*=aurora],[class*=particle]').forEach(function(x){x.remove()});
+    c.querySelectorAll('table').forEach(function(tb){
+      var th=[].slice.call(tb.querySelectorAll('thead th')),i=th.findIndex(function(h){return/^actions?$/i.test(h.textContent.trim())});
+      if(i>=0)tb.querySelectorAll('tr').forEach(function(r){if(r.children[i])r.children[i].remove()})});
+    html=c.innerHTML}
+  var w=window.open('','_blank');
+  if(!w){alert('Popup blocked. Please allow popups for this page and try again.');return}
+  w.document.write('<!doctype html><meta charset="utf-8"><title>'+E(title)+'</title><style>@page{size:A4 landscape;margin:10mm}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}body{font:12px Arial,sans-serif;margin:0;color:#111}h1{font-size:20px;margin:0}h2,h3{font-size:14px;margin:14px 0 4px}small{color:#555}table{border-collapse:collapse;width:100%;margin:8px 0;font-size:11px}th,td{border:1px solid #cbd5e1;padding:4px 6px;text-align:left;vertical-align:top}th{background:#eef2f7}thead{display:table-header-group}tr{page-break-inside:avoid}.card{display:inline-block;vertical-align:top;width:23%;min-height:44px;box-sizing:border-box;border:1px solid #cbd5e1;padding:6px 9px;margin:0 8px 8px 0;border-radius:6px}.card .label{font-size:9px;text-transform:uppercase;color:#64748b;letter-spacing:.5px}.card .num{font-size:16px;font-weight:700;margin:2px 0}.card .sub{font-size:10px;color:#555}[class*=chip],[class*=pill],[class*=badge]{display:inline-block;margin:0 6px 4px 0;padding:1px 8px;border:1px solid #cbd5e1;border-radius:10px;font-size:10px}.hidden{display:none!important}</style><h1>'+E(db.company||'Report')+'</h1><small>'+E(title)+' &bull; '+E(new Date().toLocaleString('en-IN'))+' &bull; '+E(who())+'</small><hr>'+html);
+  w.document.close();setTimeout(function(){w.focus();w.print()},500)};
+
+/* ---------- Audit log viewer ---------- */
+function showAudit(){
+  try{if(cloudRole&&cloudRole!=='admin'){alert('Only admin can view the audit log.');return}}catch(e){}
+  var L=(db.audit||[]).slice().reverse();
+  $('modalTitle').textContent='Audit Log ('+L.length+' entries)';
+  $('modalBody').innerHTML='<div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap"><input id="auQ" class="search" placeholder="Filter by user / action / item / amount…" style="flex:1;min-width:180px"><button type="button" class="btn" id="auPdf">📄 PDF</button><button type="button" class="btn" id="auCsv">⬇ CSV</button></div><div class="tablewrap" style="max-height:60vh;overflow:auto"><table><thead><tr><th>When</th><th>User</th><th>Action</th><th>Item</th><th>Details</th></tr></thead><tbody id="auB"></tbody></table></div><small style="color:#6b7280">Shows latest 500 matching entries; last '+MAX+' are kept.</small>';
+  $('modal').classList.remove('hidden');
+  function rows(){var q=$('auQ').value.toLowerCase();return L.filter(function(x){return!q||(x.u+' '+x.a+' '+x.c+' '+x.k+' '+x.n+' '+x.d).toLowerCase().indexOf(q)>=0})}
+  function paint(){$('auB').innerHTML=rows().slice(0,500).map(function(x){return'<tr><td>'+E(fdt(x.t))+'</td><td>'+E(x.u)+'</td><td><b style="color:'+(x.a==='Deleted'?'#b91c1c':x.a==='Added'?'#166534':'#92400e')+'">'+E(x.a)+'</b></td><td>'+E(x.c+(x.k?' '+x.k:''))+(x.n?'<br><small>'+E(x.n)+'</small>':'')+'</td><td>'+E(x.d)+'</td></tr>'}).join('')||'<tr><td colspan="5">No entries.</td></tr>'}
+  paint();$('auQ').oninput=paint;
+  $('auPdf').onclick=function(){krnPdf('<table>'+$('auB').parentNode.innerHTML+'</table>','Audit Log')};
+  $('auCsv').onclick=function(){
+    var q=function(v){return'"'+String(v==null?'':v).replace(/"/g,'""')+'"'};
+    var csv='\ufeff'+['When,User,Action,Collection,Item,Name,Details'].concat(rows().map(function(x){return[fdt(x.t),x.u,x.a,x.c,x.k,x.n,x.d].map(q).join(',')})).join('\r\n');
+    var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='Audit_Log_'+today()+'.csv';document.body.appendChild(a);a.click();a.remove()}
+}
+function addBtns(){
+  var a=document.querySelector('.top .actions');if(!a||document.getElementById('krnAuditBtn'))return;
+  var b=document.getElementById('backupBtn');
+  [['krnPdfBtn','📄 PDF',function(){krnPdf()}],['krnAuditBtn','🧾 Audit',showAudit]].forEach(function(d){
+    var x=document.createElement('button');x.type='button';x.className='btn';x.id=d[0];x.textContent=d[1];x.onclick=d[2];a.insertBefore(x,b||a.firstChild)});vis()}
+var st=document.createElement('style');st.id='krnBtnCss';st.textContent='html body .top .actions>.btn,html body .top .actions>button{white-space:nowrap!important;flex-shrink:0}html body .top .actions{flex-wrap:wrap!important;row-gap:8px}#krnPdfBtn,#krnAuditBtn{padding:9px 12px;display:inline-flex;align-items:center;gap:5px}';document.head.appendChild(st);
+setTimeout(addBtns,300);setTimeout(addBtns,2500);setInterval(addBtns,5000);
+
+/* ---------- search boxes: wait 160 ms after typing stops, so big lists stay smooth ---------- */
+var SID=/^(dashboardSearch|empSearch|advSearch|billSearch|ledgerSearch|invSearch)$/,tm={};
+document.addEventListener('input',function(e){
+  var el=e.target;if(!el||!SID.test(el.id)||e._krn)return;
+  e.stopImmediatePropagation();clearTimeout(tm[el.id]);
+  tm[el.id]=setTimeout(function(){var ev=new Event('input',{bubbles:true});ev._krn=1;el.dispatchEvent(ev)},160)},true);
+})();
+</script>
+<script id="krn-login-anim-script">
+(function(){
+var o=document.getElementById('authOverlay');
+if(!o||document.getElementById('krnLoginAnim'))return;
+var st=document.createElement('style');st.id='krnLoginAnimCss';
+st.textContent='#krnLoginAnim{position:absolute;inset:0;z-index:-1;overflow:hidden;pointer-events:none}'
++'#krnLoginAnim i{position:absolute;border-radius:50%;will-change:transform}'
++'#krnLoginAnim .a{width:48vmax;height:48vmax;left:-10vmax;top:-14vmax;background:radial-gradient(circle,rgba(56,189,248,.60),transparent 66%);animation:krnLA 20s ease-in-out infinite alternate}'
++'#krnLoginAnim .b{width:54vmax;height:54vmax;right:-16vmax;bottom:-20vmax;background:radial-gradient(circle,rgba(129,140,248,.55),transparent 66%);animation:krnLB 26s ease-in-out infinite alternate}'
++'#krnLoginAnim .c{width:34vmax;height:34vmax;left:36%;top:26%;background:radial-gradient(circle,rgba(244,114,182,.32),transparent 66%);animation:krnLC 30s ease-in-out infinite alternate}'
++'#krnLoginAnim .d{width:30vmax;height:30vmax;left:60%;top:-8vmax;background:radial-gradient(circle,rgba(45,212,191,.34),transparent 66%);animation:krnLD 24s ease-in-out infinite alternate}'
++'@keyframes krnLA{to{transform:translate(22vmax,16vmax) scale(1.25)}}'
++'@keyframes krnLB{to{transform:translate(-24vmax,-14vmax) scale(1.2)}}'
++'@keyframes krnLC{to{transform:translate(-14vmax,18vmax) scale(1.35)}}'
++'@keyframes krnLD{to{transform:translate(-18vmax,22vmax) scale(.85)}}'
++'#authOverlay.has-custom-wallpaper #krnLoginAnim{display:none}'
++'@media(prefers-reduced-motion:reduce){#krnLoginAnim i{animation:none}}';
+document.head.appendChild(st);
+var d=document.createElement('div');d.id='krnLoginAnim';d.setAttribute('aria-hidden','true');
+d.innerHTML='<i class="a"></i><i class="b"></i><i class="c"></i><i class="d"></i>';
+o.insertBefore(d,o.firstChild);
+
+/* animated GIF / WebP wallpaper: keep it as is (the normal uploader flattens it to a still JPEG) */
+var KEY='krnSph.lockScreenWallpaper.v1';
+document.addEventListener('change',function(e){
+  var f=e.target;if(!f||f.id!=='wallpaperFile')return;
+  var file=f.files&&f.files[0];
+  if(!file||!/^image\/(gif|webp|apng)$/.test(file.type))return;
+  e.stopImmediatePropagation();
+  var admin=false;try{admin=cloudRole==='admin'}catch(x){}
+  if(!admin){alert('Only Admin can change the lock screen wallpaper.');f.value='';return}
+  if(file.size>2.5*1024*1024){alert('Animated wallpaper must be under 2.5 MB. Please choose a smaller GIF/WebP.');f.value='';return}
+  var r=new FileReader();
+  r.onload=function(){
+    try{localStorage.setItem(KEY,r.result)}catch(x){alert('Could not save this wallpaper (browser storage is full). Try a smaller file.');return}
+    o.style.setProperty('--krn-custom-wallpaper','url("'+r.result+'")');o.classList.add('has-custom-wallpaper');
+    var n=document.getElementById('wallpaperNote');if(n)n.textContent='Animated wallpaper updated on this browser.';
+    f.value=''};
+  r.readAsDataURL(file)},true);
 })();
 </script>
 </body></html>
