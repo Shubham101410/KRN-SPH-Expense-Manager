@@ -7474,6 +7474,9 @@ tbody tr,.card,.btn,.quick-filter button{transition-property:background-color,bo
 #authOverlay.has-video-wallpaper:before,#authOverlay.has-video-wallpaper:after{animation:none!important}
 #authOverlay.has-video-wallpaper .showcase-orbit,#authOverlay.has-video-wallpaper .showcase-bubble{animation:none!important}
 #authOverlay.has-video-wallpaper .auth-card{animation:none!important;background:linear-gradient(145deg,rgba(248,250,252,.58),rgba(228,235,244,.38))!important;backdrop-filter:blur(22px) saturate(130%)!important;-webkit-backdrop-filter:blur(22px) saturate(130%)!important;will-change:transform}
+#krnLoginSoundBtn{position:absolute;right:22px;bottom:58px;z-index:5;width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.7);background:rgba(255,255,255,.28);color:#fff;font-size:19px;line-height:1;cursor:pointer;display:none;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(20,40,70,.25)}
+#krnLoginSoundBtn:hover{background:rgba(255,255,255,.45)}
+#authOverlay.has-video-wallpaper #krnLoginSoundBtn{display:flex}
 </style>
 <script id="krn-video-wallpaper">
 (function(){
@@ -7505,7 +7508,20 @@ tbody tr,.card,.btn,.quick-filter button{transition-property:background-color,bo
     o.insertBefore(v,o.firstChild);
     o.classList.add('has-video-wallpaper');
     var p=v.play();if(p&&p.catch)p.catch(function(){});
-    if(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches){v.pause()}}
+    if(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches){v.pause()}
+    ensureBtn()}
+  var SKEY='krnSph.loginVideoSound',sbtn=null;
+  function wantSound(){try{return localStorage.getItem(SKEY)==='1'}catch(e){return false}}
+  function updBtn(){var v=document.getElementById('krnLoginVideo');if(!sbtn)return;var on=v&&!v.muted;sbtn.textContent=on?'\uD83D\uDD0A':'\uD83D\uDD07';sbtn.title=on?'Mute video sound':'Play video sound';sbtn.setAttribute('aria-label',sbtn.title)}
+  function setSound(on,save){var v=document.getElementById('krnLoginVideo');if(!v)return;v.muted=!on;if(on){v.volume=.6;var p=v.play();if(p&&p.catch)p.catch(function(){v.muted=true;updBtn()})}
+    if(save!==false){try{localStorage.setItem(SKEY,on?'1':'0')}catch(e){}}updBtn()}
+  function ensureBtn(){
+    if(!sbtn){sbtn=document.createElement('button');sbtn.id='krnLoginSoundBtn';sbtn.type='button';
+      sbtn.addEventListener('click',function(ev){ev.stopPropagation();var v=document.getElementById('krnLoginVideo');setSound(!(v&&!v.muted))});
+      o.appendChild(sbtn)}
+    updBtn();
+    if(wantSound()){var go=function(){o.removeEventListener('pointerdown',go,true);o.removeEventListener('keydown',go,true);setSound(true,false)};
+      o.addEventListener('pointerdown',go,true);o.addEventListener('keydown',go,true)}}
   function note(t){var n=document.getElementById('wallpaperNote');if(n)n.textContent=t}
   function isAdmin(){try{return cloudRole==='admin'}catch(e){return false}}
 
@@ -7553,4 +7569,16 @@ tbody tr,.card,.btn,.quick-filter button{transition-property:background-color,bo
   },true);
 })();
 </script>
+<style id="login-panel-more-transparent">
+/* Login panel: highly transparent glass, only light blur so wallpaper stays visible */
+html #authOverlay:not(.hidden) .auth-card,
+html #authOverlay.has-video-wallpaper .auth-card,
+html #authOverlay.has-custom-wallpaper .auth-card{
+  background:linear-gradient(145deg,rgba(255,255,255,.14),rgba(255,255,255,.06))!important;
+  -webkit-backdrop-filter:blur(5px)!important;
+  backdrop-filter:blur(5px)!important;
+  border-right:1px solid rgba(255,255,255,.28)!important;
+  box-shadow:0 10px 40px rgba(20,30,50,.10),inset 0 1px rgba(255,255,255,.35)!important;
+}
+</style>
 </body></html>
