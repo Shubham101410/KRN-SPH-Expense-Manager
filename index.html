@@ -7511,16 +7511,16 @@ tbody tr,.card,.btn,.quick-filter button{transition-property:background-color,bo
     if(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches){v.pause()}
     ensureBtn()}
   var SKEY='krnSph.loginVideoSound',sbtn=null;
-  function wantSound(){try{return localStorage.getItem(SKEY)==='1'}catch(e){return false}}
+  function wantSound(){return true}
   function updBtn(){var v=document.getElementById('krnLoginVideo');if(!sbtn)return;var on=v&&!v.muted;sbtn.textContent=on?'\uD83D\uDD0A':'\uD83D\uDD07';sbtn.title=on?'Mute video sound':'Play video sound';sbtn.setAttribute('aria-label',sbtn.title)}
   function setSound(on,save){var v=document.getElementById('krnLoginVideo');if(!v)return;v.muted=!on;if(on){v.volume=.6;var p=v.play();if(p&&p.catch)p.catch(function(){v.muted=true;updBtn()})}
     if(save!==false){try{localStorage.setItem(SKEY,on?'1':'0')}catch(e){}}updBtn()}
   function ensureBtn(){
     if(!sbtn){sbtn=document.createElement('button');sbtn.id='krnLoginSoundBtn';sbtn.type='button';
-      sbtn.addEventListener('click',function(ev){ev.stopPropagation();var v=document.getElementById('krnLoginVideo');setSound(!(v&&!v.muted))});
+      sbtn.addEventListener('click',function(ev){ev.stopPropagation();var v=document.getElementById('krnLoginVideo');setSound(!(v&&!v.muted),false)});
       o.appendChild(sbtn)}
     updBtn();
-    if(wantSound()){var go=function(){o.removeEventListener('pointerdown',go,true);o.removeEventListener('keydown',go,true);setSound(true,false)};
+    if(wantSound()){setSound(true,false);var go=function(){o.removeEventListener('pointerdown',go,true);o.removeEventListener('keydown',go,true);setSound(true,false)};
       o.addEventListener('pointerdown',go,true);o.addEventListener('keydown',go,true)}}
   function note(t){var n=document.getElementById('wallpaperNote');if(n)n.textContent=t}
   function isAdmin(){try{return cloudRole==='admin'}catch(e){return false}}
