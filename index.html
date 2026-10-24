@@ -7470,12 +7470,10 @@ tbody tr,.card,.btn,.quick-filter button{transition-property:background-color,bo
 #krnLoginVideo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-1;pointer-events:none;background:#0b1b33}
 #authOverlay.has-video-wallpaper #krnLoginAnim{display:none}
 #krnLoginVideo{transform:translateZ(0);will-change:transform;backface-visibility:hidden}
-/* performance: no live blur / glow animations on top of a playing video */
-#authOverlay.has-video-wallpaper:before,#authOverlay.has-video-wallpaper:after{display:none!important}
-#authOverlay.has-video-wallpaper *{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
-#authOverlay.has-video-wallpaper .showcase-orbit,#authOverlay.has-video-wallpaper .showcase-bubble{animation:none!important;box-shadow:none!important;filter:none!important}
-#authOverlay.has-video-wallpaper .auth-card{background:rgba(246,249,253,.84)!important;animation:none!important}
-#authOverlay.has-video-wallpaper:before,#authOverlay.has-video-wallpaper:after{opacity:.25!important}
+/* login card keeps its transparent frosted-glass look over the video; only the decorative animations are paused for smoothness */
+#authOverlay.has-video-wallpaper:before,#authOverlay.has-video-wallpaper:after{animation:none!important}
+#authOverlay.has-video-wallpaper .showcase-orbit,#authOverlay.has-video-wallpaper .showcase-bubble{animation:none!important}
+#authOverlay.has-video-wallpaper .auth-card{animation:none!important;background:linear-gradient(145deg,rgba(248,250,252,.58),rgba(228,235,244,.38))!important;backdrop-filter:blur(22px) saturate(130%)!important;-webkit-backdrop-filter:blur(22px) saturate(130%)!important;will-change:transform}
 </style>
 <script id="krn-video-wallpaper">
 (function(){
