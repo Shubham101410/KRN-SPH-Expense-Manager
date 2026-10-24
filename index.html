@@ -1438,7 +1438,7 @@ async function loadCloudState(){
   if(error) throw error;
   if(data&&data.data){db=data.data;}
   else {db=SEED; await cloudSaveState(true);}
-  cloudReady=true; setKrnSyncState('online','Cloud Auto Sync'); render();
+  window.__krnLastCloud=JSON.stringify(db); cloudReady=true; setKrnSyncState('online','Cloud Auto Sync'); render();
 }
 async function cloudSaveState(silent=false){
   if(!cloudReady || !cloudUser) return false;
@@ -1457,7 +1457,7 @@ async function cloudSaveState(silent=false){
   }
   return true;
 }
-save=async function(){window.__krnLastSave=Date.now();window.__krnBusy=(window.__krnBusy||0)+1;try{return await cloudSaveState(false)}finally{window.__krnBusy=Math.max(0,(window.__krnBusy||1)-1);window.__krnLastSave=Date.now()}};
+save=async function(){window.__krnLastSave=Date.now();window.__krnBusy=(window.__krnBusy||0)+1;try{if(window.krnHistBefore)await window.krnHistBefore();var _ok=await cloudSaveState(false);if(_ok)window.__krnLastCloud=JSON.stringify(db);return _ok}finally{window.__krnBusy=Math.max(0,(window.__krnBusy||1)-1);window.__krnLastSave=Date.now()}};
 async function onlineLogin(){
   const u=document.getElementById('loginUser').value.trim(), p=document.getElementById('loginPass').value;
   if(!u||!p)return;
@@ -1490,7 +1490,7 @@ async function initCloud(){
             if(incoming!==current&&!_busy){
               const currentScrollY=window.scrollY;
               const tableScroll=page==='bills' ? Array.from(document.querySelectorAll('.tablewrap')).map(x=>x.scrollTop) : [];
-              db=data.data;
+              db=data.data;window.__krnLastCloud=JSON.stringify(db);
               render();
               requestAnimationFrame(()=>requestAnimationFrame(()=>{
                 window.scrollTo(0,currentScrollY);
@@ -3964,6 +3964,9 @@ body:not([data-krn-page="dashboard"]) #krnUltraBanner{display:none!important}
    <label class="row"><span><b>Smooth mode</b><small>Turns off blur &amp; background motion &ndash; fixes lag</small></span><input type="checkbox" id="kpLite"></label>
    <label class="row"><span><b>Design mouse cursor</b><small>Off = normal system cursor &bull; On = choose neon style</small></span><input type="checkbox" id="kpCur"></label>
    <button type="button" class="btn" id="kpCurPick" style="margin:2px 0 8px;width:100%">\uD83C\uDFA8 Change cursor style</button>
+   <div class="row col"><span><b>Auto-lock</b><small>After you are idle: asks for your PIN. If no PIN is set, you are logged out</small></span>
+    <select id="kpLockMin" style="width:100%"><option value="0">Never</option><option value="1">1 minute</option><option value="2">2 minutes</option><option value="5">5 minutes</option><option value="10">10 minutes</option><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="60">1 hour</option></select></div>
+   <button type="button" class="btn" id="kpPinBtn" style="margin:2px 0 8px;width:100%">\uD83D\uDD12 Set / change app PIN</button>
    <label class="row"><span><b>Auto backup</b><small>Downloads 1 backup file per day when you open the app</small></span><input type="checkbox" id="kpAB"></label>
    <button class="test" id="kpTestPay">Test: Pay coins</button><button class="test" id="kpTestRecv">Test: Receive notes</button>`;
   document.body.appendChild(pop);
@@ -3974,7 +3977,7 @@ body:not([data-krn-page="dashboard"]) #krnUltraBanner{display:none!important}
   pop.querySelector('#kpSound').onchange=e=>{pr.sound=e.target.checked;apply()};
   pop.querySelector('#kpVol').oninput=e=>{pr.vol=e.target.value/100;apply()};
   pop.querySelector('#kpLite').onchange=e=>{pr.lite=e.target.checked;apply()};
-  pop.querySelector('#kpCur').checked=window.krnCursorOn?window.krnCursorOn():true;pop.querySelector('#kpCur').onchange=e=>{window.krnSetCursor&&window.krnSetCursor(e.target.checked);if(e.target.checked&&window.krnPickCursor)window.krnPickCursor()};var _cp=pop.querySelector('#kpCurPick');if(_cp)_cp.onclick=()=>{if(window.krnSetCursor)window.krnSetCursor(true);pop.querySelector('#kpCur').checked=true;window.krnPickCursor&&window.krnPickCursor()};
+  pop.querySelector('#kpCur').checked=window.krnCursorOn?window.krnCursorOn():true;pop.querySelector('#kpCur').onchange=e=>{window.krnSetCursor&&window.krnSetCursor(e.target.checked);if(e.target.checked&&window.krnPickCursor)window.krnPickCursor()};var _lm=pop.querySelector('#kpLockMin');if(_lm){_lm.value=window.krnLockMin?String(window.krnLockMin()):'0';_lm.onchange=()=>window.krnSetLockMin&&window.krnSetLockMin(+_lm.value)};var _pb=pop.querySelector('#kpPinBtn');if(_pb)_pb.onclick=()=>window.krnPinDialog&&window.krnPinDialog();var _cp=pop.querySelector('#kpCurPick');if(_cp)_cp.onclick=()=>{if(window.krnSetCursor)window.krnSetCursor(true);pop.querySelector('#kpCur').checked=true;window.krnPickCursor&&window.krnPickCursor()};
   pop.querySelector('#kpAB').checked=window.krnAutoBackupOn?window.krnAutoBackupOn():true;pop.querySelector('#kpAB').onchange=e=>window.krnSetAutoBackup&&window.krnSetAutoBackup(e.target.checked);
   pop.querySelectorAll('#kpFx button').forEach(x=>x.onclick=()=>{pr.fx=x.dataset.v;apply();sync()});
   pop.querySelector('#kpTestPay').onclick=()=>window.krnLedgerFx&&window.krnLedgerFx('pay');
@@ -5774,6 +5777,8 @@ html[data-theme=dark] button>.krn-nb{box-shadow:0 0 0 2px #0b1220}
   .modalbox{width:100%!important;max-height:92vh!important;border-radius:20px 20px 0 0!important;padding:16px 14px calc(18px + env(safe-area-inset-bottom,0px))!important}
   #invGroups .tablewrap,#monGroups .tablewrap{content-visibility:auto;contain-intrinsic-size:auto 480px}
 }
+
+.cn-pill{color:#16a34a;font-weight:700}.inv-neg{color:#16a34a;font-weight:800}
 </style>
 <script id="krn-invoices-v2-script">
 (function(){
@@ -5855,8 +5860,11 @@ html[data-theme=dark] button>.krn-nb{box-shadow:0 0 0 2px #0b1220}
       var recent=r.ym>=addMonth(curMonth(),-1);
       if(r.state==='pending'||(r.state==='notsub'&&recent))out.push({kind:'mon',ns:r.state==='notsub',name:typeIcon(r.t.type)+' '+r.t.name,party:r.t.party||'',ym:r.ym,due:r.due,amount:r.amount,a:r.ti+'|'+r.ym});
     });
+    var _cm=cmapBuild();
     list().forEach(function(x,i){
-      if(statusOf(x)==='Submitted'&&x.dueDate)out.push({kind:'inv',name:'Invoice '+x.no,party:x.party||'',ym:String(x.dueDate).slice(0,7),due:x.dueDate,amount:Number(x.amount||0),a:String(i)});
+      if(isCN(x))return;
+      var net=Number(x.amount||0)-creditedFor(x,_cm);
+      if(statusOf(x)==='Submitted'&&x.dueDate&&net>0.005)out.push({kind:'inv',name:'Invoice '+x.no,party:x.party||'',ym:String(x.dueDate).slice(0,7),due:x.dueDate,amount:net,a:String(i)});
     });
     out.sort(function(a,b){return a.due<b.due?-1:(a.due>b.due?1:0)});
     return out;
@@ -6021,6 +6029,7 @@ html[data-theme=dark] button>.krn-nb{box-shadow:0 0 0 2px #0b1220}
   function invStOk(x,st){
     var s=statusOf(x);
     if(st==='all')return true;
+    if(st==='credit')return isCN(x);
     if(st==='notsub')return s==='Not Submitted';
     if(st==='pending')return s==='Submitted';
     if(st==='received')return s==='Payment Received';
@@ -6034,7 +6043,7 @@ html[data-theme=dark] button>.krn-nb{box-shadow:0 0 0 2px #0b1220}
       if(F.party&&String(x.party||'').trim()!==F.party)return false;
       if(F.loc){var lc=String(x.location||'').trim();if(F.loc==='__none'?!!lc:lc!==F.loc)return false}
       if(!q)return true;
-      return [x.no,x.party,x.location,x.address,x.gstNo,x.desc,x.date,x.submittedOn,x.dueDate,fmt(x.date),fmt(x.submittedOn),fmt(x.dueDate),fmt(x.paidOn),x.amount,x.gstAmt,x.gstRate,s]
+      return [x.no,x.refNo,x.reason,x.party,x.location,x.address,x.gstNo,x.desc,x.date,x.submittedOn,x.dueDate,fmt(x.date),fmt(x.submittedOn),fmt(x.dueDate),fmt(x.paidOn),x.amount,x.gstAmt,x.gstRate,s]
         .some(function(v){return String(v==null?'':v).toLowerCase().indexOf(q)>-1});
     });
   }
@@ -6062,7 +6071,7 @@ html[data-theme=dark] button>.krn-nb{box-shadow:0 0 0 2px #0b1220}
         '<select id="invLoc" aria-label="Location"><option value="">All locations</option>'+ls.map(function(v){return '<option value="'+esc(v)+'">'+esc(v)+'</option>'}).join('')+(ls.length&&hasNoLoc?'<option value="__none">(No location)</option>':'')+'</select>'+
         '<select id="invGrp" aria-label="Group by"><option value="month">Group: Month</option><option value="party">Group: Party</option><option value="loc">Group: Location</option><option value="none">No grouping</option></select>'+
         '<button type="button" class="btn" id="invReport">\uD83D\uDCC4 Report</button><button type="button" class="btn" id="invExport">\u2B07 Export CSV</button>'+
-        (ro?'':'<button type="button" class="btn primary" id="addInvoice">+ Add Invoice</button>')+
+        (ro?'':'<button type="button" class="btn" id="addCN">\u21A9 Credit Note</button><button type="button" class="btn primary" id="addInvoice">+ Add Invoice</button>')+
       '</div>'+
       '<div class="mc-row" id="invChips"></div><div class="mon-sum" id="invSum"></div><div id="invGroups"></div>';
     $('invSearch').value=F.q;$('invParty').value=F.party;$('invLoc').value=F.loc;$('invGrp').value=F.grp;
@@ -6072,6 +6081,7 @@ html[data-theme=dark] button>.krn-nb{box-shadow:0 0 0 2px #0b1220}
     $('invGrp').onchange=function(){F.grp=this.value;saveF();invPaint()};
     $('invExport').onclick=exportInvoices;$('invReport').onclick=openReport;
     if($('addInvoice'))$('addInvoice').onclick=function(){openInvoiceModal(null)};
+    if($('addCN'))$('addCN').onclick=function(){window.openCreditNoteModal(null,null)};
     invPaint();
   }
 
@@ -6088,24 +6098,24 @@ html[data-theme=dark] button>.krn-nb{box-shadow:0 0 0 2px #0b1220}
   function setH(el,h){if(el.__h===h)return;el.__h=h;el.innerHTML=h}
 
   function invRowHtml(r,ro){
-    var x=r.x,s=statusOf(r.x),paid=s==='Payment Received';
+    var x=r.x,s=statusOf(r.x),paid=s==='Payment Received',cr=creditedFor(x,CM||undefined);
     var badgeCls=paid?'ok':(s==='Submitted'?'wait':'idle');
     var dueCell;
-    if(paid)dueCell='Paid '+(x.paidOn?fmt(x.paidOn):'');
+    if(paid)dueCell=(isCN(x)?'Refunded ':'Paid ')+(x.paidOn?fmt(x.paidOn):'');
     else if(s==='Not Submitted')dueCell=x.dueDate?fmt(x.dueDate):'\u2014';
     else dueCell=x.dueDate?fmt(x.dueDate)+chipHtml(x.dueDate):'\u2014';
     return '<tr data-iid="'+esc(x.id||('i'+r.i))+'">'+
-      '<td class="m-title m-nolabel" data-label="Invoice No."><strong>'+esc(x.no)+'</strong></td>'+
+      '<td class="m-title m-nolabel" data-label="Invoice No."><strong>'+esc(x.no)+'</strong>'+(isCN(x)?'<span class="inv-sm cn-pill">\u21A9 Credit note'+(x.refNo?' \u2022 against '+esc(x.refNo):'')+'</span>':'')+'</td>'+
       '<td data-label="Invoice Date">'+fmt(x.date)+'</td>'+
       '<td data-label="Submitted On">'+(x.submittedOn&&s!=='Not Submitted'?fmt(x.submittedOn):'\u2014')+'</td>'+
       '<td class="m-sub m-nolabel" data-label="Party / Client">'+esc(x.party)+((x.location||x.address)?'<span class="inv-sm">'+(x.location?esc(x.location):'')+(x.location&&x.address?' \u2022 ':'')+(x.address?'\uD83D\uDCCD '+esc(x.address):'')+'</span>':'')+'</td>'+
       '<td class="inv-gstno" data-label="GST No.">'+(x.gstNo?'<span class="gstno-chip">'+esc(x.gstNo)+'</span>':'\u2014')+'</td>'+
       '<td class="inv-desc m-full" data-label="Description">'+esc(x.desc)+'</td>'+
       '<td data-label="GST">'+(Number(x.gstRate)>0?money(x.gstAmt)+'<span class="inv-sm">'+Number(x.gstRate)+'% GST</span>':'\u2014')+'</td>'+
-      '<td class="inv-amt" data-label="Amount">'+money(x.amount)+'</td>'+
-      '<td class="m-nolabel m-full" data-label="Status"><span class="status '+badgeCls+'">'+s+'</span></td>'+
+      '<td class="inv-amt" data-label="Amount">'+(isCN(x)?'<span class="inv-neg">'+money(x.amount)+'</span>':money(x.amount)+(cr?'<span class="inv-sm">Credit \u2212'+money(cr)+' \u2022 Net '+money(Number(x.amount||0)-cr)+'</span>':''))+'</td>'+
+      '<td class="m-nolabel m-full" data-label="Status"><span class="status '+badgeCls+'">'+(isCN(x)?(paid?'Refunded':'Credit open'):s)+'</span></td>'+
       '<td data-label="Due / Payment">'+dueCell+'</td>'+
-      '<td class="m-act" data-label="Action">'+(ro?'':'<button type="button" class="btn invEdit" data-i="'+r.i+'">Edit</button>'+(paid?'':' <button type="button" class="btn green invPaid" data-i="'+r.i+'">Paid</button>'))+'</td>'+
+      '<td class="m-act" data-label="Action">'+(ro?'':'<button type="button" class="btn invEdit" data-i="'+r.i+'">Edit</button>'+(paid?'':' <button type="button" class="btn green invPaid" data-i="'+r.i+'">'+(isCN(x)?'Refunded':'Paid')+'</button>'))+'</td>'+
       '</tr>';
   }
   function ikpi(cls,ic,lb,amt,sub,chip){
@@ -6124,14 +6134,15 @@ html[data-theme=dark] button>.krn-nb{box-shadow:0 0 0 2px #0b1220}
   }
 
   function invPaint(){
+    CM=cmapBuild();
     var ro=readOnly(),tdy=today(),cm=curMonth(),all=list(),base=invBase(),rows=invFiltered();
     /* ---- summary cards on top (whole business) ---- */
     var K={over:{n:0,a:0,max:0},pend:{n:0,a:0},ns:{n:0,a:0},paid:{n:0,a:0}};
     all.forEach(function(x){
       var s=statusOf(x),a=Number(x.amount||0);
-      if(s==='Submitted'){K.pend.n++;K.pend.a+=a;if(x.dueDate&&x.dueDate<tdy){K.over.n++;K.over.a+=a;var d=-diffDays(tdy,x.dueDate);if(d>K.over.max)K.over.max=d}}
+      if(s==='Submitted'){if(!isCN(x))K.pend.n++;K.pend.a+=a;if(x.dueDate&&x.dueDate<tdy){K.over.n++;K.over.a+=a;var d=-diffDays(tdy,x.dueDate);if(d>K.over.max)K.over.max=d}}
       else if(s==='Not Submitted'){K.ns.n++;K.ns.a+=a}
-      else if(String(x.paidOn||'').slice(0,7)===cm){K.paid.n++;K.paid.a+=a}
+      else if(String(x.paidOn||'').slice(0,7)===cm){if(!isCN(x))K.paid.n++;K.paid.a+=a}
     });
     $('invKpi').innerHTML=
       ikpi('bad','\u26A0\uFE0F','Overdue',K.over.a,plural(K.over.n,'invoice')+(K.over.n?' \u2022 oldest '+plural(K.over.max,'day'):''),'overdue')+
@@ -6139,9 +6150,9 @@ html[data-theme=dark] button>.krn-nb{box-shadow:0 0 0 2px #0b1220}
       ikpi('info','\uD83D\uDCE4','Not submitted',K.ns.a,plural(K.ns.n,'invoice'),'notsub')+
       ikpi('ok','\u2705','Paid this month',K.paid.a,plural(K.paid.n,'invoice'),'received');
     /* ---- chips ---- */
-    var C={all:base.length,overdue:0,pending:0,notsub:0,received:0};
-    base.forEach(function(r){['overdue','pending','notsub','received'].forEach(function(k){if(invStOk(r.x,k))C[k]++})});
-    $('invChips').innerHTML=[['all','All'],['overdue','\u26A0 Overdue'],['pending','Payment pending'],['notsub','Not submitted'],['received','Paid']].map(function(c){
+    var C={all:base.length,overdue:0,pending:0,notsub:0,received:0,credit:0};
+    base.forEach(function(r){['overdue','pending','notsub','received','credit'].forEach(function(k){if(invStOk(r.x,k))C[k]++})});
+    $('invChips').innerHTML=[['all','All'],['overdue','\u26A0 Overdue'],['pending','Payment pending'],['notsub','Not submitted'],['received','Paid'],['credit','\u21A9 Credit notes']].map(function(c){
       return '<button type="button" class="mc'+(F.st===c[0]?' on':'')+'" data-chip="'+c[0]+'">'+c[1]+'<i>'+C[c[0]]+'</i></button>'}).join('');
     var tot=0,paid=0,due=0,gstSum=0;
     rows.forEach(function(r){var a=Number(r.x.amount||0);tot+=a;gstSum+=Number(r.x.gstAmt||0);if(statusOf(r.x)==='Payment Received')paid+=a;else due+=a});
@@ -6194,9 +6205,9 @@ html[data-theme=dark] button>.krn-nb{box-shadow:0 0 0 2px #0b1220}
 
   function exportInvoices(){
     var rows=invFiltered().map(function(r){return r.x});
-    download('Invoices',['Invoice No','Invoice Date','Submitted On','Due Date','Party / Client','GST No','Description','Taxable Amount','GST %','GST Amount','Total Amount','Status','Payment Date','Location','Address'],
+    download('Invoices',['Invoice No','Invoice Date','Submitted On','Due Date','Party / Client','GST No','Description','Taxable Amount','GST %','GST Amount','Total Amount','Status','Payment Date','Location','Address','Type','Against Invoice'],
       rows.map(function(x){var st=statusOf(x),tot=Number(x.amount||0),gst=Number(x.gstAmt||0),base=(x.baseAmt!=null&&x.baseAmt!=='')?Number(x.baseAmt):Math.round((tot-gst)*100)/100;
-        return [csvCell(x.no,true),csvCell(x.date||'',false),csvCell(st==='Not Submitted'?'':(x.submittedOn||''),false),csvCell(x.dueDate||'',false),csvCell(x.party,true),csvCell(x.gstNo||'',true),csvCell(x.desc||'',true),csvCell(base,false),csvCell(Number(x.gstRate||0),false),csvCell(gst,false),csvCell(tot,false),csvCell(st==='Payment Received'?'Paid':st,false),csvCell(st==='Payment Received'?(x.paidOn||''):'',false),csvCell(x.location||'',true),csvCell(x.address||'',true)]}));
+        return [csvCell(x.no,true),csvCell(x.date||'',false),csvCell(st==='Not Submitted'?'':(x.submittedOn||''),false),csvCell(x.dueDate||'',false),csvCell(x.party,true),csvCell(x.gstNo||'',true),csvCell(x.desc||'',true),csvCell(base,false),csvCell(Number(x.gstRate||0),false),csvCell(gst,false),csvCell(tot,false),csvCell(st==='Payment Received'?'Paid':st,false),csvCell(st==='Payment Received'?(x.paidOn||''):'',false),csvCell(x.location||'',true),csvCell(x.address||'',true),csvCell(isCN(x)?'Credit Note':'Invoice',false),csvCell(x.refNo||'',true)]}));
   }
 
   function partyGst(name){
@@ -6217,6 +6228,7 @@ html[data-theme=dark] button>.krn-nb{box-shadow:0 0 0 2px #0b1220}
     if(readOnly()){alert('Viewer access: editing is not allowed.');return}
     var L=list(),x=(index===null||index===undefined)?null:L[index];
     if(index!=null&&!x)return;
+    if(x&&isCN(x))return window.openCreditNoteModal(null,index);
     var s=x?statusOf(x):'Submitted';
     var rate=x?Number(x.gstRate||0):0,std=[0,5,12,18,28],isCustom=std.indexOf(rate)<0;
     var gstOpts=std.map(function(r){return '<option value="'+r+'"'+(!isCustom&&rate===r?' selected':'')+'>'+(r?r+'%':'No GST')+'</option>'}).join('')+'<option value="custom"'+(isCustom?' selected':'')+'>Custom %</option>';
@@ -6245,7 +6257,7 @@ html[data-theme=dark] button>.krn-nb{box-shadow:0 0 0 2px #0b1220}
       '</div>'+
       '<datalist id="invPartyList">'+parties().map(function(p){return '<option value="'+esc(p)+'"></option>'}).join('')+'</datalist>'+
       '<br><button type="button" class="btn primary" id="saveInvoice">'+(x?'Update':'Save')+' Invoice</button>'+
-      (x?'<button type="button" class="btn" id="deleteInvoice" style="margin-left:8px">Delete</button>':''));
+      (x?'<button type="button" class="btn" id="deleteInvoice" style="margin-left:8px">Delete</button><button type="button" class="btn" id="invCN" style="margin-left:8px">\u21A9 Credit Note</button>':''));
     $('inv_status').onchange=function(){
       var v=this.value;
       $('inv_paid_wrap').style.display=v==='Payment Received'?'':'none';
@@ -6277,6 +6289,7 @@ html[data-theme=dark] button>.krn-nb{box-shadow:0 0 0 2px #0b1220}
       ni.addEventListener('input',chk);p.addEventListener('input',chk);p.addEventListener('change',chk);chk();
     })();
     $('saveInvoice').onclick=function(){saveInvoice(x?index:null)};
+    if(x)$('invCN').onclick=function(){closeModal();window.openCreditNoteModal(index,null)};
     if(x)$('deleteInvoice').onclick=function(){
       if(confirm('Delete invoice '+x.no+'?')){withUndo('Invoice '+x.no+' deleted',function(){L.splice(index,1);closeModal();save()})}
     };
@@ -6286,14 +6299,14 @@ html[data-theme=dark] button>.krn-nb{box-shadow:0 0 0 2px #0b1220}
   window.openPaidModal=function(index){
     if(readOnly()){alert('Viewer access: editing is not allowed.');return}
     var x=list()[index];if(!x)return;
-    openShell('Mark Invoice as Paid',
+    openShell(isCN(x)?'Mark Credit Note as Refunded':'Mark Invoice as Paid',
       '<div class="formgrid"><div class="field wide"><b>'+esc(x.no)+'</b> \u2014 '+esc(x.party)+' \u2022 '+money(x.amount)+'</div>'+
-      '<div class="field"><label>Paid On</label><input id="inv_paid_quick" type="date" value="'+today()+'"></div></div>'+
-      '<br><button type="button" class="btn green" id="invPaidSave">Mark as Paid</button>');
+      '<div class="field"><label>'+(isCN(x)?'Refunded On':'Paid On')+'</label><input id="inv_paid_quick" type="date" value="'+today()+'"></div></div>'+
+      '<br><button type="button" class="btn green" id="invPaidSave">'+(isCN(x)?'Mark as Refunded':'Mark as Paid')+'</button>');
     var inp=$('inv_paid_quick');if(inp)inp.focus();
     $('invPaidSave').onclick=function(){
       var d=($('inv_paid_quick').value||'').trim()||today();
-      withUndo('Invoice '+x.no+' marked paid',function(){
+      withUndo((isCN(x)?'Credit note ':'Invoice ')+x.no+(isCN(x)?' marked refunded':' marked paid'),function(){
         x.status='Payment Received';x.paidOn=d;if(!x.submittedOn)x.submittedOn=d;
         if(!x.id)x.id='IV'+Date.now().toString(36)+index;FOCUS=x.id;
         closeModal();save();
@@ -6301,6 +6314,28 @@ html[data-theme=dark] button>.krn-nb{box-shadow:0 0 0 2px #0b1220}
     };
   };
 
+  /* ---------- credit notes: stored as negative entries in the invoice list ---------- */
+  var CM=null;
+  function isCN(x){return !!x&&x.type==='credit'}
+  function cmapBuild(){
+    var m={};
+    list().forEach(function(c){
+      if(!isCN(c))return;
+      var a=-Number(c.amount||0),k=c.refId?('id:'+c.refId):(c.refNo?('no:'+normNo(c.refNo)+'|'+String(c.party||'').trim().toLowerCase()):'');
+      if(k)m[k]=(m[k]||0)+a;
+    });
+    return m;
+  }
+  function creditedFor(x,m){
+    if(isCN(x))return 0;m=m||cmapBuild();
+    var a=(x.id&&m['id:'+x.id])||0;
+    a+=m['no:'+normNo(x.no)+'|'+String(x.party||'').trim().toLowerCase()]||0;
+    return Math.round(a*100)/100;
+  }
+  function nextCnNo(){
+    var mx=0;list().forEach(function(c){if(isCN(c)){var m=String(c.no||'').match(/(\d+)\s*$/);if(m&&+m[1]>mx)mx=+m[1]}});
+    return 'CN-'+String(mx+1).padStart(3,'0');
+  }
   function normNo(v){return String(v||'').trim().toLowerCase().replace(/\s+/g,'')}
   /* exact = same invoice no + same party | sameNo = same no, other party | probable = same party + date + amount */
   function findDup(no,party,total,date,skip){
@@ -6313,6 +6348,88 @@ html[data-theme=dark] button>.krn-nb{box-shadow:0 0 0 2px #0b1220}
     });
     return res;
   }
+  window.openCreditNoteModal=function(refIndex,cnIndex){
+    if(readOnly()){alert('Viewer access: editing is not allowed.');return}
+    var L=list(),x=(cnIndex===null||cnIndex===undefined)?null:L[cnIndex];
+    if(cnIndex!=null&&!x)return;
+    var ref=null;
+    if(x&&x.refId)ref=L.filter(function(y){return y.id===x.refId&&!isCN(y)})[0]||null;
+    else if(!x&&refIndex!=null)ref=L[refIndex]||null;
+    var refIdx=ref?L.indexOf(ref):-1;
+    var rate=x?Number(x.gstRate||0):(ref?Number(ref.gstRate||0):0),std=[0,5,12,18,28],isCustom=std.indexOf(rate)<0;
+    var gstOpts=std.map(function(r){return '<option value="'+r+'"'+(!isCustom&&rate===r?' selected':'')+'>'+(r?r+'%':'No GST')+'</option>'}).join('')+'<option value="custom"'+(isCustom?' selected':'')+'>Custom %</option>';
+    var reasons=['Goods returned','Discount / rebate','Rate difference','Invoice cancelled','Other'];
+    var rs=x?(x.reason||'Other'):'Goods returned',s=x?statusOf(x):'Submitted';
+    var absBase=x?Math.abs(Number(x.baseAmt!=null&&x.baseAmt!==''?x.baseAmt:x.amount)):'';
+    var refOpts='<option value="-1">\u2014 Not linked to an invoice \u2014</option>'+L.map(function(y,i){return {y:y,i:i}}).filter(function(r){return !isCN(r.y)}).map(function(r){
+      return '<option value="'+r.i+'"'+(r.i===refIdx?' selected':'')+'>'+esc(r.y.no)+' \u2022 '+esc(r.y.party||'')+' \u2022 '+money(r.y.amount)+'</option>'}).join('');
+    openShell(x?'Edit Credit Note':'Issue Credit Note',
+      '<div class="formgrid">'+
+        '<div class="field"><label>Credit Note No. *</label><input id="cn_no" value="'+esc(x?x.no:nextCnNo())+'"></div>'+
+        '<div class="field"><label>Date</label><input id="cn_date" type="date" value="'+esc(x&&x.date?x.date:today())+'"></div>'+
+        '<div class="field wide"><label>Against Invoice</label><select id="cn_ref">'+refOpts+'</select></div>'+
+        '<div class="field"><label>Party / Client *</label><input id="cn_party" list="invPartyList" value="'+esc(x?x.party:(ref?ref.party:''))+'"></div>'+
+        '<div class="field"><label>Party GST No.</label><input id="cn_gstno" value="'+esc(x?(x.gstNo||''):(ref?(ref.gstNo||''):''))+'" maxlength="15" style="text-transform:uppercase"></div>'+
+        '<div class="field"><label>Location / Site</label><input id="cn_loc" value="'+esc(x?(x.location||''):(ref?(ref.location||''):''))+'"></div>'+
+        '<div class="field wide"><label>Address</label><textarea id="cn_addr" rows="2">'+esc(x?(x.address||''):(ref?(ref.address||''):''))+'</textarea></div>'+
+        '<div class="field"><label>Reason</label><select id="cn_reason">'+reasons.map(function(r){return '<option'+(r===rs?' selected':'')+'>'+r+'</option>'}).join('')+'</select></div>'+
+        '<div class="field"><label>Credit Amount before GST (\u20B9) *</label><input id="cn_amt" type="number" min="0" step="0.01" value="'+esc(absBase)+'" placeholder="0.00"></div>'+
+        '<div class="field"><label>GST %</label><select id="cn_gst">'+gstOpts+'</select></div>'+
+        '<div class="field" id="cn_gstc_wrap"'+(isCustom?'':' style="display:none"')+'><label>Custom GST %</label><input id="cn_gstc" type="number" min="0" max="100" step="0.01" value="'+(isCustom?esc(rate):'')+'"></div>'+
+        '<div class="field"><label>GST Amount (\u20B9)</label><input id="cn_gsta" readonly tabindex="-1"></div>'+
+        '<div class="field"><label>Total Credit (\u20B9)</label><input id="cn_tot" readonly tabindex="-1"></div>'+
+        '<div class="field"><label>Status</label><select id="cn_status"><option value="Submitted"'+(s!=='Payment Received'?' selected':'')+'>Credit open (adjust against dues)</option><option value="Payment Received"'+(s==='Payment Received'?' selected':'')+'>Refunded / adjusted</option></select></div>'+
+        '<div class="field" id="cn_paid_wrap"'+(s==='Payment Received'?'':' style="display:none"')+'><label>Refunded On</label><input id="cn_paid" type="date" value="'+esc(x&&x.paidOn?x.paidOn:today())+'"></div>'+
+        '<div class="field wide"><label>Note</label><textarea id="cn_desc" rows="2" placeholder="Details, e.g. 10 units returned on 12 Oct">'+esc(x?(x.desc||''):'')+'</textarea></div>'+
+      '</div>'+
+      '<datalist id="invPartyList">'+parties().map(function(p){return '<option value="'+esc(p)+'"></option>'}).join('')+'</datalist>'+
+      '<br><button type="button" class="btn primary" id="cn_save">'+(x?'Update':'Save')+' Credit Note</button>'+
+      (x?'<button type="button" class="btn" id="cn_del" style="margin-left:8px">Delete</button>':''));
+    function calc(){
+      var base=Number($('cn_amt').value)||0,g=$('cn_gst').value,r=g==='custom'?(Number($('cn_gstc').value)||0):Number(g);
+      var gst=Math.round(base*r)/100;$('cn_gsta').value=gst.toFixed(2);$('cn_tot').value=(Math.round((base+gst)*100)/100).toFixed(2);
+    }
+    $('cn_gst').onchange=function(){$('cn_gstc_wrap').style.display=this.value==='custom'?'':'none';calc()};
+    $('cn_amt').oninput=calc;$('cn_gstc').oninput=calc;calc();
+    $('cn_status').onchange=function(){$('cn_paid_wrap').style.display=this.value==='Payment Received'?'':'none'};
+    $('cn_ref').onchange=function(){
+      var i=Number(this.value),y=i>=0?L[i]:null;if(!y)return;
+      $('cn_party').value=y.party||'';$('cn_gstno').value=y.gstNo||'';$('cn_loc').value=y.location||'';$('cn_addr').value=y.address||'';
+      var r=Number(y.gstRate||0);if(std.indexOf(r)>-1){$('cn_gst').value=String(r);$('cn_gstc_wrap').style.display='none'}else{$('cn_gst').value='custom';$('cn_gstc_wrap').style.display='';$('cn_gstc').value=r}
+      calc();
+    };
+    $('cn_save').onclick=function(){
+      var no=$('cn_no').value.trim(),party=$('cn_party').value.trim(),raw=$('cn_amt').value,amount=Number(raw);
+      if(!no){alert('Please enter the Credit Note No.');return}
+      if(!party){alert('Please enter the Party / Client name.');return}
+      if(raw===''||!isFinite(amount)||amount<=0){alert('Please enter a valid credit amount (more than 0).');return}
+      var gsel=$('cn_gst').value,r=gsel==='custom'?Number($('cn_gstc').value):Number(gsel);
+      if(!isFinite(r)||r<0||r>100){alert('Please enter a valid GST % (0 to 100).');return}
+      var base=Math.round(amount*100)/100,gst=Math.round(base*r)/100,total=Math.round((base+gst)*100)/100;
+      var dp=findDup(no,party,-total,$('cn_date').value,x?cnIndex:null);
+      if(dp.exact>-1){alert('Credit note "'+no+'" for '+party+' already exists.');return}
+      var ri=Number($('cn_ref').value),refInv=ri>=0?L[ri]:null;
+      if(refInv){
+        var already=creditedFor(refInv)-((x&&x.refId&&x.refId===refInv.id)?Math.abs(Number(x.amount||0)):0);
+        if(already+total>Number(refInv.amount||0)+0.005&&!confirm('Total credit against invoice '+refInv.no+' ('+money(already+total)+') is more than the invoice amount ('+money(refInv.amount)+').\n\nSave anyway?'))return;
+        if(!refInv.id)refInv.id='IV'+Date.now().toString(36)+ri;
+      }
+      var st=$('cn_status').value==='Payment Received'?'Payment Received':'Submitted',dt=$('cn_date').value||today();
+      var obj=Object.assign({},x||{},{
+        id:(x&&x.id)?x.id:('CN'+Date.now().toString(36)),type:'credit',no:no,date:dt,submittedOn:dt,dueDate:'',
+        party:party,gstNo:$('cn_gstno').value.trim().toUpperCase(),location:$('cn_loc').value.trim(),address:$('cn_addr').value.trim(),
+        refId:refInv?refInv.id:'',refNo:refInv?refInv.no:'',reason:$('cn_reason').value,desc:$('cn_desc').value.trim(),
+        amount:-total,baseAmt:-base,gstRate:r,gstAmt:-gst,status:st,paidOn:st==='Payment Received'?($('cn_paid').value||today()):''
+      });
+      if(x)L[cnIndex]=obj;else listW().push(obj);
+      FOCUS=obj.id;closeModal();save();
+    };
+    if(x)$('cn_del').onclick=function(){
+      if(confirm('Delete credit note '+x.no+'?')){withUndo('Credit note '+x.no+' deleted',function(){L.splice(cnIndex,1);closeModal();save()})}
+    };
+    var f=$('cn_amt');if(f)f.focus();
+  };
+
   function saveInvoice(index){
     var L=list(),old=index===null?null:L[index];
     var no=$('inv_no').value.trim(),party=$('inv_party').value.trim(),raw=$('inv_amt').value,amount=Number(raw);
@@ -6387,7 +6504,7 @@ html[data-theme=dark] button>.krn-nb{box-shadow:0 0 0 2px #0b1220}
     h+='<div class="sm" style="margin-top:6px">GST in these invoices: '+money(D.iG)+'</div>';
     if(D.inv.length){
       h+='<div class="tw"><table style="margin-top:10px"><thead><tr><th>Date</th><th>Invoice No.</th><th>Party</th><th>Location</th><th class="r">GST</th><th class="r">Amount</th><th>Status</th><th>Due / Paid</th></tr></thead><tbody>'+
-        D.inv.map(function(x){var st=statusOf(x);return '<tr><td>'+esc(fmt(x.date))+'</td><td>'+esc(x.no)+'</td><td>'+esc(x.party)+'</td><td>'+esc(x.location||'')+'</td><td class="r">'+money(x.gstAmt||0)+'</td><td class="r">'+money(x.amount)+'</td><td>'+esc(st)+'</td><td>'+esc(st==='Payment Received'?fmt(x.paidOn):(x.dueDate?fmt(x.dueDate):''))+'</td></tr>'}).join('')+'</tbody></table></div>';
+        D.inv.map(function(x){var st=statusOf(x);return '<tr><td>'+esc(fmt(x.date))+'</td><td>'+esc(x.no)+(isCN(x)?' <span class="sm">(credit note)</span>':'')+'</td><td>'+esc(x.party)+'</td><td>'+esc(x.location||'')+'</td><td class="r">'+money(x.gstAmt||0)+'</td><td class="r">'+money(x.amount)+'</td><td>'+esc(st)+'</td><td>'+esc(st==='Payment Received'?fmt(x.paidOn):(x.dueDate?fmt(x.dueDate):''))+'</td></tr>'}).join('')+'</tbody></table></div>';
     }else h+='<p class="sm">No invoices dated in this month.</p>';
     h+='<h2>Monthly payments due</h2><div class="k">'+kp('Payments',D.mon.length)+kp('Total',money(D.mT))+kp('Paid',money(D.mP))+kp('Still to pay',money(D.mD))+'</div>';
     h+='<div class="sm" style="margin-top:6px">GST in these payments: '+money(D.mG)+'</div>';
@@ -6422,7 +6539,7 @@ html[data-theme=dark] button>.krn-nb{box-shadow:0 0 0 2px #0b1220}
     r(['Monthly Report',monthLabel(D.ym)]);r(['Generated on',today()]);r([]);
     r(['INVOICES RAISED']);r(['Count',D.inv.length,'Total',D.iT,'Received',D.iP,'Pending',D.iD,'Overdue',D.iO,'GST',D.iG]);
     r(['Date','Invoice No','Party','Location','Address','GST No','GST Amount','Amount','Status','Due Date','Paid On']);
-    D.inv.forEach(function(x){r([x.date||'',x.no||'',x.party||'',x.location||'',x.address||'',x.gstNo||'',Number(x.gstAmt||0),Number(x.amount||0),statusOf(x),x.dueDate||'',x.paidOn||''])});
+    D.inv.forEach(function(x){r([x.date||'',(x.no||'')+(isCN(x)?' (Credit note)':''),x.party||'',x.location||'',x.address||'',x.gstNo||'',Number(x.gstAmt||0),Number(x.amount||0),statusOf(x),x.dueDate||'',x.paidOn||''])});
     r([]);r(['MONTHLY PAYMENTS DUE']);r(['Count',D.mon.length,'Total',D.mT,'Paid',D.mP,'To pay',D.mD,'GST',D.mG]);
     r(['Due Date','Payment','Party','Location','Address','GST Amount','Amount','Status','Paid On']);
     D.mon.forEach(function(x){r([x.due||'',x.t.name||'',x.t.party||'',x.t.location||'',x.t.address||'',Number(x.gst||0),Number(x.amount||0),monStateText(x),x.rec.paidOn||''])});
@@ -7159,6 +7276,269 @@ tbody tr,.card,.btn,.quick-filter button{transition-property:background-color,bo
     var on=!!document.getElementById('invTab')&&!!(document.getElementById('addInvoice')||document.getElementById('addTpl'));
     if(b.hidden===on)b.hidden=!on;
   },800);
+})();
+</script>
+<script id="krn-history-script">
+(function(){
+  var KEEP=30,TBL='app_state_history',FLAG='krnHistDay',failed=false,pruned=false;
+  function lget(k){try{return localStorage.getItem(k)}catch(e){return null}}
+  function lset(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+  function ymd(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+  function isAdmin(){try{return !!(cloud&&cloudReady&&cloudUser&&cloudRole==='admin')}catch(e){return false}}
+  function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  function note(d){d=d||{};return (d.invoices||[]).length+' invoices \u2022 '+(d.monthly||[]).length+' recurring payments \u2022 '+(d.employees||[]).length+' employees'}
+
+  /* Called right before every save: once a day, keep a copy of the data as it was BEFORE that day's first change */
+  window.krnHistBefore=async function(){
+    try{
+      if(failed||!isAdmin())return;
+      var t=ymd(new Date());if(lget(FLAG)===t)return;
+      var prev=window.__krnLastCloud;if(!prev)return;
+      var data=JSON.parse(prev);
+      var r=await cloud.from(TBL).upsert({day:t,kind:'start',note:note(data),size:prev.length,data:data},{onConflict:'day,kind',ignoreDuplicates:true});
+      if(r.error){failed=true;console.warn('History not saved:',r.error.message);return}
+      lset(FLAG,t);
+      if(!pruned){pruned=true;await prune()}
+    }catch(e){failed=true;console.warn('History error',e)}
+  };
+  /* keep only the newest 30 daily copies (restore points are removed after 30 days) */
+  async function prune(){
+    var q=await cloud.from(TBL).select('id').eq('kind','start').order('day',{ascending:false}).range(KEEP,KEEP+300);
+    if(!q.error&&q.data&&q.data.length)await cloud.from(TBL).delete().in('id',q.data.map(function(x){return x.id}));
+    await cloud.from(TBL).delete().like('kind','restore%').lt('created_at',new Date(Date.now()-KEEP*864e5).toISOString());
+  }
+
+  var css=document.createElement('style');
+  css.textContent="#krnHist{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:rgba(3,8,20,.62);backdrop-filter:blur(4px)}"+
+  "#krnHist .hb{width:min(94vw,520px);max-height:86vh;display:flex;flex-direction:column;background:#0b1226;color:#e8eefc;border:1px solid #24345a;border-radius:18px;padding:18px;box-shadow:0 24px 60px rgba(0,0,0,.55)}"+
+  "#krnHist h3{margin:0 0 4px;font-size:18px}#krnHist p{margin:0 0 12px;color:#9db2cf;font-size:12.5px}"+
+  "#krnHist .hl{overflow:auto;display:flex;flex-direction:column;gap:8px;padding-right:2px}"+
+  "#krnHist .hr{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #22345a;border-radius:12px;background:#0e1a33}"+
+  "#krnHist .hr .t{flex:1;min-width:0}#krnHist .hr b{display:block;font-size:13.5px}#krnHist .hr small{color:#9db2cf;font-size:11.5px}"+
+  "#krnHist button{appearance:none;border:0;border-radius:10px;padding:8px 13px;font-weight:800;font-size:12.5px;background:#1769e0;color:#fff}"+
+  "#krnHist button.x{background:#22345a;margin-top:12px;width:100%;padding:11px}#krnHist button:disabled{opacity:.5}"+
+  "#krnHist .em{padding:18px;text-align:center;color:#9db2cf;font-size:13px}";
+  document.head.appendChild(css);
+
+  function dayLabel(d){try{return new Date(d+'T00:00:00').toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}catch(e){return d}}
+  async function openHistory(){
+    if(!isAdmin()){alert('Only an Admin can use version history.');return}
+    var old=document.getElementById('krnHist');if(old)old.remove();
+    var o=document.createElement('div');o.id='krnHist';
+    o.innerHTML='<div class="hb" role="dialog" aria-label="Version history"><h3>\uD83D\uDD58 Version history</h3><p>Last 30 daily copies. Each one is your data as it was at the start of that day. Restoring first saves your current data as a safety copy.</p><div class="hl"><div class="em">Loading\u2026</div></div><button type="button" class="x">Close</button></div>';
+    document.body.appendChild(o);
+    o.querySelector('.x').onclick=function(){o.remove()};
+    o.addEventListener('click',function(e){if(e.target===o)o.remove()});
+    var list=o.querySelector('.hl');
+    var r=await cloud.from(TBL).select('id,day,kind,note,size,created_at').order('day',{ascending:false}).order('created_at',{ascending:false}).limit(80);
+    if(r.error){list.innerHTML='<div class="em">History is not set up yet.<br>Run <b>history_setup.sql</b> once in Supabase (SQL Editor).<br><small>'+esc(r.error.message)+'</small></div>';return}
+    if(!r.data.length){list.innerHTML='<div class="em">No copies yet. The first one is created automatically at your next save.</div>';return}
+    list.innerHTML=r.data.map(function(x){
+      var isR=String(x.kind).indexOf('restore')===0;
+      var title=isR?'Before restore \u2022 '+new Date(x.created_at).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):dayLabel(x.day)+' \u2022 start of day';
+      return '<div class="hr"><div class="t"><b>'+esc(title)+'</b><small>'+esc(x.note||'')+(x.size?' \u2022 '+Math.max(1,Math.round(x.size/1024))+' KB':'')+'</small></div><button type="button" data-id="'+x.id+'" data-t="'+esc(title)+'">Restore</button></div>';
+    }).join('');
+    list.querySelectorAll('button[data-id]').forEach(function(b){b.onclick=function(){restore(+b.dataset.id,b.dataset.t,o,b)}});
+  }
+  async function restore(id,title,o,btn){
+    if(!confirm('Restore your data to:\n'+title+'\n\nYour current data is saved as a safety copy first, so you can come back to it from this list.\n\nContinue?'))return;
+    btn.disabled=true;btn.textContent='Restoring\u2026';
+    try{
+      var g=await cloud.from(TBL).select('data').eq('id',id).single();
+      if(g.error||!g.data||!g.data.data)throw new Error(g.error?g.error.message:'Copy not found');
+      var cur=JSON.stringify(db),stamp=Date.now();
+      var s1=await cloud.from(TBL).insert({day:ymd(new Date()),kind:'restore'+stamp,note:note(db),size:cur.length,data:JSON.parse(cur)});
+      if(s1.error)throw new Error('Could not save a safety copy: '+s1.error.message);
+      db=g.data.data;
+      if(typeof save==='function')await save();
+      o.remove();
+      if(window.krnToast)window.krnToast('ok','\uD83D\uDD58','Data restored','Safety copy of the old data kept in history',5000);
+    }catch(e){alert('Restore failed: '+e.message);btn.disabled=false;btn.textContent='Restore'}
+  }
+  window.krnOpenHistory=openHistory;
+
+  var hb=document.createElement('button');hb.className='btn';hb.id='histBtn';hb.type='button';hb.textContent='\uD83D\uDD58 History';hb.style.display='none';
+  var rb=document.getElementById('restoreBtn');
+  if(rb&&rb.parentNode)rb.parentNode.insertBefore(hb,rb.nextSibling);
+  hb.onclick=openHistory;
+  setInterval(function(){hb.style.display=isAdmin()?'':'none'},1500);
+})();
+</script>
+<script id="krn-lock-script">
+(function(){
+  var K_HASH='krnPinHash',K_SALT='krnPinSalt',K_UID='krnPinUid',K_LEN='krnPinLen',K_MIN='krnLockMin',MAXF=5;
+  var locked=false,last=Date.now(),fails=0,buf='',needUnlock=false,lockEl=null,busyVerify=false;
+  function lget(k){try{return localStorage.getItem(k)}catch(e){return null}}
+  function lset(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+  function ldel(k){try{localStorage.removeItem(k)}catch(e){}}
+  function pinSet(){return !!lget(K_HASH)}
+  function pinLen(){var n=parseInt(lget(K_LEN)||'4',10);return n>=4&&n<=6?n:4}
+  function minutes(){var v=parseInt(lget(K_MIN)||'0',10);return v>0?v:0}
+  function loggedIn(){try{return !!(cloudUser&&cloudReady)}catch(e){return false}}
+  window.krnLockMin=minutes;
+  window.krnSetLockMin=function(m){lset(K_MIN,String(m||0));last=Date.now()};
+
+  /* ---- hashing (SHA-256 when the browser allows, simple fallback otherwise) ---- */
+  function fallback(str){var h1=0xdeadbeef,h2=0x41c6ce57;for(var i=0;i<str.length;i++){var c=str.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677)}h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return 'f'+(4294967296*(2097151&h2)+(h1>>>0)).toString(16)}
+  async function sha(t){
+    try{if(window.crypto&&crypto.subtle){var b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,'0')}).join('')}}catch(e){}
+    return fallback(t);
+  }
+  function rnd(){try{var a=new Uint8Array(12);crypto.getRandomValues(a);return Array.from(a).map(function(x){return x.toString(16).padStart(2,'0')}).join('')}catch(e){return String(Math.random()).slice(2)+Date.now()}}
+  function hashPin(p){return sha((lget(K_SALT)||'')+':'+p)}
+  function clearPin(){[K_HASH,K_SALT,K_UID,K_LEN].forEach(ldel)}
+
+  /* ---- styles ---- */
+  var css=document.createElement('style');
+  css.textContent="#krnLock{position:fixed;inset:0;z-index:2147483600;display:none;align-items:center;justify-content:center;background:radial-gradient(circle at 30% 20%,#12244a,#050a17 70%);color:#e8eefc;font-family:inherit;user-select:none;-webkit-user-select:none}"+
+  "#krnLock.on{display:flex}#krnLock .lk{width:min(92vw,340px);text-align:center}"+
+  "#krnLock .lk-i{font-size:38px}#krnLock h2{margin:6px 0 2px;font-size:22px}#krnLock p{margin:0 0 18px;color:#9db2cf;font-size:13px}"+
+  "#krnLock .lk-d{display:flex;justify-content:center;gap:14px;margin:0 0 8px;height:16px}"+
+  "#krnLock .lk-d i{width:14px;height:14px;border-radius:50%;border:2px solid #4a6fb5;transition:all .12s}#krnLock .lk-d i.f{background:#38bdf8;border-color:#38bdf8;box-shadow:0 0 12px #38bdf8}"+
+  "#krnLock .lk-e{min-height:18px;color:#f87171;font-size:12.5px;font-weight:700;margin-bottom:10px}"+
+  "#krnLock .lk-k{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:0 auto 14px;max-width:280px}"+
+  "#krnLock .lk-k button{appearance:none;height:62px;border-radius:50%;border:1px solid #24345a;background:rgba(255,255,255,.05);color:#e8eefc;font-size:24px;font-weight:700;touch-action:manipulation;-webkit-tap-highlight-color:transparent}"+
+  "#krnLock .lk-k button:active{background:#1769e0}#krnLock .lk-k button.s{font-size:14px;color:#9db2cf}"+
+  "#krnLock .lk-f{appearance:none;background:none;border:0;color:#7fb2ff;font-size:13px;text-decoration:underline;padding:8px}"+
+  "#krnLock.shake .lk-d{animation:krnLkShake .35s}@keyframes krnLkShake{20%,60%{transform:translateX(-9px)}40%,80%{transform:translateX(9px)}}"+
+  "#krnPinDlg{position:fixed;inset:0;z-index:2147483500;display:flex;align-items:center;justify-content:center;background:rgba(3,8,20,.62);backdrop-filter:blur(4px)}"+
+  "#krnPinDlg .pb{width:min(92vw,380px);background:#0b1226;color:#e8eefc;border:1px solid #24345a;border-radius:18px;padding:18px;box-shadow:0 24px 60px rgba(0,0,0,.55)}"+
+  "#krnPinDlg h3{margin:0 0 4px;font-size:18px}#krnPinDlg p{margin:0 0 12px;color:#9db2cf;font-size:12.5px}"+
+  "#krnPinDlg label{display:block;margin:10px 0 4px;font-size:12px;font-weight:700;color:#9db2cf}"+
+  "#krnPinDlg input{width:100%;box-sizing:border-box;height:44px;border-radius:10px;border:1px solid #2a3d66;background:#0e1a33;color:#fff;font-size:18px;letter-spacing:8px;text-align:center;padding:0 10px}"+
+  "#krnPinDlg .er{min-height:18px;color:#f87171;font-size:12.5px;font-weight:700;margin-top:8px}"+
+  "#krnPinDlg .bt{display:flex;gap:8px;margin-top:12px}#krnPinDlg button{flex:1;appearance:none;border:0;border-radius:10px;padding:11px;font-weight:800;font-size:13px;background:#1769e0;color:#fff}"+
+  "#krnPinDlg button.g{background:#22345a}#krnPinDlg button.d{background:#7f1d1d}"+
+  "@media print{#krnLock{display:none!important}}";
+  document.head.appendChild(css);
+
+  /* ---- lock screen ---- */
+  function build(){
+    if(lockEl)return;
+    lockEl=document.createElement('div');lockEl.id='krnLock';lockEl.setAttribute('role','dialog');lockEl.setAttribute('aria-label','App locked');
+    lockEl.innerHTML='<div class="lk"><div class="lk-i">\uD83D\uDD12</div><h2>App locked</h2><p>Enter your PIN to continue</p><div class="lk-d" id="lkDots"></div><div class="lk-e" id="lkErr"></div>'+
+      '<div class="lk-k">'+[1,2,3,4,5,6,7,8,9].map(function(n){return '<button type="button" data-k="'+n+'">'+n+'</button>'}).join('')+'<button type="button" class="s" data-k="c">Clear</button><button type="button" data-k="0">0</button><button type="button" class="s" data-k="b">\u232B</button></div>'+
+      '<button type="button" class="lk-f" id="lkForgot">Forgot PIN? Log out</button></div>';
+    document.body.appendChild(lockEl);
+    lockEl.addEventListener('click',function(e){
+      var b=e.target.closest&&e.target.closest('button[data-k]');
+      if(b){press(b.getAttribute('data-k'));return}
+      if(e.target.id==='lkForgot'){
+        if(confirm('Log out and remove the PIN?\n\nYou will log in again with your email and password.'))forceLogout();
+      }
+    });
+  }
+  function dots(){var n=pinLen(),h='';for(var i=0;i<n;i++)h+='<i'+(i<buf.length?' class="f"':'')+'></i>';var d=document.getElementById('lkDots');if(d)d.innerHTML=h}
+  function setErr(t){var e=document.getElementById('lkErr');if(e)e.textContent=t||''}
+  function lock(){
+    if(locked||!pinSet())return;
+    build();locked=true;buf='';fails=0;setErr('');dots();
+    try{if(document.activeElement&&document.activeElement.blur)document.activeElement.blur()}catch(e){}
+    lockEl.classList.add('on');
+    var m=document.getElementById('krnHist');if(m)m.remove();
+  }
+  function unlock(){locked=false;needUnlock=false;buf='';last=Date.now();if(lockEl)lockEl.classList.remove('on')}
+  function forceLogout(){
+    clearPin();unlock();
+    try{if(typeof onlineLogout==='function')onlineLogout()}catch(e){}
+  }
+  async function press(k){
+    if(!locked||busyVerify)return;
+    if(k==='b')buf=buf.slice(0,-1);
+    else if(k==='c')buf='';
+    else if(/^\d$/.test(k)&&buf.length<pinLen())buf+=k;
+    setErr('');dots();
+    if(buf.length===pinLen()){
+      busyVerify=true;
+      var ok=(await hashPin(buf))===lget(K_HASH);
+      busyVerify=false;
+      if(ok){unlock();return}
+      fails++;buf='';dots();
+      lockEl.classList.remove('shake');void lockEl.offsetWidth;lockEl.classList.add('shake');
+      if(fails>=MAXF){setErr('Too many wrong tries \u2014 logging out');setTimeout(forceLogout,900)}
+      else setErr('Wrong PIN ('+fails+'/'+MAXF+')');
+    }
+  }
+  window.addEventListener('keydown',function(e){
+    if(!locked)return;
+    if(/^\d$/.test(e.key)){e.preventDefault();e.stopPropagation();press(e.key)}
+    else if(e.key==='Backspace'){e.preventDefault();e.stopPropagation();press('b')}
+    else if(e.key==='Escape'||e.key==='Tab'){e.preventDefault();e.stopPropagation()}
+  },true);
+
+  /* ---- idle detection ---- */
+  function bump(){if(!locked)last=Date.now()}
+  ['mousemove','mousedown','keydown','touchstart','wheel','scroll','click'].forEach(function(ev){window.addEventListener(ev,bump,{passive:true,capture:true})});
+  function check(){
+    var m=minutes();
+    if(!m||locked||!loggedIn())return;
+    if(Date.now()-last<m*60000)return;
+    if(pinSet())lock();
+    else{
+      if(window.__krnBusy>0)return;
+      last=Date.now();
+      try{if(typeof onlineLogout==='function')onlineLogout()}catch(e){}
+    }
+  }
+  setInterval(check,5000);
+  document.addEventListener('visibilitychange',function(){if(!document.hidden)check()});
+
+  /* ---- open the app locked when a PIN exists ---- */
+  if(pinSet()){
+    needUnlock=true;lock();
+    var t0=Date.now();
+    var iv=setInterval(function(){
+      if(!needUnlock){clearInterval(iv);return}
+      if(loggedIn()){
+        var uid=lget(K_UID);
+        if(uid&&cloudUser&&cloudUser.id!==uid){clearPin();unlock();clearInterval(iv);return}   /* PIN belongs to another account */
+        if(!locked&&pinSet())lock();
+      }else if(Date.now()-t0>12000){unlock();clearInterval(iv)}   /* nobody logged in: show the login page */
+    },300);
+  }
+
+  /* ---- set / change / remove PIN ---- */
+  window.krnPinDialog=function(){
+    if(!loggedIn()){alert('Please log in first.');return}
+    var old=document.getElementById('krnPinDlg');if(old)old.remove();
+    var has=pinSet(),o=document.createElement('div');o.id='krnPinDlg';
+    function inp(id,l){return '<label for="'+id+'">'+l+'</label><input id="'+id+'" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off">'}
+    o.innerHTML='<div class="pb" role="dialog"><h3>\uD83D\uDD12 App PIN</h3><p>'+(has?'Change or remove your PIN.':'Choose a 4 to 6 digit PIN. The app will ask for it after you are idle and when you open it.')+' It is stored only on this device.</p>'+
+      (has?inp('pnCur','Current PIN'):'')+inp('pnNew',has?'New PIN':'PIN (4\u20136 digits)')+inp('pnNew2','Confirm PIN')+'<div class="er" id="pnErr"></div>'+
+      '<div class="bt"><button type="button" class="g" id="pnX">Cancel</button>'+(has?'<button type="button" class="d" id="pnDel">Remove</button>':'')+'<button type="button" id="pnOk">Save PIN</button></div></div>';
+    document.body.appendChild(o);
+    function err(t){document.getElementById('pnErr').textContent=t}
+    function v(id){var e=document.getElementById(id);return e?e.value.replace(/\D/g,''):''}
+    document.getElementById('pnX').onclick=function(){o.remove()};
+    o.addEventListener('click',function(e){if(e.target===o)o.remove()});
+    var f=document.getElementById(has?'pnCur':'pnNew');if(f)f.focus();
+    async function checkCur(){if(!has)return true;var c=v('pnCur');if(!c){err('Enter your current PIN');return false}if((await hashPin(c))!==lget(K_HASH)){err('Current PIN is wrong');return false}return true}
+    document.getElementById('pnOk').onclick=async function(){
+      if(!(await checkCur()))return;
+      var a=v('pnNew'),b=v('pnNew2');
+      if(!/^\d{4,6}$/.test(a)){err('PIN must be 4 to 6 digits');return}
+      if(a!==b){err('The two PINs do not match');return}
+      lset(K_SALT,rnd());lset(K_HASH,await hashPin(a));lset(K_LEN,String(a.length));lset(K_UID,cloudUser&&cloudUser.id?cloudUser.id:'');
+      if(!minutes()){lset(K_MIN,'5');var sel=document.getElementById('kpLockMin');if(sel)sel.value='5'}
+      last=Date.now();o.remove();
+      if(window.krnToast)window.krnToast('ok','\uD83D\uDD12','PIN saved','Auto-lock is on: '+minutes()+' min idle',4500);
+    };
+    var del=document.getElementById('pnDel');
+    if(del)del.onclick=async function(){
+      if(!(await checkCur()))return;
+      if(!confirm('Remove the PIN? With auto-lock on, you will be logged out when idle instead.'))return;
+      clearPin();o.remove();
+      if(window.krnToast)window.krnToast('ok','\uD83D\uDD13','PIN removed','',3500);
+    };
+  };
+
+  /* ---- "Lock" button next to the other top buttons ---- */
+  var lb=document.createElement('button');lb.className='btn';lb.id='lockBtn';lb.type='button';lb.textContent='\uD83D\uDD12 Lock';lb.style.display='none';
+  var anchor=document.getElementById('histBtn')||document.getElementById('restoreBtn');
+  if(anchor&&anchor.parentNode)anchor.parentNode.insertBefore(lb,anchor.nextSibling);
+  lb.onclick=lock;
+  (function(){var sel=document.getElementById('kpLockMin');if(sel){sel.value=String(minutes());sel.addEventListener('change',function(){window.krnSetLockMin(+sel.value)})}})();
+  setInterval(function(){lb.style.display=(pinSet()&&loggedIn())?'':'none'},1500);
 })();
 </script>
 </body></html>
