@@ -7513,7 +7513,7 @@ tbody tr,.card,.btn,.quick-filter button{transition-property:background-color,bo
   var SKEY='krnSph.loginVideoSound',sbtn=null;
   function wantSound(){return true}
   function updBtn(){var v=document.getElementById('krnLoginVideo');if(!sbtn)return;var on=v&&!v.muted;sbtn.textContent=on?'\uD83D\uDD0A':'\uD83D\uDD07';sbtn.title=on?'Mute video sound':'Play video sound';sbtn.setAttribute('aria-label',sbtn.title)}
-  function setSound(on,save){var v=document.getElementById('krnLoginVideo');if(!v)return;v.muted=!on;if(on){v.volume=.6;var p=v.play();if(p&&p.catch)p.catch(function(){v.muted=true;updBtn()})}
+  function setSound(on,save){var v=document.getElementById('krnLoginVideo');if(!v)return;v.muted=!on;if(on){v.volume=.6;var p=v.play();if(p&&p.catch)p.catch(function(){v.muted=true;updBtn();var q=v.play();if(q&&q.catch)q.catch(function(){})})}
     if(save!==false){try{localStorage.setItem(SKEY,on?'1':'0')}catch(e){}}updBtn()}
   function ensureBtn(){
     if(!sbtn){sbtn=document.createElement('button');sbtn.id='krnLoginSoundBtn';sbtn.type='button';
