@@ -5713,6 +5713,35 @@ html[data-theme=dark] button>.krn-nb{box-shadow:0 0 0 2px #0b1220}
  html[data-theme=dark] #invTab table td.m-act{background:#0e182b!important}
  html[data-theme=dark] #invTab table thead th:last-child{background:#14233d!important}
 }
+
+/* ===== premium monthly payments ===== */
+.mk-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 14px}
+.mk{--c:59,130,246;appearance:none;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;padding:14px 16px;border-radius:18px;border:1px solid rgba(var(--c),.4);background:linear-gradient(135deg,rgba(var(--c),.2),rgba(var(--c),.04));color:inherit;font:inherit;transition:transform .15s,box-shadow .2s}
+.mk:hover{transform:translateY(-2px);box-shadow:0 12px 28px -14px rgba(var(--c),.7)}
+.mk.on{box-shadow:0 0 0 2px rgba(var(--c),.6)}
+.mk.bad{--c:239,68,68}.mk.warn{--c:245,158,11}.mk.ok{--c:34,197,94}
+.mk:after{content:"";position:absolute;right:-26px;top:-26px;width:92px;height:92px;border-radius:50%;background:rgba(var(--c),.15);pointer-events:none}
+.mk .ic{font-size:18px;line-height:1}.mk .lb{font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;opacity:.75}
+.mk b{font-size:22px;line-height:1.15}.mk small{opacity:.72;font-size:11.5px}
+.mc-row{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px}
+.mc{appearance:none;display:inline-flex;gap:7px;align-items:center;padding:7px 13px;border-radius:999px;border:1px solid rgba(128,140,160,.38);background:transparent;color:inherit;font:inherit;font-size:12.5px;font-weight:700}
+.mc i{font-style:normal;font-size:11px;padding:1px 7px;border-radius:999px;background:rgba(128,140,160,.22)}
+.mc:hover{border-color:#4a8cf0}
+.mc.on{background:linear-gradient(135deg,#1769e0,#0b4ca8);color:#fff;border-color:transparent}.mc.on i{background:rgba(255,255,255,.28)}
+.mon-sum{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px;font-size:12.5px}
+.mon-sum .bt{display:flex;gap:6px}
+.mon-sum .bt .btn{padding:5px 10px;font-size:12px}
+.mon-alert-scroll{max-height:340px;overflow:auto;padding-right:4px}
+.mon-alert-t{margin-top:10px;width:100%}
+.mon-gh2{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0 8px;padding:12px 14px;border-radius:14px;border:1px solid rgba(128,140,160,.32);background:linear-gradient(90deg,rgba(23,105,224,.12),rgba(23,105,224,.02));user-select:none}
+.mon-gh2 .chev{display:inline-block;transition:transform .2s}.mon-gh2.open .chev{transform:rotate(90deg)}
+.mon-gh2 .gm{font-size:12px;opacity:.8}.mon-gh2 em{color:#ef4444;font-style:normal;font-weight:800}
+.mon-gh2 .gs{margin-left:auto;font-size:12px;opacity:.85}
+.mon-more{margin:8px 0 14px;width:100%}
+.mon-setup-h{appearance:none;width:100%;display:flex;align-items:center;gap:10px;padding:12px 14px;margin-top:16px;border-radius:14px;border:1px solid rgba(128,140,160,.32);background:transparent;color:inherit;font:inherit;font-weight:800;text-align:left}
+.mon-setup-h .cnt{margin-left:auto;font-size:12px;padding:2px 9px;border-radius:999px;background:rgba(128,140,160,.22)}
+.mon-setup-grid{max-height:440px;overflow:auto;margin-top:10px}
+@media(max-width:760px){.mk-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.mk b{font-size:18px}.mon-gh2 .gs{margin-left:0;width:100%}}
 </style>
 <script id="krn-invoices-v2-script">
 (function(){
@@ -6153,12 +6182,28 @@ html[data-theme=dark] button>.krn-nb{box-shadow:0 0 0 2px #0b1220}
   /* =====================================================================
      TAB 2 : MONTHLY PAYMENTS (rent, electricity, internet ...)
      ===================================================================== */
+  function actionable(r){return r.state==='pending'||(r.state==='notsub'&&r.ym>=addMonth(curMonth(),-1))}
+  function dd(r){return diffDays(today(),r.due)}
+  function matchQ(r){
+    if(!M.q)return true;
+    var t=r.t,h=[t.name,t.party,t.location,t.address,t.gstNo,t.type,monthLabel(r.ym)].join(' ').toLowerCase();
+    return M.q.toLowerCase().split(/\s+/).every(function(w){return !w||h.indexOf(w)>-1});
+  }
+  function matchSt(r,st){
+    if(st==='all')return true;
+    if(st==='over')return actionable(r)&&dd(r)<0;
+    if(st==='soon')return actionable(r)&&dd(r)>=0&&dd(r)<=7;
+    if(st==='todo')return actionable(r);
+    return r.state===st;
+  }
+  function baseRows(){return instances().filter(function(r){return (M.month==='all'||r.ym===M.month)&&matchQ(r)})}
+  /* newest month first; inside a month unpaid (most overdue first) then paid */
   function monFiltered(){
-    return instances().filter(function(r){
-      if(M.month!=='all'&&r.ym!==M.month)return false;
-      if(M.st!=='all'&&r.state!==M.st)return false;
-      return true;
-    }).sort(function(a,b){return a.ym===b.ym?(a.due<b.due?-1:(a.due>b.due?1:0)):(a.ym<b.ym?1:-1)});
+    return baseRows().filter(function(r){return matchSt(r,M.st)}).sort(function(a,b){
+      if(a.ym!==b.ym)return a.ym<b.ym?1:-1;
+      var pa=a.state==='paid'?1:0,pb=b.state==='paid'?1:0;if(pa!==pb)return pa-pb;
+      return a.due<b.due?-1:(a.due>b.due?1:0);
+    });
   }
   function monthOptions(){
     var all=instances(),seen={},arr=[];
@@ -6188,40 +6233,90 @@ html[data-theme=dark] button>.krn-nb{box-shadow:0 0 0 2px #0b1220}
     return h+'</div>';
   }
 
+  function alertHtml2(items,ro){
+    if(!items.length)return alertHtml(items,ro);
+    var total=0,bad=0;
+    items.forEach(function(it){total+=it.amount;if(diffDays(today(),it.due)<=0)bad++});
+    var show=M.alertAll?items:items.slice(0,5);
+    var h='<div class="inv-alert mon-alert"><div class="inv-alert-h"><b>\uD83D\uDCB8 Payments to make</b><span>'+plural(items.length,'payment')+' \u2022 '+money(total)+(bad?' \u2022 <em>'+bad+' overdue / due today</em>':'')+'</span></div><div class="'+(M.alertAll?'mon-alert-scroll':'')+'">';
+    show.forEach(function(it){
+      h+='<div class="inv-ar"><div class="l"><b>'+esc(it.name)+'</b><small>'+esc(it.party)+(it.party?' \u2022 ':'')+esc(monthLabel(it.ym))+(it.kind==='inv'?' \u2022 Invoice':'')+(it.ns?' \u2022 Bill not submitted':'')+'</small></div>'+
+         '<div class="m">'+money(it.amount)+'</div>'+
+         '<div class="d">'+fmt(it.due)+chipHtml(it.due)+'</div>'+
+         '<div class="a">'+(ro?'':'<button type="button" class="btn invPay" data-k="'+it.kind+'" data-a="'+esc(it.a)+'">Mark Paid</button>')+'</div></div>';
+    });
+    h+='</div>';
+    if(items.length>5)h+='<button type="button" class="btn mon-alert-t" id="monAlertT">'+(M.alertAll?'Show less':'View all '+items.length+' payments')+'</button>';
+    return h+'</div>';
+  }
+
   function monTab(){
     var ro=readOnly(),months=monthOptions();
+    M.q=M.q||'';M.open=M.open||{};M.lim=M.lim||{};
     if(M.month!=='all'&&months.indexOf(M.month)<0)M.month='all';
     $('invTab').innerHTML=
+      '<div class="mk-grid" id="monKpi"></div>'+
       '<div class="toolbar inv-toolbar">'+
+        '<input id="monQ" class="search" type="search" autocomplete="off" placeholder="\uD83D\uDD0D Search payment, party, location, address\u2026" value="'+esc(M.q)+'">'+
         '<select id="monMonth" aria-label="Month"><option value="all">All months</option>'+months.map(function(m){return '<option value="'+m+'">'+esc(monthLabel(m))+'</option>'}).join('')+'</select>'+
-        '<select id="monStatus" aria-label="Status"><option value="all">All status</option><option value="notsub">Bill not submitted</option><option value="pending">Payment pending</option><option value="paid">Paid</option></select>'+
         '<button type="button" class="btn" id="monExport">\u2B07 Export CSV</button>'+
         (ro?'':'<button type="button" class="btn primary" id="addTpl">+ Add Monthly Payment</button>')+
       '</div>'+
-      '<div id="monAlert"></div><div class="inv-cards" id="monCards"></div><div id="monGroups"></div><div id="monSetup"></div>';
-    $('monMonth').value=M.month;$('monStatus').value=M.st;
+      '<div class="mc-row" id="monChips"></div><div class="mon-sum" id="monSum"></div>'+
+      '<div id="monAlert"></div><div id="monGroups"></div><div id="monSetup"></div>';
+    $('monMonth').value=M.month;
     $('monMonth').onchange=function(){M.month=this.value;monPaint()};
-    $('monStatus').onchange=function(){M.st=this.value;monPaint()};
+    var qt;$('monQ').oninput=function(){var v=this.value;clearTimeout(qt);qt=setTimeout(function(){M.q=v.trim();monPaint()},140)};
     $('monExport').onclick=exportMonthly;
     if($('addTpl'))$('addTpl').onclick=function(){openTplModal(null)};
     monPaint();
   }
 
-  function monPaint(){
-    var ro=readOnly(),rows=monFiltered();
-    $('monAlert').innerHTML=alertHtml(toPay(),ro);
-    var tot=0,paid=0,pend=0,ns=0,nsN=0,pendN=0,paidN=0,gstSum=0;
-    rows.forEach(function(r){
-      tot+=r.amount;gstSum+=Number(r.gst||0);
-      if(r.state==='paid'){paid+=r.amount;paidN++}else if(r.state==='pending'){pend+=r.amount;pendN++}else{ns+=r.amount;nsN++}
-    });
-    var scope=M.month==='all'?'All months':monthLabel(M.month);
-    $('monCards').innerHTML=
-      card('Total',money(tot),scope+' \u2022 '+plural(rows.length,'payment')+(gstSum?' \u2022 incl. GST '+money(gstSum):''))+
-      card('Paid',money(paid),plural(paidN,'payment'))+
-      card('Payment Pending',money(pend),'Bill submitted \u2022 '+plural(pendN,'payment'))+
-      card('Bill Not Submitted',money(ns),plural(nsN,'payment'));
+  function kpi(cls,ic,lb,amt,sub,chip){
+    return '<button type="button" class="mk '+cls+(M.st===chip?' on':'')+'" data-chip="'+chip+'"><span class="ic">'+ic+'</span><span class="lb">'+lb+'</span><b>'+money(amt)+'</b><small>'+sub+'</small></button>';
+  }
 
+  function groupHtml(ym,a,ro){
+    var t=0,p=0,d=0,od=0;
+    a.forEach(function(r){t+=r.amount;if(r.state==='paid')p+=r.amount;else d+=r.amount;if(actionable(r)&&dd(r)<0)od++});
+    var force=M.st!=='all'||!!M.q||M.month!=='all';
+    var open=M.open[ym]!==undefined?M.open[ym]:(force||ym===curMonth()||od>0);
+    var lim=M.lim[ym]||25,h='<div class="mon-gh2'+(open?' open':'')+'" data-ym="'+ym+'" data-open="'+(open?1:0)+'" role="button" tabindex="0"><span class="chev">\u25B8</span><b>'+esc(monthLabel(ym))+'</b>'+
+      '<span class="gm">'+plural(a.length,'payment')+(od?' \u2022 <em>'+od+' overdue</em>':'')+'</span>'+
+      '<span class="gs">Total '+money(t)+' \u2022 Paid '+money(p)+' \u2022 Due '+money(d)+'</span></div>';
+    if(open){
+      h+='<div class="tablewrap"><table class="mon-table"><thead><tr><th>Payment</th><th>GST No.</th><th>Due Date</th><th>GST</th><th>Amount</th><th>Bill</th><th>Payment Status</th><th>Action</th></tr></thead><tbody>'+
+        a.slice(0,lim).map(function(r){return monRow(r,ro)}).join('')+'</tbody></table></div>';
+      if(a.length>lim)h+='<button type="button" class="btn mon-more" data-ym="'+ym+'">Show 25 more ('+(a.length-lim)+' left)</button>';
+    }
+    return h;
+  }
+
+  function monPaint(){
+    var ro=readOnly(),all=instances(),base=baseRows(),rows=monFiltered(),cm=curMonth();
+    /* ---- summary cards (always on top, whole business, not affected by filters) ---- */
+    var K={over:{n:0,a:0,max:0},soon:{n:0,a:0},todo:{n:0,a:0},paid:{n:0,a:0}};
+    all.forEach(function(r){
+      if(actionable(r)){var d=dd(r);K.todo.n++;K.todo.a+=r.amount;
+        if(d<0){K.over.n++;K.over.a+=r.amount;if(-d>K.over.max)K.over.max=-d}else if(d<=7){K.soon.n++;K.soon.a+=r.amount}}
+      if(r.state==='paid'&&String(r.rec.paidOn||'').slice(0,7)===cm){K.paid.n++;K.paid.a+=r.amount}
+    });
+    $('monKpi').innerHTML=
+      kpi('bad','\u26A0\uFE0F','Overdue',K.over.a,plural(K.over.n,'payment')+(K.over.n?' \u2022 oldest '+plural(K.over.max,'day'):''),'over')+
+      kpi('warn','\u23F0','Due in 7 days',K.soon.a,plural(K.soon.n,'payment'),'soon')+
+      kpi('info','\uD83D\uDCB8','Total to pay',K.todo.a,plural(K.todo.n,'payment'),'todo')+
+      kpi('ok','\u2705','Paid this month',K.paid.a,plural(K.paid.n,'payment'),'paid');
+    /* ---- filter chips with live counts ---- */
+    var C={all:base.length,over:0,soon:0,todo:0,notsub:0,paid:0};
+    base.forEach(function(r){if(matchSt(r,'over'))C.over++;if(matchSt(r,'soon'))C.soon++;if(matchSt(r,'todo'))C.todo++;if(r.state==='notsub')C.notsub++;if(r.state==='paid')C.paid++});
+    $('monChips').innerHTML=[['all','All'],['over','\u26A0 Overdue'],['soon','\u23F0 Due soon'],['todo','To pay'],['notsub','Bill not submitted'],['paid','Paid']].map(function(c){
+      return '<button type="button" class="mc'+(M.st===c[0]?' on':'')+'" data-chip="'+c[0]+'">'+c[1]+'<i>'+C[c[0]]+'</i></button>'}).join('');
+    var tot=0,paid=0,due=0;rows.forEach(function(r){tot+=r.amount;if(r.state==='paid')paid+=r.amount;else due+=r.amount});
+    $('monSum').innerHTML='<span>Showing <b>'+rows.length+'</b> of '+all.length+' \u2022 Total '+money(tot)+' \u2022 Paid '+money(paid)+' \u2022 Due '+money(due)+'</span>'+
+      '<span class="bt"><button type="button" class="btn" id="monExpand">Expand all</button> <button type="button" class="btn" id="monCollapse">Collapse all</button></span>';
+    /* ---- compact "payments to make" (only on the plain view) ---- */
+    $('monAlert').innerHTML=(M.st==='all'&&!M.q&&M.month==='all')?alertHtml2(toPay(),ro):'';
+    /* ---- month groups (collapsible, 25 rows at a time) ---- */
     var g=$('monGroups');
     if(!mlist().length){
       g.innerHTML='<div class="empty" style="padding:28px">No monthly payments set up yet.'+(ro?'':' Click \u201C+ Add Monthly Payment\u201D and add things like rent, electricity or internet with the date by which they must be paid every month.')+'</div>';
@@ -6230,14 +6325,19 @@ html[data-theme=dark] button>.krn-nb{box-shadow:0 0 0 2px #0b1220}
     }else{
       var byM={},order=[];
       rows.forEach(function(r){if(!byM[r.ym]){byM[r.ym]=[];order.push(r.ym)}byM[r.ym].push(r)});
-      g.innerHTML=order.map(function(ym){
-        var a=byM[ym],t=0,p=0,d=0;
-        a.forEach(function(r){t+=r.amount;if(r.state==='paid')p+=r.amount;else if(r.state==='pending')d+=r.amount});
-        return '<div class="mon-gh"><b>'+esc(monthLabel(ym))+'</b><span>Total '+money(t)+' \u2022 Paid '+money(p)+' \u2022 Pending '+money(d)+'</span></div>'+
-          '<div class="tablewrap"><table class="mon-table"><thead><tr><th>Payment</th><th>GST No.</th><th>Due Date</th><th>GST</th><th>Amount</th><th>Bill</th><th>Payment Status</th><th>Action</th></tr></thead><tbody>'+
-          a.map(function(r){return monRow(r,ro)}).join('')+'</tbody></table></div>';
-      }).join('');
+      g.innerHTML=order.map(function(ym){return groupHtml(ym,byM[ym],ro)}).join('');
     }
+    /* ---- events ---- */
+    document.querySelectorAll('#monKpi .mk,#monChips .mc').forEach(function(b){b.onclick=function(){var c=b.dataset.chip;M.st=(M.st===c&&c!=='all')?'all':c;monPaint()}});
+    document.querySelectorAll('.mon-gh2').forEach(function(h){
+      h.onclick=function(){M.open[h.dataset.ym]=h.dataset.open!=='1';monPaint()};
+      h.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();h.onclick()}};
+    });
+    document.querySelectorAll('.mon-more').forEach(function(b){b.onclick=function(){M.lim[b.dataset.ym]=(M.lim[b.dataset.ym]||25)+25;monPaint()}});
+    var yms={};rows.forEach(function(r){yms[r.ym]=1});
+    $('monExpand').onclick=function(){Object.keys(yms).forEach(function(y){M.open[y]=true});monPaint()};
+    $('monCollapse').onclick=function(){Object.keys(yms).forEach(function(y){M.open[y]=false});monPaint()};
+    if($('monAlertT'))$('monAlertT').onclick=function(){M.alertAll=!M.alertAll;monPaint()};
     document.querySelectorAll('.invPay').forEach(function(b){b.onclick=function(){markPaid(b.dataset.k,b.dataset.a)}});
     document.querySelectorAll('.monAct').forEach(function(b){b.onclick=function(){
       var act=b.dataset.act,a=b.dataset.a;
@@ -6246,15 +6346,20 @@ html[data-theme=dark] button>.krn-nb{box-shadow:0 0 0 2px #0b1220}
       else{var p=a.split('|');openMonModal(+p[0],p[1])}
     }});
 
-    var setup=$('monSetup');
+    /* ---- recurring set-up list: collapsed by default ---- */
+    var setup=$('monSetup'),tl=mlist().map(function(t,ti){return {t:t,ti:ti}}).filter(function(x){
+      if(!M.q)return true;var t=x.t,h=[t.name,t.party,t.location,t.address,t.gstNo,t.type].join(' ').toLowerCase();
+      return M.q.toLowerCase().split(/\s+/).every(function(w){return !w||h.indexOf(w)>-1})});
     if(mlist().length){
-      setup.innerHTML='<div class="inv-setup-h">Recurring payments set up</div><div class="inv-setup">'+
-        mlist().map(function(t,ti){
+      setup.innerHTML='<button type="button" class="mon-setup-h" id="monSetupT"><span class="chev">'+(M.setupOpen?'\u25BE':'\u25B8')+'</span>Recurring payments set up<span class="cnt">'+tl.length+'</span></button>'+
+        (M.setupOpen?'<div class="mon-setup-grid"><div class="inv-setup">'+tl.map(function(x){
+          var t=x.t,ti=x.ti;
           return '<div class="inv-tpl"><b>'+typeIcon(t.type)+' '+esc(t.name)+'</b><small>'+esc([typeSub(t),t.party,t.location,t.gstNo?('GST '+t.gstNo):''].filter(Boolean).join(' \u2022 '))+'</small>'+(t.address?'<small>\uD83D\uDCCD '+esc(t.address)+'</small>':'')+
             '<span class="t3">'+money(t.amount)+(Number(t.gstRate)>0?' (incl. '+Number(t.gstRate)+'% GST)':'')+' \u2022 pay by the '+ordinal(parseInt(t.dueDay,10)||1)+' of every month</span>'+
             '<small>From '+(validYm(t.startMonth)?monthLabel(t.startMonth):'\u2014')+(validYm(t.endMonth)?' to '+monthLabel(t.endMonth):' (ongoing)')+'</small>'+
             (ro?'':'<button type="button" class="btn tplEdit" data-ti="'+ti+'">Edit</button>')+'</div>';
-        }).join('')+'</div>';
+        }).join('')+'</div></div>':'');
+      $('monSetupT').onclick=function(){M.setupOpen=!M.setupOpen;monPaint()};
       document.querySelectorAll('.tplEdit').forEach(function(b){b.onclick=function(){openTplModal(+b.dataset.ti)}});
     }else setup.innerHTML='';
   }
