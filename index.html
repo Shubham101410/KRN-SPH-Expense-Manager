@@ -1068,10 +1068,10 @@ body.nav-drawer-open #navDrawerToggle{left:calc(min(var(--nav-drawer-width),86vw
     <div class="account-save-note">Name and photo are saved on this browser for the currently logged-in account. Your login email and Admin/Viewer role remain controlled by Supabase.</div>
     <div id="wallpaperAdminTools" class="wallpaper-admin-tools" style="display:none">
       <div class="account-edit-title">Lock Screen Wallpaper</div>
-      <p class="wallpaper-help">Admin can choose a background image for the login screen. It is saved on this browser.</p>
+      <p class="wallpaper-help">Admin can choose an image, GIF or MP4 video as the login screen background. It is saved on this browser.</p>
       <div class="wallpaper-actions"><button type="button" id="wallpaperChoose">✦ Change Wallpaper</button><button type="button" id="wallpaperReset">Reset</button></div>
-      <input id="wallpaperFile" type="file" accept="image/*" hidden>
-      <div class="wallpaper-note" id="wallpaperNote">Recommended: landscape image, 1920 × 1080.</div>
+      <input id="wallpaperFile" type="file" accept="image/*,video/mp4,video/webm" hidden>
+      <div class="wallpaper-note" id="wallpaperNote">Image, GIF (up to 2.5 MB) or MP4/WebM video (up to 5 MB). Landscape 1920 × 1080 recommended.</div>
     </div>
     <div id="appLockBox" class="applock-box">
       <div class="account-edit-title">App Lock</div>
@@ -7463,6 +7463,90 @@ tbody tr,.card,.btn,.quick-filter button{transition-property:background-color,bo
   lb.onclick=lock;
   (function(){var sel=document.getElementById('kpLockMin');if(sel){sel.value=String(minutes());sel.addEventListener('change',function(){window.krnSetLockMin(+sel.value)})}})();
   setInterval(function(){lb.style.display=(pinSet()&&loggedIn())?'':'none'},1500);
+})();
+</script>
+
+<style id="krn-video-wallpaper-css">
+#krnLoginVideo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-1;pointer-events:none;background:#0b1b33}
+#authOverlay.has-video-wallpaper #krnLoginAnim{display:none}
+#authOverlay.has-video-wallpaper:before,#authOverlay.has-video-wallpaper:after{opacity:.25!important}
+</style>
+<script id="krn-video-wallpaper">
+(function(){
+  var DB='krnSphWallpaperDB',STORE='files',VKEY='loginVideo',MAX=5*1024*1024;
+  var o=document.getElementById('authOverlay');if(!o)return;
+  var url=null;
+  function idb(){return new Promise(function(res,rej){
+    var r=indexedDB.open(DB,1);
+    r.onupgradeneeded=function(){r.result.createObjectStore(STORE)};
+    r.onsuccess=function(){res(r.result)};r.onerror=function(){rej(r.error)}})}
+  function tx(mode,fn){return idb().then(function(db){return new Promise(function(res,rej){
+    var t=db.transaction(STORE,mode),st=t.objectStore(STORE),q=fn(st);
+    t.oncomplete=function(){res(q&&q.result)};t.onerror=function(){rej(t.error)}})})}
+  function saveBlob(b){return tx('readwrite',function(s){return s.put(b,VKEY)})}
+  function loadBlob(){return tx('readonly',function(s){return s.get(VKEY)})}
+  function delBlob(){return tx('readwrite',function(s){return s.delete(VKEY)})}
+  function removeVideo(){
+    var v=document.getElementById('krnLoginVideo');if(v){try{v.pause()}catch(e){}v.remove()}
+    if(url){URL.revokeObjectURL(url);url=null}
+    o.classList.remove('has-video-wallpaper')}
+  function showVideo(blob){
+    removeVideo();
+    url=URL.createObjectURL(blob);
+    var v=document.createElement('video');v.id='krnLoginVideo';
+    v.muted=true;v.loop=true;v.autoplay=true;v.playsInline=true;v.preload='auto';
+    v.setAttribute('muted','');v.setAttribute('playsinline','');v.setAttribute('aria-hidden','true');
+    v.src=url;
+    v.addEventListener('error',function(){removeVideo()});
+    o.insertBefore(v,o.firstChild);
+    o.classList.add('has-video-wallpaper');
+    var p=v.play();if(p&&p.catch)p.catch(function(){});
+    if(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches){v.pause()}}
+  function note(t){var n=document.getElementById('wallpaperNote');if(n)n.textContent=t}
+  function isAdmin(){try{return cloudRole==='admin'}catch(e){return false}}
+
+  // restore saved video on page load
+  try{loadBlob().then(function(b){if(b&&b.size)showVideo(b)}).catch(function(){})}catch(e){}
+
+  // pause the video once logged in (saves CPU/battery), resume on lock screen
+  new MutationObserver(function(){
+    var v=document.getElementById('krnLoginVideo');if(!v)return;
+    if(o.classList.contains('hidden'))v.pause();
+    else if(!(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches)){var p=v.play();if(p&&p.catch)p.catch(function(){})}
+  }).observe(o,{attributes:true,attributeFilter:['class']});
+
+  // MP4 / WebM chosen in the wallpaper picker (runs before the image handlers)
+  document.addEventListener('change',function(e){
+    var f=e.target;if(!f||f.id!=='wallpaperFile')return;
+    var file=f.files&&f.files[0];if(!file)return;
+    if(/^video\//.test(file.type)||/\.(mp4|webm|m4v)$/i.test(file.name)){
+      e.stopImmediatePropagation();
+      if(!isAdmin()){alert('Only Admin can change the lock screen wallpaper.');f.value='';return}
+      if(file.size>MAX){alert('Video wallpaper must be under 5 MB (recommended 3-4 MB). This file is '+(file.size/1048576).toFixed(1)+' MB.');f.value='';return}
+      var test=document.createElement('video');test.muted=true;test.preload='metadata';
+      var turl=URL.createObjectURL(file);
+      test.onloadedmetadata=function(){
+        URL.revokeObjectURL(turl);
+        saveBlob(file).then(function(){
+          showVideo(file);
+          note('Video wallpaper updated on this browser ('+(file.size/1048576).toFixed(1)+' MB).');
+          alert('Lock screen video wallpaper updated.')
+        }).catch(function(){alert('Could not save the video (browser storage blocked or full).')});
+        f.value=''};
+      test.onerror=function(){URL.revokeObjectURL(turl);alert('This video could not be played by the browser. Please use an H.264 MP4.');f.value=''};
+      test.src=turl;
+      return}
+    // a normal image/GIF replaces the video (only if it is accepted by the existing handlers)
+    if(/^image\//.test(file.type)){
+      var animated=/^image\/(gif|webp|apng)$/.test(file.type);
+      if(isAdmin()&&!(animated&&file.size>2.5*1024*1024)){delBlob().catch(function(){});removeVideo()}}
+  },true);
+
+  // Reset removes the video as well
+  document.addEventListener('click',function(e){
+    var b=e.target&&e.target.closest&&e.target.closest('#wallpaperReset');
+    if(b&&isAdmin()){delBlob().catch(function(){});removeVideo()}
+  },true);
 })();
 </script>
 </body></html>
