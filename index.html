@@ -1039,6 +1039,13 @@ body.nav-drawer-open #navDrawerToggle{left:calc(min(var(--nav-drawer-width),86vw
   </div>
   <div class="smart-auto-footer"><span class="sa-key">Ctrl</span><span>+</span><span class="sa-key">B</span><span> New Bill</span><span class="sa-sep">•</span><span class="sa-key">Ctrl</span><span>+</span><span class="sa-key">A</span><span> New Advance</span><span class="sa-sep">•</span><span class="sa-key">Ctrl</span><span>+</span><span class="sa-key">L</span><span> Ledger</span></div>
 </div>
+<style id="krn-applock-css">
+#accountMenu .applock-box{margin:14px 0 4px;padding-top:12px;border-top:1px solid #edf1f5}
+#accountMenu .applock-box select{width:100%;box-sizing:border-box;height:40px;border:1px solid #d5e1ef;border-radius:10px;padding:0 10px;background:#fff;font-weight:600;margin:4px 0 8px}
+#accountMenu .applock-actions{display:flex;flex-direction:column;gap:8px}
+#accountMenu .applock-actions button{width:100%;min-height:38px;border:1px solid #d5e1ef;border-radius:10px;background:#fff;font-weight:700;cursor:pointer}
+#accountMenu .applock-actions button:hover{border-color:#2f7df6;color:#1d5fd1}
+</style>
 <div id="accountMenu" aria-hidden="true">
   <button class="account-close" id="accountMenuClose" aria-label="Close">×</button>
   <div class="account-menu-head">
@@ -1065,6 +1072,12 @@ body.nav-drawer-open #navDrawerToggle{left:calc(min(var(--nav-drawer-width),86vw
       <div class="wallpaper-actions"><button type="button" id="wallpaperChoose">✦ Change Wallpaper</button><button type="button" id="wallpaperReset">Reset</button></div>
       <input id="wallpaperFile" type="file" accept="image/*" hidden>
       <div class="wallpaper-note" id="wallpaperNote">Recommended: landscape image, 1920 × 1080.</div>
+    </div>
+    <div id="appLockBox" class="applock-box">
+      <div class="account-edit-title">App Lock</div>
+      <p class="wallpaper-help">Auto-lock after idle time. It asks for your PIN; if no PIN is set, you are logged out.</p>
+      <select id="kpLockMin"><option value="0">Never</option><option value="1">1 minute</option><option value="2">2 minutes</option><option value="5">5 minutes</option><option value="10">10 minutes</option><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="60">1 hour</option></select>
+      <div class="applock-actions"><button type="button" id="kpPinBtn">🔒 Set / change app PIN</button><button type="button" id="lockBtn" style="display:none">🔒 Lock now</button></div>
     </div>
     <button class="account-logout" id="accountMenuLogout">↪ Logout from this device</button>
   </div>
@@ -3964,20 +3977,17 @@ body:not([data-krn-page="dashboard"]) #krnUltraBanner{display:none!important}
    <label class="row"><span><b>Smooth mode</b><small>Turns off blur &amp; background motion &ndash; fixes lag</small></span><input type="checkbox" id="kpLite"></label>
    <label class="row"><span><b>Design mouse cursor</b><small>Off = normal system cursor &bull; On = choose neon style</small></span><input type="checkbox" id="kpCur"></label>
    <button type="button" class="btn" id="kpCurPick" style="margin:2px 0 8px;width:100%">\uD83C\uDFA8 Change cursor style</button>
-   <div class="row col"><span><b>Auto-lock</b><small>After you are idle: asks for your PIN. If no PIN is set, you are logged out</small></span>
-    <select id="kpLockMin" style="width:100%"><option value="0">Never</option><option value="1">1 minute</option><option value="2">2 minutes</option><option value="5">5 minutes</option><option value="10">10 minutes</option><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="60">1 hour</option></select></div>
-   <button type="button" class="btn" id="kpPinBtn" style="margin:2px 0 8px;width:100%">\uD83D\uDD12 Set / change app PIN</button>
    <label class="row"><span><b>Auto backup</b><small>Downloads 1 backup file per day when you open the app</small></span><input type="checkbox" id="kpAB"></label>
    <button class="test" id="kpTestPay">Test: Pay coins</button><button class="test" id="kpTestRecv">Test: Receive notes</button>`;
   document.body.appendChild(pop);
   const sync=()=>{pop.querySelector('#kpSound').checked=!!pr.sound;pop.querySelector('#kpVol').value=Math.round((pr.vol==null?.8:pr.vol)*100);pop.querySelector('#kpLite').checked=!!pr.lite;pop.querySelectorAll('#kpFx button').forEach(x=>x.classList.toggle('on',x.dataset.v===pr.fx))};
   sync();
-  b.addEventListener('click',e=>{e.stopPropagation();const r=b.getBoundingClientRect();pop.style.top=(r.bottom+8)+'px';pop.style.left=Math.max(8,Math.min(innerWidth-pop.offsetWidth-8,r.left))+'px';pop.classList.toggle('on')});
+  b.addEventListener('click',e=>{e.stopPropagation();const r=b.getBoundingClientRect();pop.style.top=(r.bottom+8)+'px';pop.style.maxHeight=Math.max(160,innerHeight-r.bottom-20)+'px';pop.style.left=Math.max(8,Math.min(innerWidth-pop.offsetWidth-8,r.left))+'px';pop.classList.toggle('on')});
   document.addEventListener('click',e=>{if(!pop.contains(e.target)&&e.target!==b)pop.classList.remove('on')});
   pop.querySelector('#kpSound').onchange=e=>{pr.sound=e.target.checked;apply()};
   pop.querySelector('#kpVol').oninput=e=>{pr.vol=e.target.value/100;apply()};
   pop.querySelector('#kpLite').onchange=e=>{pr.lite=e.target.checked;apply()};
-  pop.querySelector('#kpCur').checked=window.krnCursorOn?window.krnCursorOn():true;pop.querySelector('#kpCur').onchange=e=>{window.krnSetCursor&&window.krnSetCursor(e.target.checked);if(e.target.checked&&window.krnPickCursor)window.krnPickCursor()};var _lm=pop.querySelector('#kpLockMin');if(_lm){_lm.value=window.krnLockMin?String(window.krnLockMin()):'0';_lm.onchange=()=>window.krnSetLockMin&&window.krnSetLockMin(+_lm.value)};var _pb=pop.querySelector('#kpPinBtn');if(_pb)_pb.onclick=()=>window.krnPinDialog&&window.krnPinDialog();var _cp=pop.querySelector('#kpCurPick');if(_cp)_cp.onclick=()=>{if(window.krnSetCursor)window.krnSetCursor(true);pop.querySelector('#kpCur').checked=true;window.krnPickCursor&&window.krnPickCursor()};
+  pop.querySelector('#kpCur').checked=window.krnCursorOn?window.krnCursorOn():true;pop.querySelector('#kpCur').onchange=e=>{window.krnSetCursor&&window.krnSetCursor(e.target.checked);if(e.target.checked&&window.krnPickCursor)window.krnPickCursor()};var _cp=pop.querySelector('#kpCurPick');if(_cp)_cp.onclick=()=>{if(window.krnSetCursor)window.krnSetCursor(true);pop.querySelector('#kpCur').checked=true;window.krnPickCursor&&window.krnPickCursor()};
   pop.querySelector('#kpAB').checked=window.krnAutoBackupOn?window.krnAutoBackupOn():true;pop.querySelector('#kpAB').onchange=e=>window.krnSetAutoBackup&&window.krnSetAutoBackup(e.target.checked);
   pop.querySelectorAll('#kpFx button').forEach(x=>x.onclick=()=>{pr.fx=x.dataset.v;apply();sync()});
   pop.querySelector('#kpTestPay').onclick=()=>window.krnLedgerFx&&window.krnLedgerFx('pay');
@@ -4049,7 +4059,7 @@ html.krn-lite .print-ledger-hero[class*="krn-h-"]{animation:none!important}
  /* settings button + popover */
  #krnPrefBtn{display:inline-flex;align-items:center;gap:6px;font-weight:700}
  #krnPrefBtn span{font-size:13px}
- #krnPrefPop{position:fixed;z-index:100400;width:300px;max-width:calc(100vw - 16px);background:#fff;border:1px solid #dbe5f0;border-radius:16px;box-shadow:0 24px 60px rgba(15,35,65,.22);padding:14px;opacity:0;visibility:hidden;transform:translateY(-6px);transition:opacity .15s,transform .15s,visibility .15s}
+ #krnPrefPop{overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;position:fixed;z-index:100400;width:300px;max-width:calc(100vw - 16px);background:#fff;border:1px solid #dbe5f0;border-radius:16px;box-shadow:0 24px 60px rgba(15,35,65,.22);padding:14px;opacity:0;visibility:hidden;transform:translateY(-6px);transition:opacity .15s,transform .15s,visibility .15s}
  #krnPrefPop.on{opacity:1;visibility:visible;transform:none}
  #krnPrefPop h4{margin:0 0 8px;font-size:14px;color:#0d3158}
  #krnPrefPop .row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 0;border-top:1px solid #eef2f7;cursor:pointer}
@@ -7446,10 +7456,10 @@ tbody tr,.card,.btn,.quick-filter button{transition-property:background-color,bo
     };
   };
 
-  /* ---- "Lock" button next to the other top buttons ---- */
-  var lb=document.createElement('button');lb.className='btn';lb.id='lockBtn';lb.type='button';lb.textContent='\uD83D\uDD12 Lock';lb.style.display='none';
-  var anchor=document.getElementById('histBtn')||document.getElementById('restoreBtn');
-  if(anchor&&anchor.parentNode)anchor.parentNode.insertBefore(lb,anchor.nextSibling);
+  /* ---- Lock controls live in the profile menu ---- */
+  var lb=document.getElementById('lockBtn');
+  if(!lb){lb=document.createElement('button');lb.style.display='none'}
+  var pinB=document.getElementById('kpPinBtn');if(pinB)pinB.onclick=function(){window.krnPinDialog&&window.krnPinDialog()};
   lb.onclick=lock;
   (function(){var sel=document.getElementById('kpLockMin');if(sel){sel.value=String(minutes());sel.addEventListener('change',function(){window.krnSetLockMin(+sel.value)})}})();
   setInterval(function(){lb.style.display=(pinSet()&&loggedIn())?'':'none'},1500);
