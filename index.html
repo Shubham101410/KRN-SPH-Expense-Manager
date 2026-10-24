@@ -7631,4 +7631,268 @@ html #authOverlay.has-custom-wallpaper .auth-card{
   #authOverlay .auth-card .auth-btn,#authOverlay .auth-card .auth-default,#authOverlay .auth-card .auth-logo,
   #authOverlay .auth-card .auth-btn:before{animation:none!important}}
 </style>
+<style id="krn-login-fx-css">
+/* ---------- wrong password shake ---------- */
+@keyframes krnShake{0%,100%{transform:translateX(0)}12%{transform:translateX(-11px)}28%{transform:translateX(9px)}44%{transform:translateX(-7px)}60%{transform:translateX(5px)}76%{transform:translateX(-3px)}90%{transform:translateX(1px)}}
+html #authOverlay .auth-card.krn-shake{animation:krnShake .55s cubic-bezier(.36,.07,.19,.97)!important}
+#authOverlay .auth-error:not(:empty){animation:krnUp .35s ease both}
+
+/* ---------- show / hide password + caps lock ---------- */
+.krn-pw{position:relative}
+#authOverlay .krn-pw input{padding-right:46px!important}
+.krn-eye{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:34px;height:34px;border:0;border-radius:9px;background:transparent;color:#64748b;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.krn-eye:hover{background:rgba(15,23,42,.08);color:#1e3a5f}
+.krn-eye svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.krn-caps{display:none;margin-top:7px;font-size:11.5px;font-weight:800;color:#b45309;background:rgba(255,237,200,.75);border:1px solid rgba(245,158,11,.45);border-radius:9px;padding:6px 10px}
+.krn-caps.show{display:block;animation:krnUp .25s ease both}
+
+/* ---------- time-of-day tint + greeting chip ---------- */
+#krnTint{position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.55;transition:opacity 1s ease,background 1s ease}
+#authOverlay[data-tod=morning] #krnTint{background:linear-gradient(155deg,rgba(255,206,140,.50),rgba(255,160,185,.28) 55%,rgba(255,255,255,0))}
+#authOverlay[data-tod=afternoon] #krnTint{background:linear-gradient(155deg,rgba(110,195,255,.38),rgba(255,236,160,.28) 60%,rgba(255,255,255,0))}
+#authOverlay[data-tod=evening] #krnTint{background:linear-gradient(155deg,rgba(255,132,84,.46),rgba(196,96,170,.36) 58%,rgba(70,50,130,.12))}
+#authOverlay[data-tod=night] #krnTint{background:linear-gradient(155deg,rgba(20,30,100,.58),rgba(70,50,135,.40) 60%,rgba(10,15,50,.18));opacity:.75}
+.krn-tod-chip{display:inline-flex;align-items:center;gap:8px;margin:0 0 16px;padding:7px 15px 7px 11px;border-radius:999px;font-size:12px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:#fff;background:rgba(255,255,255,.20);border:1px solid rgba(255,255,255,.45);text-shadow:0 1px 8px rgba(0,0,0,.18);box-shadow:0 6px 20px rgba(0,0,0,.08)}
+.krn-tod-chip svg{width:22px;height:22px;flex:0 0 22px}
+
+/* ---------- typing effect ---------- */
+.krn-caret{display:inline-block;width:3px;height:.78em;margin-left:5px;background:rgba(255,255,255,.9);vertical-align:-.04em;animation:krnBlink .75s steps(1) infinite}
+@keyframes krnBlink{50%{opacity:0}}
+.showcase-hello .krn-dot{transition:opacity .35s}
+
+/* ---------- sun / moon icons ---------- */
+@keyframes krnSpin{to{transform:rotate(360deg)}}
+@keyframes krnGlow{0%,100%{filter:drop-shadow(0 0 6px rgba(255,214,90,.55))}50%{filter:drop-shadow(0 0 16px rgba(255,214,90,.95))}}
+@keyframes krnGlowM{0%,100%{filter:drop-shadow(0 0 6px rgba(220,225,255,.45))}50%{filter:drop-shadow(0 0 16px rgba(220,225,255,.9))}}
+@keyframes krnTwinkle{0%,100%{opacity:.25}50%{opacity:1}}
+.krn-sun{animation:krnGlow 3s ease-in-out infinite}
+.krn-sun .rays{transform-origin:32px 32px;animation:krnSpin 16s linear infinite}
+.krn-moon{animation:krnGlowM 3.4s ease-in-out infinite}
+.krn-moon .st{animation:krnTwinkle 2.2s ease-in-out infinite}
+.krn-moon .st:nth-of-type(2){animation-delay:.7s}.krn-moon .st:nth-of-type(3){animation-delay:1.3s}
+
+/* ---------- welcome splash + exit ---------- */
+#krnWelcome{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;text-align:center;color:#fff;pointer-events:none;opacity:0;animation:krnWIn .55s ease .22s forwards;overflow:hidden;font-family:Inter,"Segoe UI",Arial,sans-serif}
+@keyframes krnWIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
+#krnWelcome:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 46%,rgba(8,16,40,.46),rgba(8,16,40,.18) 62%,rgba(8,16,40,.05))}
+#krnWelcome .kw-inner{position:relative;padding:20px}
+#krnWelcome .kw-orb{width:96px;height:96px;margin:0 auto 14px;animation:krnLogoFloat 3.2s ease-in-out infinite}
+#krnWelcome .kw-orb svg{width:100%;height:100%}
+#krnWelcome .kw-greet{font-size:clamp(17px,3vw,24px);font-weight:700;letter-spacing:3px;text-transform:uppercase;opacity:.95;text-shadow:0 2px 16px rgba(0,0,0,.35)}
+#krnWelcome .kw-name{font-size:clamp(34px,7vw,66px);font-weight:300;letter-spacing:-1px;line-height:1.1;margin:8px 0 10px;text-shadow:0 6px 30px rgba(0,0,0,.4);word-break:break-word}
+#krnWelcome .kw-sub{font-size:clamp(13px,1.8vw,16px);opacity:.88;text-shadow:0 2px 12px rgba(0,0,0,.4)}
+#krnWelcome .kw-petal{position:absolute;top:-8vh;font-size:22px;opacity:0;animation:krnPetal var(--pd) ease-in var(--pl) forwards}
+@keyframes krnPetal{0%{transform:translate3d(0,0,0) rotate(0);opacity:0}12%{opacity:.95}50%{transform:translate3d(var(--ps),55vh,0) rotate(180deg)}100%{transform:translate3d(calc(var(--ps)*-.6),115vh,0) rotate(380deg);opacity:.85}}
+#authOverlay.krn-welcoming .auth-card,#authOverlay.krn-welcoming .auth-showcase{opacity:0!important;transform:scale(.96)!important;transition:opacity .3s ease,transform .3s ease!important;pointer-events:none!important}
+#authOverlay.krn-welcoming #krnLoginSoundBtn{opacity:0;pointer-events:none}
+#authOverlay.krn-zoomout{opacity:0!important;transform:scale(1.07)!important;transition:opacity .55s ease,transform .55s ease!important}
+@media(prefers-reduced-motion:reduce){#krnWelcome .kw-orb,.krn-sun,.krn-sun .rays,.krn-moon,.krn-moon .st{animation:none!important}}
+</style>
+<script id="krn-login-fx-js">
+(function(){
+  var o=document.getElementById('authOverlay');if(!o||window.__krnLoginFx)return;window.__krnLoginFx=1;
+  var reduce=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches);
+  function $(id){return document.getElementById(id)}
+
+  /* ----- time of day ----- */
+  function tod(){
+    var h=new Date().getHours();
+    if(h>=5&&h<12)return{k:'morning',t:'Good Morning',f:['\uD83C\uDF38','\uD83C\uDF3C','\uD83C\uDF37','\uD83C\uDF3A']};
+    if(h>=12&&h<17)return{k:'afternoon',t:'Good Afternoon',f:['\uD83C\uDF3B','\uD83C\uDF3C','\uD83C\uDF38','\uD83C\uDF3B']};
+    if(h>=17&&h<20)return{k:'evening',t:'Good Evening',f:['\uD83C\uDF3A','\uD83C\uDF37','\uD83C\uDF39','\uD83C\uDF38']};
+    return{k:'night',t:(h>=20?'Good Evening':'Good Night'),f:['\uD83C\uDF38','\uD83C\uDF37','\u2728','\uD83C\uDF3C']};
+  }
+  function sunSVG(fill,ray){
+    var r='';for(var i=0;i<8;i++){var a=i*Math.PI/4,c=Math.cos(a),s=Math.sin(a);
+      r+='<line x1="'+(32+c*20).toFixed(1)+'" y1="'+(32+s*20).toFixed(1)+'" x2="'+(32+c*28).toFixed(1)+'" y2="'+(32+s*28).toFixed(1)+'"/>'}
+    return '<svg class="krn-sun" viewBox="0 0 64 64" aria-hidden="true"><g class="rays" stroke="'+ray+'" stroke-width="3.2" stroke-linecap="round">'+r+'</g><circle cx="32" cy="32" r="12.5" fill="'+fill+'"/></svg>'}
+  function moonSVG(){
+    return '<svg class="krn-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="#F6F1C7"/>'
+      +'<circle class="st" cx="19" cy="4.5" r=".9" fill="#fff"/><circle class="st" cx="22" cy="8" r=".6" fill="#fff"/><circle class="st" cx="16.5" cy="2.3" r=".55" fill="#fff"/></svg>'}
+  function icon(k){
+    if(k==='night')return moonSVG();
+    if(k==='evening')return sunSVG('#FF9A4D','#FFB066');
+    if(k==='afternoon')return sunSVG('#FFD23F','#FFC21A');
+    return sunSVG('#FFD84D','#FFC933')}
+
+  /* ----- tint + chip ----- */
+  var T=tod();o.setAttribute('data-tod',T.k);
+  var tint=document.createElement('div');tint.id='krnTint';tint.setAttribute('aria-hidden','true');
+  var sp=$('krnSparkles');if(sp)o.insertBefore(tint,sp);else o.appendChild(tint);
+  var chip=document.createElement('div');chip.className='krn-tod-chip';
+  var copy=o.querySelector('.showcase-copy');if(copy)copy.insertBefore(chip,copy.firstChild);
+  function refreshTod(){T=tod();o.setAttribute('data-tod',T.k);chip.innerHTML=icon(T.k)+'<span>'+T.t+'</span>'}
+  refreshTod();
+
+  /* ----- typing effect on "Hello." ----- */
+  var hello=o.querySelector('.showcase-hello'),tt=0;
+  function typeHello(){
+    if(!hello)return;var my=++tt;
+    if(reduce){hello.innerHTML='Hello<span>.</span>';return}
+    hello.innerHTML='<b class="krn-t" style="font-weight:inherit"></b><span class="krn-dot" style="opacity:0">.</span><i class="krn-caret"></i>';
+    var b=hello.querySelector('.krn-t'),d=hello.querySelector('.krn-dot'),c=hello.querySelector('.krn-caret'),w='Hello',i=0;
+    (function step(){
+      if(my!==tt)return;
+      if(i<w.length){b.textContent+=w.charAt(i++);setTimeout(step,i===1?420:150)}
+      else{d.style.opacity='1';setTimeout(function(){if(my===tt&&c&&c.parentNode)c.parentNode.removeChild(c)},1700)}
+    })();
+  }
+  typeHello();
+
+  /* ----- show / hide password + caps lock ----- */
+  var pw=$('loginPass'),eye=null,caps=null;
+  var EYE='<svg viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+  var EYEOFF='<svg viewBox="0 0 24 24"><path d="M17.9 17.9A10.9 10.9 0 0 1 12 19C5 19 1 12 1 12a18.5 18.5 0 0 1 5.1-5.9M9.9 5.2A10.4 10.4 0 0 1 12 5c7 0 11 7 11 7a18.6 18.6 0 0 1-2.2 3.2M1 1l22 22"/><path d="M14.1 14.1a3 3 0 1 1-4.2-4.2"/></svg>';
+  function resetPw(){if(!pw||!eye)return;pw.type='password';eye.innerHTML=EYE;eye.setAttribute('aria-label','Show password');eye.title='Show password';if(caps)caps.classList.remove('show')}
+  if(pw&&pw.parentNode&&!pw.parentNode.classList.contains('krn-pw')){
+    var wrap=document.createElement('div');wrap.className='krn-pw';
+    pw.parentNode.insertBefore(wrap,pw);wrap.appendChild(pw);
+    eye=document.createElement('button');eye.type='button';eye.className='krn-eye';eye.tabIndex=-1;
+    eye.addEventListener('mousedown',function(e){e.preventDefault()});
+    eye.addEventListener('click',function(){var show=pw.type==='password';pw.type=show?'text':'password';eye.innerHTML=show?EYEOFF:EYE;eye.title=show?'Hide password':'Show password';eye.setAttribute('aria-label',eye.title);try{pw.focus()}catch(e){}});
+    wrap.appendChild(eye);
+    caps=document.createElement('div');caps.className='krn-caps';caps.textContent='\u26A0 Caps Lock is ON';
+    wrap.parentNode.insertBefore(caps,wrap.nextSibling);
+    resetPw();
+    function chk(e){try{if(e.getModifierState)caps.classList.toggle('show',!!e.getModifierState('CapsLock'))}catch(x){}}
+    pw.addEventListener('keydown',chk);pw.addEventListener('keyup',chk);pw.addEventListener('click',chk);
+    pw.addEventListener('blur',function(){caps.classList.remove('show')});
+  }
+
+  /* ----- shake on wrong password ----- */
+  var err=$('loginError'),card=o.querySelector('.auth-card');
+  if(err&&card){
+    new MutationObserver(function(){
+      var t=(err.textContent||'').trim();if(!t||/^Connecting/i.test(t))return;
+      card.classList.remove('krn-shake');void card.offsetWidth;card.classList.add('krn-shake');
+      setTimeout(function(){card.classList.remove('krn-shake')},700);
+    }).observe(err,{childList:true,characterData:true,subtree:true});
+  }
+
+  /* ----- welcome splash after login ----- */
+  function getName(){
+    var n='',derived=false;
+    try{if(typeof cloudFullName!=='undefined'&&cloudFullName)n=String(cloudFullName).trim()}catch(e){}
+    if(!n){try{if(typeof cloudUser!=='undefined'&&cloudUser&&cloudUser.email){n=cloudUser.email.split('@')[0];derived=true}}catch(e){}}
+    if(!n){var u=$('loginUser');n=u?u.value.trim():'';if(n.indexOf('@')>0)n=n.split('@')[0];derived=true}
+    if(derived){n=n.replace(/[._-]+/g,' ').replace(/\b[a-z]/g,function(c){return c.toUpperCase()})}
+    return n}
+  function playWelcome(done){
+    if(reduce){done();return}
+    T=tod();o.setAttribute('data-tod',T.k);
+    var w=document.createElement('div');w.id='krnWelcome';
+    var nm=getName();
+    w.innerHTML='<div class="kw-inner"><div class="kw-orb">'+icon(T.k)+'</div><div class="kw-greet"></div><div class="kw-name"></div><div class="kw-sub">Welcome back to your workspace</div></div>';
+    w.querySelector('.kw-greet').textContent=T.t;
+    w.querySelector('.kw-name').textContent=nm||'Welcome';
+    var n=(window.innerWidth<700)?10:18;
+    for(var i=0;i<n;i++){var p=document.createElement('span');p.className='kw-petal';p.textContent=T.f[i%T.f.length];
+      p.style.cssText='left:'+(Math.random()*96).toFixed(1)+'%;font-size:'+(16+Math.random()*18).toFixed(0)+'px;--pd:'+(2.2+Math.random()*1.4).toFixed(2)+'s;--pl:'+(0.1+Math.random()*0.9).toFixed(2)+'s;--ps:'+((Math.random()*120-60)).toFixed(0)+'px';
+      w.appendChild(p)}
+    o.appendChild(w);o.classList.add('krn-welcoming');
+    setTimeout(function(){o.classList.add('krn-zoomout')},1900);
+    setTimeout(function(){
+      done();
+      setTimeout(function(){o.classList.remove('krn-welcoming','krn-zoomout');if(w.parentNode)w.parentNode.removeChild(w)},80);
+    },2480);
+  }
+  var pending=false,orig=window.showLoggedIn;
+  if(typeof orig==='function'&&!orig.__krnWelcome){
+    var wrapped=function(){
+      var self=this,args=arguments;
+      if(pending)return;
+      if(o.classList.contains('hidden'))return orig.apply(self,args);
+      pending=true;
+      playWelcome(function(){pending=false;orig.apply(self,args)});
+    };
+    for(var k in orig){try{wrapped[k]=orig[k]}catch(e){}}
+    wrapped.__krnWelcome=true;window.showLoggedIn=wrapped;
+  }
+
+  /* ----- refresh effects whenever the login screen comes back ----- */
+  var wasHidden=o.classList.contains('hidden');
+  new MutationObserver(function(){
+    var h=o.classList.contains('hidden');
+    if(wasHidden&&!h){refreshTod();typeHello();resetPw()}
+    wasHidden=h;
+  }).observe(o,{attributes:true,attributeFilter:['class']});
+})();
+</script>
+<script id="krn-crud-toasts">
+/* Delete / Update toasts (Add / Approve / Settle toasts already exist in krn-boom-script) */
+(function(){
+  if(window.__krnCrud)return;window.__krnCrud=1;
+  var COLS=['employees','advances','bills','settlements'];
+  var ONE={employees:'Employee',advances:'Advance',bills:'Bill',settlements:'Settlement'};
+  var SOFT={status:1,approvedAt:1,approvedBy:1,approvedOn:1,statusUpdatedAt:1};   // approvals already have their own toast
+  var t0=Date.now(),last=null;
+  function keyOf(x,i){return String(x&&(x.id!=null?x.id:(x.billId!=null?x.billId:('#'+i))))}
+  function snapAll(){
+    try{
+      var out={};
+      COLS.forEach(function(c){
+        var m={},a=(typeof db!=='undefined'&&db&&db[c])||[];
+        for(var i=0;i<a.length;i++)m[keyOf(a[i],i)]=JSON.stringify(a[i]);
+        out[c]=m});
+      return out;
+    }catch(e){return null}
+  }
+  function changedKeys(a,b){
+    var x,y,k,r=[];try{x=JSON.parse(a);y=JSON.parse(b)}catch(e){return['*']}
+    for(k in x)if(JSON.stringify(x[k])!==JSON.stringify(y[k]))r.push(k);
+    for(k in y)if(!(k in x))r.push(k);
+    return r}
+  function diff(a,b){
+    var res={del:[],upd:[]};if(!a||!b)return res;
+    COLS.forEach(function(c){
+      var k;
+      for(k in a[c])if(!(k in b[c]))res.del.push({c:c,k:k,j:a[c][k]});
+      for(k in b[c])if((k in a[c])&&a[c][k]!==b[c][k]){
+        var ch=changedKeys(a[c][k],b[c][k]);
+        if(ch.length&&!ch.every(function(z){return SOFT[z]}))res.upd.push({c:c,k:k,j:b[c][k]});
+      }});
+    return res}
+  function money2(n){try{return money(n)}catch(e){return '\u20b9'+n}}
+  function nm(id){try{var e=emp(id);return e&&e.name?e.name:id}catch(x){return id}}
+  function detail(it){
+    var o;try{o=JSON.parse(it.j)}catch(e){return it.k}
+    if(it.c==='employees')return (o.name||o.id||it.k);
+    var a=(o.amount!=null?money2(o.amount):'');
+    var who=o.empId?nm(o.empId):'';
+    return [(o.id||it.k),a,who].filter(Boolean).join(' \u00b7 ')}
+  function show(kind,icon,title,sub,rgb){
+    if(typeof window.krnToast!=='function')return;
+    window.krnToast(kind,icon,title,sub,4200);
+    if(rgb){var b=document.getElementById('krnToasts');var t=b&&b.lastElementChild;if(t)t.style.setProperty('--rgb',rgb)}}
+  function announce(r){
+    if(!r||(Date.now()-t0)<4000)return;
+    if(r.del.length+r.upd.length>8)return;                    // restore / bulk import: stay quiet
+    if(r.del.length){
+      var emps=r.del.filter(function(x){return x.c==='employees'});
+      if(emps.length){var rest=r.del.length-emps.length;
+        show('warn','\uD83D\uDDD1',(emps.length>1?emps.length+' employees deleted':'Employee deleted'),detail(emps[0])+(rest?' \u00b7 and '+rest+' related '+(rest===1?'entry':'entries'):''),'248,113,113')}
+      else if(r.del.length===1)show('warn','\uD83D\uDDD1',ONE[r.del[0].c]+' deleted',detail(r.del[0]),'248,113,113');
+      else show('warn','\uD83D\uDDD1',r.del.length+' records deleted','Removed from the list','248,113,113');
+      return}
+    if(r.upd.length){
+      var eu=r.upd.filter(function(x){return x.c==='employees'});
+      if(eu.length)show('info','\u270E','Employee updated',detail(eu[0]));
+      else if(r.upd.length===1)show('info','\u270E',ONE[r.upd[0].c]+' updated',detail(r.upd[0]));
+      else show('info','\u270E',r.upd.length+' records updated','Changes saved')}
+  }
+  last=snapAll();
+  function wrap(name,after){
+    var o=window[name];if(typeof o!=='function'||o.__krnCrud)return;
+    var w=function(){
+      if(!after){try{var cur=snapAll();announce(diff(last,cur));last=cur}catch(e){}}
+      var r=o.apply(this,arguments);
+      if(after){try{last=snapAll()}catch(e){}}
+      return r};
+    for(var k in o){try{w[k]=o[k]}catch(e){}}
+    w.__krnCrud=true;window[name]=w}
+  wrap('save',false);          // diff just before each save -> exactly what the user changed
+  wrap('render',true);         // keep baseline fresh after cloud syncs / re-renders
+  setInterval(function(){if(!document.hidden){var c=snapAll();if(c)last=c}},3000);
+})();
+</script>
 </body></html>
