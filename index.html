@@ -1003,6 +1003,51 @@ body.nav-drawer-open #navDrawerToggle{left:calc(min(var(--nav-drawer-width),86vw
 @media(prefers-reduced-motion:reduce){.side,#navDrawerToggle,#navDrawerBackdrop{transition:none!important}}
 @media print{#navDrawerToggle,#navDrawerBackdrop{display:none!important}.side{display:none!important}.main{margin:0!important;width:100%!important;padding:0!important}}
 </style>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Playfair+Display:ital,wght@1,500;1,600&display=swap">
+<style id="krn-greet-font-style">
+.krn-g-hi{font-family:"Playfair Display",Georgia,"Times New Roman",serif!important;font-style:italic!important;font-weight:600!important;letter-spacing:.2px!important}
+.krn-g-name{font-family:"Dancing Script","Segoe Script","Brush Script MT",cursive!important;font-weight:700!important;font-size:1.26em;letter-spacing:.4px!important;line-height:1}
+html body #krnUltraBanner .ux-title .krn-g-hi{background:linear-gradient(92deg,#fff 0%,#e3f3ff 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;padding:.08em .06em .1em 0}
+html body #krnUltraBanner .ux-title .krn-g-name{background:linear-gradient(92deg,#fff6d6 0%,#ffe08a 38%,#ffffff 72%,#cfe6ff 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;padding:.1em .14em .22em .02em;margin-left:.08em;filter:drop-shadow(0 2px 8px rgba(255,200,90,.28))}
+#krnGreetFly .krn-g-name{text-shadow:0 2px 14px rgba(255,200,90,.35)}
+</style>
+<style id="krn-bye-style">
+#krnGoodbye{position:fixed;inset:0;z-index:2147482000;display:flex;align-items:center;justify-content:center;text-align:center;color:#fff;opacity:0;overflow:hidden;animation:byeIn .45s ease forwards}
+#krnGoodbye.out{animation:byeOut .65s ease forwards}
+@keyframes byeIn{to{opacity:1}}
+@keyframes byeOut{from{opacity:1;transform:none}to{opacity:0;transform:scale(1.05)}}
+#krnGoodbye[data-tod=morning]{background:radial-gradient(70% 70% at 50% 44%,rgba(255,196,140,.55),transparent 70%),linear-gradient(160deg,#13285a,#4a4f9c 45%,#c0719a 80%,#f6a46c)}
+#krnGoodbye[data-tod=afternoon]{background:radial-gradient(70% 70% at 50% 44%,rgba(255,242,170,.42),transparent 70%),linear-gradient(160deg,#0a3573,#1472c4 55%,#52b8f0)}
+#krnGoodbye[data-tod=evening]{background:radial-gradient(70% 70% at 50% 44%,rgba(255,130,80,.5),transparent 70%),linear-gradient(160deg,#171240,#53276f 45%,#c2476a 80%,#ff8a4c)}
+#krnGoodbye[data-tod=night]{background:radial-gradient(70% 70% at 50% 44%,rgba(120,140,255,.32),transparent 70%),linear-gradient(160deg,#030816,#091843 55%,#1a2a66)}
+#krnGoodbye .bye-stars i{position:absolute;border-radius:50%;background:#fff;box-shadow:0 0 6px rgba(255,255,255,.8);opacity:.35;animation:krnTwinkle var(--t,3s) ease-in-out var(--d,0s) infinite}
+#krnGoodbye .bye-in{position:relative;padding:0 22px}
+#krnGoodbye .bye-orb{position:relative;width:122px;height:122px;margin:0 auto 22px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.34),rgba(255,255,255,.08) 62%);border:1px solid rgba(255,255,255,.4);box-shadow:0 14px 46px rgba(0,0,0,.28),0 0 54px rgba(255,214,140,.28),inset 0 1px 0 rgba(255,255,255,.55);animation:kwPop 1.1s cubic-bezier(.34,1.56,.64,1) .2s backwards}
+#krnGoodbye .bye-orb::before{content:"";position:absolute;inset:-7px;border-radius:50%;background:conic-gradient(from 0deg,rgba(255,255,255,0),rgba(255,236,176,.95),rgba(255,255,255,0) 40%,rgba(255,255,255,0) 60%,rgba(255,236,176,.7),rgba(255,255,255,0));-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 2px),#000 calc(100% - 1px));mask:radial-gradient(farthest-side,transparent calc(100% - 2px),#000 calc(100% - 1px));animation:byeSpin 6s linear infinite}
+@keyframes byeSpin{to{transform:rotate(360deg)}}
+#krnGoodbye .bye-hand{position:relative;width:70px;height:70px;display:block;transform-origin:52% 92%;filter:drop-shadow(0 6px 10px rgba(0,0,0,.28)) drop-shadow(0 0 14px rgba(255,214,140,.55));animation:byeWave 1.3s cubic-bezier(.45,0,.35,1) 1s 3}
+@keyframes byeWave{0%,100%{transform:rotate(0)}18%{transform:rotate(22deg)}36%{transform:rotate(-12deg)}54%{transform:rotate(20deg)}72%{transform:rotate(-8deg)}88%{transform:rotate(8deg)}}
+#krnGoodbye .bye-arc{opacity:0;animation:byeArc 1.3s ease-in-out 1s 3}
+#krnGoodbye .bye-arc.a2{animation-delay:1.12s}
+@keyframes byeArc{0%,100%{opacity:0;transform:translateX(-3px)}30%,60%{opacity:.85;transform:none}}
+#krnGoodbye .bye-spark{position:absolute;color:#fff3c8;font-size:15px;line-height:1;text-shadow:0 0 10px rgba(255,220,140,.9);opacity:0;animation:byeSpark 2.6s ease-in-out infinite}
+#krnGoodbye .bye-spark.s1{left:-14px;top:14px;animation-delay:1.2s}
+#krnGoodbye .bye-spark.s2{right:-12px;top:-4px;font-size:12px;animation-delay:1.9s}
+#krnGoodbye .bye-spark.s3{right:6px;bottom:-10px;font-size:13px;animation-delay:2.5s}
+@keyframes byeSpark{0%,100%{opacity:0;transform:scale(.3) rotate(0)}50%{opacity:1;transform:scale(1) rotate(90deg)}}
+#krnGoodbye .kw-ring{position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(255,255,255,.55);opacity:0;animation:kwRing 2.8s ease-out infinite}
+#krnGoodbye .kw-ring.r2{animation-delay:1s}
+#krnGoodbye .bye-tag{font-size:13px;font-weight:700;letter-spacing:6px;text-transform:uppercase;animation:kwTrack 1s cubic-bezier(.2,.8,.2,1) .5s backwards}
+#krnGoodbye .bye-title{margin:12px 0 8px;font-size:clamp(34px,7vw,62px);line-height:1.12;text-shadow:0 6px 30px rgba(0,0,0,.35);animation:kwRise .95s cubic-bezier(.16,.84,.3,1) .7s backwards}
+#krnGoodbye .bye-title .krn-g-name{color:#ffe9a8;text-shadow:0 4px 24px rgba(255,200,90,.45)}
+#krnGoodbye .bye-line{height:2px;width:0;margin:0 auto 14px;border-radius:2px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.95),transparent);box-shadow:0 0 14px rgba(255,255,255,.55);animation:kwLine 1s cubic-bezier(.2,.8,.2,1) 1.1s forwards}
+#krnGoodbye .bye-sub{font-size:16px;opacity:.9;animation:kwFade .9s ease 1.3s backwards}
+#krnGoodbye .bye-prog{position:absolute;left:50%;bottom:7vh;transform:translateX(-50%);width:min(230px,62vw);font-size:10.5px;font-weight:700;letter-spacing:2.2px;text-transform:uppercase;animation:kwFade .8s ease .9s backwards}
+#krnGoodbye .bye-prog b{display:block;height:3px;margin-top:10px;border-radius:9px;background:rgba(255,255,255,.2);overflow:hidden}
+#krnGoodbye .bye-prog b i{display:block;height:100%;width:0;border-radius:9px;background:linear-gradient(90deg,#fff,#ffd98a);box-shadow:0 0 12px rgba(255,255,255,.75);animation:kwProg calc(var(--kwD,3s) - .9s) cubic-bezier(.3,.6,.25,1) .45s forwards}
+@media(prefers-reduced-motion:reduce){#krnGoodbye *{animation:none!important}}
+</style>
 </head><body>
 <div id="authOverlay">
   <div class="auth-card">
@@ -7786,9 +7831,11 @@ html #authOverlay .auth-card.krn-shake{animation:krnShake .55s cubic-bezier(.36,
   /* ----- greeting -> slides into dashboard banner (replaces "Expense Control Center") ----- */
   function bannerTitle(){return document.querySelector('#krnUltraBanner .ux-title')}
   function greetText(nm){return T.t+(nm?', '+nm:'')}
+  function esc(x){var d=document.createElement('div');d.textContent=x;return d.innerHTML}
+  function greetHTML(nm){return '<span class="krn-g-hi">'+esc(T.t)+(nm?',':'')+'</span>'+(nm?' <span class="krn-g-name">'+esc(nm)+'</span>':'')}
   function prepFly(txt,fromEls){
     var title=bannerTitle();if(!title)return null;
-    var cs=getComputedStyle(title),f=document.createElement('div');f.id='krnGreetFly';f.textContent=txt;
+    var cs=getComputedStyle(title),f=document.createElement('div');f.id='krnGreetFly';f.innerHTML=txt;
     f.style.cssText='position:fixed;left:0;top:0;z-index:2147483000;margin:0;white-space:nowrap;pointer-events:none;transform-origin:0 0;will-change:transform,opacity;color:#fff;text-shadow:0 4px 22px rgba(8,16,40,.55);opacity:0';
     f.style.fontFamily=cs.fontFamily;f.style.fontSize=cs.fontSize;f.style.fontWeight=cs.fontWeight;f.style.letterSpacing=cs.letterSpacing;f.style.lineHeight=cs.lineHeight;
     document.body.appendChild(f);
@@ -7799,7 +7846,7 @@ html #authOverlay .auth-card.krn-shake{animation:krnShake .55s cubic-bezier(.36,
     if(fromEls&&fromEls.length){var a=fromEls[0].getBoundingClientRect(),b=fromEls[fromEls.length-1].getBoundingClientRect();cy=(a.top+b.bottom)/2}
     var x0=(vw-w*k0)/2,y0=cy-h*k0/2;
     f.style.transform='translate3d('+x0+'px,'+y0+'px,0) scale('+k0+')';
-    title.textContent=txt;title.style.opacity='0';           /* hold real title hidden until the greeting lands */
+    title.innerHTML=txt;title.style.opacity='0';           /* hold real title hidden until the greeting lands */
     return{f:f,title:title,x0:x0,y0:y0,k0:k0,
       show:function(){f.style.transition='opacity .25s ease';f.style.opacity='1'},
       go:function(){
@@ -7821,7 +7868,7 @@ html #authOverlay .auth-card.krn-shake{animation:krnShake .55s cubic-bezier(.36,
         function this_lerp(a,b,t){return a+(b-a)*t}
       }};
   }
-  function setBannerGreeting(){var t=bannerTitle();if(t)t.textContent=greetText(getName())}
+  function setBannerGreeting(){var t=bannerTitle();if(t)t.innerHTML=greetHTML(getName())}
 
   /* welcome screen length (seconds) – chosen in Profile menu; 0 = skip */
   function welcomeSecs(){var v=NaN;try{v=parseFloat(localStorage.getItem('krnWelcomeSecs'))}catch(e){}
@@ -7847,7 +7894,7 @@ html #authOverlay .auth-card.krn-shake{animation:krnShake .55s cubic-bezier(.36,
     setTimeout(function(){
       /* greeting text lifts off the splash and keeps floating while the dashboard appears */
       var g=w.querySelector('.kw-greet'),n=w.querySelector('.kw-name');
-      fly=prepFly(greetText(nm),[g,n]);
+      fly=prepFly(greetHTML(nm),[g,n]);
       if(fly){[g,n].forEach(function(el){el.style.transition='opacity .25s ease';el.style.opacity='0'});fly.show()}
     },D-730);
     setTimeout(function(){o.classList.add('krn-zoomout')},D-580);
@@ -7868,6 +7915,34 @@ html #authOverlay .auth-card.krn-shake{animation:krnShake .55s cubic-bezier(.36,
       if(note){note.textContent=sel.value==='0'?'Welcome screen turned off.':'Saved \u2713 – '+sel.value+' sec welcome screen from next login.';
         clearTimeout(note._t);note._t=setTimeout(function(){note.textContent=''},2600)}
     });
+  })();
+  /* ---------- goodbye screen on logout ---------- */
+  (function(){
+    function byeSub(k){return k==='morning'?'Have a wonderful day ahead':k==='afternoon'?'Enjoy the rest of your day':k==='evening'?'Have a lovely evening':'Good night & sweet dreams'}
+    var busy=false;
+    function wrap(){
+      var orig=window.onlineLogout;if(typeof orig!=='function'||orig.__krnBye)return;
+      var w=function(){
+        var args=arguments,self=this;
+        if(busy||reduce||welcomeSecs()<=0||!o.classList.contains('hidden'))return orig.apply(self,args);
+        busy=true;
+        var Tt=tod(),nm=getName(),D=5000,p;
+        var st='';for(var i=0;i<16;i++)st+='<i style="left:'+(Math.random()*100).toFixed(1)+'%;top:'+(Math.random()*80).toFixed(1)+'%;width:'+(1+Math.random()*1.8).toFixed(1)+'px;height:'+(1+Math.random()*1.8).toFixed(1)+'px;--t:'+(1.6+Math.random()*2.6).toFixed(1)+'s;--d:'+(Math.random()*3).toFixed(1)+'s"></i>';
+        var el=document.createElement('div');el.id='krnGoodbye';el.setAttribute('data-tod',Tt.k);el.style.setProperty('--kwD',(D/1000)+'s');
+        el.innerHTML='<div class="bye-stars">'+st+'</div><div class="bye-in"><div class="bye-orb"><i class="kw-ring r1"></i><i class="kw-ring r2"></i><i class="bye-spark s1">\u2726</i><i class="bye-spark s2">\u2726</i><i class="bye-spark s3">\u2726</i><svg class="bye-hand" viewBox="0 0 100 100" aria-hidden="true"><defs><linearGradient id="byeSkin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffeccb"/><stop offset=".55" stop-color="#ffd08e"/><stop offset="1" stop-color="#f1a85a"/></linearGradient><linearGradient id="byeCuff" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffffff" stop-opacity=".92"/><stop offset="1" stop-color="#dfe8ff" stop-opacity=".85"/></linearGradient></defs><path class="bye-arc a1" d="M82 18q9 9 0 20" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/><path class="bye-arc a2" d="M90 12q13 14 0 32" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><g fill="url(#byeSkin)" stroke="rgba(150,84,20,.28)" stroke-width="1"><rect x="30" y="18" width="11" height="44" rx="5.5" transform="rotate(-10 35.5 58)"/><rect x="42" y="9" width="11.5" height="50" rx="5.75" transform="rotate(-3 47.8 58)"/><rect x="54" y="13" width="11" height="47" rx="5.5" transform="rotate(5 59.5 58)"/><rect x="65" y="26" width="10" height="36" rx="5" transform="rotate(14 70 60)"/><rect x="29" y="44" width="43" height="42" rx="19"/><rect x="17" y="48" width="11.5" height="32" rx="5.75" transform="rotate(-38 24 76)"/></g><ellipse cx="46" cy="58" rx="9" ry="13" fill="#fff" opacity=".28"/><rect x="33" y="82" width="34" height="12" rx="6" fill="url(#byeCuff)"/></svg></div><div class="bye-tag">See you again</div>'
+          +'<div class="bye-title"><span class="krn-g-hi">Goodbye'+(nm?',':'!')+'</span>'+(nm?' <span class="krn-g-name">'+esc(nm)+'</span>':'')+'</div>'
+          +'<div class="bye-line"></div><div class="bye-sub">'+byeSub(Tt.k)+'</div></div>'
+          +'<div class="bye-prog"><span>Signing you out securely</span><b><i></i></b></div>';
+        document.body.appendChild(el);
+        setTimeout(function(){try{p=orig.apply(self,args)}catch(e){console.error(e)}},500);
+        setTimeout(function(){var l=el.querySelector('.bye-prog span');if(l)l.textContent='Signed out \u2713'},D-800);
+        setTimeout(function(){el.classList.add('out')},D);
+        setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);busy=false},D+680);
+        return new Promise(function(res){setTimeout(function(){res(p)},D+690)});
+      };
+      w.__krnBye=1;window.onlineLogout=w;
+    }
+    wrap();
   })();
   var pending=false,orig=window.showLoggedIn;
   if(typeof orig==='function'&&!orig.__krnWelcome){
