@@ -1264,6 +1264,7 @@ const renderBillPendingSummary=()=>{
 };
 const tabCounts=()=>{const L=db.bills.filter(x=>!window.krnBillTypeF||window.krnBillTypeF==='all'||billTypeOf(x)===window.krnBillTypeF);const c=k=>L.filter(x=>String(x.status||'Pending').toLowerCase()===k).length;return {all:L.length,pending:c('pending'),approved:c('approved'),rejected:c('rejected')}};
 const renderBillTable=()=>{
+ const sel=window.krnBillSel||(window.krnBillSel=new Set());
  const q=($('billSearch')?.value||'').trim().toLowerCase();
  const rows=db.bills.map((x,i)=>({x,i})).filter(({x})=>{
   const st=String(x.status||'Pending').toLowerCase();
@@ -1281,16 +1282,17 @@ const renderBillTable=()=>{
   if(st==='Pending') actions=`<button class="btn approve" data-i="${i}">Approve</button> <button class="btn reject" data-i="${i}">Reject</button> `;
   // Approved and Rejected entries only show Edit; an Approved bill can no longer be rejected from the list.
   actions+=`<button class="btn editBill" data-i="${i}">Edit</button>`;
-  return `<tr><td>${esc(x.id)}</td><td>${esc(emp(x.empId)?.name||x.empId)}</td><td><span class="btype ${billTypeOf(x)==='Travelling'?'t':'o'}">${billTypeOf(x)}</span></td><td>${fmt(x.date)}</td><td>${fmt(x.submissionDate||'')}</td><td>${esc(x.category)}</td><td>${esc(x.vendor)}</td><td>${money(x.amount)}</td><td><span class="status ${cls}">${esc(st)}${st!=='Approved'?' — NOT COUNTING':''}</span></td><td>${actions}</td></tr>`;
- }).join(''):`<tr><td colspan="9"><div class="empty" style="padding:28px">No ${billTab==='all'?'':billTab+' '}bills found.</div></td></tr>`;
+  return `<tr class="${sel.has(String(x.id))?'bsel':''}"><td class="bchk"><input type="checkbox" class="billSel" data-id="${esc(x.id)}" ${sel.has(String(x.id))?'checked':''} aria-label="Select bill"></td><td>${esc(x.id)}</td><td>${esc(emp(x.empId)?.name||x.empId)}</td><td><span class="btype ${billTypeOf(x)==='Travelling'?'t':'o'}">${billTypeOf(x)}</span></td><td>${fmt(x.date)}</td><td>${fmt(x.submissionDate||'')}</td><td>${esc(x.category)}</td><td>${esc(x.vendor)}</td><td>${money(x.amount)}</td><td><span class="status ${cls}">${esc(st)}${st!=='Approved'?' — NOT COUNTING':''}</span>${window.krnBillPaid&&krnBillPaid(x)?' <span class="status ok">Paid ✓</span>':''}</td><td>${actions}</td></tr>`;
+ }).join(''):`<tr><td colspan="11"><div class="empty" style="padding:28px">No ${billTab==='all'?'':billTab+' '}bills found.</div></td></tr>`;
  $('billTabs').innerHTML=[tab('all','All'),tab('pending','Pending'),tab('approved','Approved'),tab('rejected','Rejected')].join('');
  $('billTableBody').innerHTML=body;
+ if(window.krnBulkBind)krnBulkBind(rows.map(r=>r.x));
  document.querySelectorAll('[data-bill-tab]').forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();const sy=window.scrollY;billTab=b.dataset.billTab;renderBillTable();renderBillPendingSummary();b.blur();requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo({top:sy,left:0,behavior:'instant'})))});
  document.querySelectorAll('.approve').forEach(b=>b.onclick=()=>{db.bills[Number(b.dataset.i)].status='Approved';save()});
  document.querySelectorAll('.reject').forEach(b=>b.onclick=()=>{if(confirm('Reject this bill? It will remain visible in the ledger but will NOT be counted.')){db.bills[Number(b.dataset.i)].status='Rejected';save()}});
  document.querySelectorAll('.editBill').forEach(b=>b.onclick=()=>openModal('bill',Number(b.dataset.i)));
 };
-$('page').innerHTML=`<div class="panel"><div class="toolbar"><input class="search" id="billSearch" placeholder="Search employee / ID / bill..."><select id="billTypeFilter" aria-label="Bill type" style="min-height:46px;border-radius:14px;border:1px solid #cbd5e1;padding:0 12px;font-weight:700;background:#fff"><option value="all">All bill types</option><option value="Travelling">Travelling</option><option value="Other">Other</option></select><button class="btn primary" id="addBill">+ Submit Bill</button></div><div id="billTypeCounts" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:12px 0 0"></div><div id="billTabs" class="bill-tabs" style="display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 12px"></div><div id="billPendingSummary" class="pending-summary"></div><div class="tablewrap"><table><thead><tr><th>Bill ID</th><th>Employee</th><th>Type</th><th>Bill Date</th><th>Submission Date</th><th>Category</th><th>Vendor</th><th>Amount</th><th>Status</th><th>Action</th></tr></thead><tbody id="billTableBody"></tbody></table></div></div>`;
+$('page').innerHTML=`<div class="panel"><div class="toolbar"><input class="search" id="billSearch" placeholder="Search employee / ID / bill..."><select id="billTypeFilter" aria-label="Bill type" style="min-height:46px;border-radius:14px;border:1px solid #cbd5e1;padding:0 12px;font-weight:700;background:#fff"><option value="all">All bill types</option><option value="Travelling">Travelling</option><option value="Other">Other</option></select><button class="btn primary" id="addBill">+ Submit Bill</button></div><div id="billTypeCounts" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:12px 0 0"></div><div id="billTabs" class="bill-tabs" style="display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 12px"></div><div id="billPendingSummary" class="pending-summary"></div><div id="billBulkBar" class="bulkbar" hidden></div><div class="tablewrap"><table><thead><tr><th class="bchk"><input type="checkbox" id="billSelAll" title="Select all shown" aria-label="Select all shown"></th><th>Bill ID</th><th>Employee</th><th>Type</th><th>Bill Date</th><th>Submission Date</th><th>Category</th><th>Vendor</th><th>Amount</th><th>Status</th><th>Action</th></tr></thead><tbody id="billTableBody"></tbody></table></div></div>`;
 $('addBill').onclick=()=>openModal('bill');if($('billTypeFilter')){$('billTypeFilter').value=window.krnBillTypeF||'all';$('billTypeFilter').onchange=function(){window.krnBillTypeF=this.value;renderBillTable()}}
 $('billSearch').oninput=()=>{const sy=window.scrollY;renderBillTable();renderBillPendingSummary();requestAnimationFrame(()=>window.scrollTo({top:sy,left:0,behavior:'instant'}))};
 renderBillTable();renderBillPendingSummary();
@@ -1448,7 +1450,7 @@ function saveEmployee(index){const id=val('f_id').trim(),name=val('f_name').trim
 function addAdvance(){saveAdvance(null)}
 function saveAdvance(index){if(!val('f_emp')||!emp(val('f_emp')))return alert('Please enter a valid Employee ID from Employee Master.');if(!val('f_amt'))return alert('Amount required');const obj={id:val('f_aid'),empId:val('f_emp'),date:val('f_date'),amount:Number(val('f_amt')||0),remarks:val('f_rem')};{const em=window.krnEmiFromForm?krnEmiFromForm(obj,index===null?null:db.advances[index]):undefined;if(em===false)return;if(em)obj.emi=em}if(index===null)db.advances.push(obj);else db.advances[index]=obj;closeModal();save()}
 function addBill(){saveBill(null)}
-function saveBill(index){if(!val('f_emp')||!emp(val('f_emp')))return alert('Please enter a valid Employee ID from Employee Master.');if(!val('f_amt'))return alert('Amount required');const billId=val('f_bid').trim();if(!billId)return alert('Bill ID required');const duplicate=db.bills.some((b,i)=>String(b.id).trim().toLowerCase()===billId.toLowerCase()&&(index===null||i!==index));if(duplicate)return alert('Bill Number already exists. Please use a unique Bill Number.');const old=index===null?null:db.bills[index];const obj={id:billId,empId:val('f_emp'),date:val('f_date'),category:val('f_cat'),vendor:val('f_vendor'),invoice:val('f_inv'),description:val('f_desc'),amount:Number(val('f_amt')||0),submissionDate:val('f_submission_date')||'',status:val('f_status')||old?.status||'Pending',remarks:old?.remarks||'',billType:val('f_btype')||billTypeOf(old)||'Other'};if(index===null)db.bills.push(obj);else db.bills[index]=obj;closeModal();save()}
+function saveBill(index){if(!val('f_emp')||!emp(val('f_emp')))return alert('Please enter a valid Employee ID from Employee Master.');if(!val('f_amt'))return alert('Amount required');const billId=val('f_bid').trim();if(!billId)return alert('Bill ID required');const duplicate=db.bills.some((b,i)=>String(b.id).trim().toLowerCase()===billId.toLowerCase()&&(index===null||i!==index));if(duplicate)return alert('Bill Number already exists. Please use a unique Bill Number.');const old=index===null?null:db.bills[index];const obj={id:billId,empId:val('f_emp'),date:val('f_date'),category:val('f_cat'),vendor:val('f_vendor'),invoice:val('f_inv'),description:val('f_desc'),amount:Number(val('f_amt')||0),submissionDate:val('f_submission_date')||'',status:val('f_status')||old?.status||'Pending',remarks:old?.remarks||'',paid:old?.paid,paidDate:old?.paidDate,paidRef:old?.paidRef,billType:val('f_btype')||billTypeOf(old)||'Other'};if(index===null)db.bills.push(obj);else db.bills[index]=obj;closeModal();save()}
 function closeModal(){$('modal').classList.add('hidden')}
 function backup(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(db,null,2)],{type:'application/json'}));a.download='Expense_Advance_Backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)}
 function restore(){$('restoreFile').click()}
@@ -8577,6 +8579,7 @@ function paint(){
     if(WX){var c2=document.createElement('span');c2.className='kx-chip';c2.textContent=WX.t+'\u00B0C \u00B7 '+WL[WX.k][hi()?1:0]+(WX.city?' \u00B7 '+WX.city:'');eb.appendChild(c2)}}}
 setInterval(function(){if(!$('krnUltraBanner'))return;loadWx(false);paint()},1500);
 setInterval(function(){loadWx(true)},18e5);
+window.krnWxRefresh=function(){loadWx(true);paint()};
 
 /* ---------- idle warning (30 s before auto-logout / lock) ---------- */
 var dl=0,tm=0;
@@ -8616,6 +8619,92 @@ bind('krnFest','krnFest','1','krnPrefNote',function(){paint()});
 bind('krnWx','krnWx','1','krnPrefNote',function(v){if(v==='0')WX=null;else loadWx(true);paint()});
 var cityEl=$('krnWxCity');if(cityEl){cityEl.value=pref('krnWxCity','');cityEl.addEventListener('change',function(){setp('krnWxCity',cityEl.value.trim());loadWx(true);note('krnPrefNote','City saved \u2713')})}
 hint();
+})();
+</script>
+<style id="krn-bulk-style">
+.bulkbar{position:sticky;top:8px;z-index:30;display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 14px;margin:0 0 10px;border-radius:14px;background:#0f2a4d;color:#fff;box-shadow:0 10px 30px rgba(15,42,77,.28)}
+.bulkbar[hidden]{display:none}
+.bulkbar .bb-info{flex:1;min-width:140px;font-size:13px}
+#billBulkBar .bbb{all:unset;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:0 16px;border-radius:12px;font:800 14px system-ui,sans-serif;cursor:pointer;background:#fff!important;color:#0f2a4d!important;border:1px solid #fff!important;text-shadow:none!important;opacity:1!important;filter:none!important;white-space:nowrap}
+#billBulkBar .bbb.bb-ok{background:#2563eb!important;color:#fff!important;border-color:#2563eb!important}
+#billBulkBar .bbb.bb-pay{background:#16a34a!important;color:#fff!important;border-color:#16a34a!important}
+#billBulkBar .bbb.bb-clear{background:transparent!important;color:#e2e8f0!important;border:1px solid rgba(255,255,255,.45)!important}
+#billBulkBar .bbb:hover:not(:disabled){filter:brightness(1.08)!important}
+#billBulkBar .bbb:disabled{opacity:.35!important;cursor:not-allowed}
+td.bchk,th.bchk{width:34px;text-align:center}td.bchk input,th.bchk input{width:18px;height:18px;cursor:pointer}
+tr.bsel td{background:#eef5ff!important}
+#kxPay{position:fixed;inset:0;z-index:2147480000;display:flex;align-items:center;justify-content:center;background:rgba(4,12,26,.55);backdrop-filter:blur(5px);padding:14px}
+#kxPay .kx-card{width:min(560px,100%);max-height:90vh;overflow:auto;background:#fff;color:#13233d;border-radius:18px;padding:22px;box-shadow:0 30px 90px rgba(2,8,23,.4);font-family:system-ui,sans-serif}
+#kxPay h3{margin:0 0 4px;font-size:19px}#kxPay p{margin:0 0 12px;color:#64748b;font-size:13px}
+#kxPay table{width:100%;border-collapse:collapse;font-size:13px;margin:8px 0}#kxPay th,#kxPay td{padding:7px 6px;border-bottom:1px solid #e5edf6;text-align:left}#kxPay td.r,#kxPay th.r{text-align:right}
+#kxPay .warn{color:#b45309;font-size:11px;font-weight:700}
+#kxPay .row{display:flex;gap:10px;margin:10px 0}#kxPay .row label{flex:1;font-size:11px;font-weight:800;color:#64748b}
+#kxPay .row input{width:100%;box-sizing:border-box;height:40px;border:1px solid #d5e1ef;border-radius:10px;padding:0 10px;margin-top:4px;font-weight:600}
+#kxPay .acts{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+</style>
+<script id="krn-bulk">
+(function(){
+var $=function(i){return document.getElementById(i)};
+function H(v){return String(v==null?'':v).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function st(x){return String(x.status||'Pending').toLowerCase()}
+function sel(){return window.krnBillSel||(window.krnBillSel=new Set())}
+window.krnBillPaid=function(x){return !!(x&&x.paid&&(db.settlements||[]).some(function(s){return s.id===x.paidRef}))};
+function chosen(){var S=sel();return db.bills.filter(function(x){return S.has(String(x.id))})}
+function sum(a){return a.reduce(function(t,x){return t+Number(x.amount||0)},0)}
+window.krnBulkBind=function(visible){
+  var S=sel();
+  [].forEach.call(document.querySelectorAll('.billSel'),function(c){c.onchange=function(){c.checked?S.add(c.dataset.id):S.delete(c.dataset.id);c.closest('tr').classList.toggle('bsel',c.checked);krnBulkUpdate()}});
+  var all=$('billSelAll');
+  if(all)all.onchange=function(){visible.forEach(function(x){all.checked?S.add(String(x.id)):S.delete(String(x.id))});[].forEach.call(document.querySelectorAll('.billSel'),function(c){c.checked=all.checked;c.closest('tr').classList.toggle('bsel',all.checked)});krnBulkUpdate()};
+  krnBulkUpdate()};
+window.krnBulkUpdate=function(){
+  var S=sel(),ids=new Set(db.bills.map(function(x){return String(x.id)}));S.forEach(function(i){if(!ids.has(i))S.delete(i)});
+  var bar=$('billBulkBar');if(!bar)return;
+  var c=chosen(),pend=c.filter(function(x){return st(x)==='pending'}),pay=c.filter(function(x){return st(x)==='approved'&&!krnBillPaid(x)});
+  var all=$('billSelAll'),vis=[].slice.call(document.querySelectorAll('.billSel')),n=vis.filter(function(v){return v.checked}).length;
+  if(all){all.checked=vis.length>0&&n===vis.length;all.indeterminate=n>0&&n<vis.length}
+  if(!c.length){bar.hidden=true;bar.innerHTML='';return}
+  bar.hidden=false;
+  bar.innerHTML='<div class="bb-info"><b>'+c.length+'</b> selected &nbsp;•&nbsp; <b>'+money(sum(c))+'</b></div>'
+   +'<button class="bbb bb-ok" id="bbApprove"'+(pend.length?'':' disabled')+'>Approve ('+pend.length+')</button>'
+   +'<button class="bbb bb-pay" id="bbPay"'+(pay.length?'':' disabled')+'>Pay ('+pay.length+')</button>'
+   +'<button class="bbb" id="bbExport">Export CSV ('+c.length+')</button>'
+   +'<button class="bbb bb-clear" id="bbClear">Clear</button>';
+  $('bbApprove').onclick=function(){
+    if(!pend.length||!confirm('Approve '+pend.length+' pending bill(s) worth '+money(sum(pend))+'?'))return;
+    pend.forEach(function(x){x.status='Approved'});S.clear();save()};
+  $('bbPay').onclick=function(){if(pay.length)payDialog(pay)};
+  $('bbExport').onclick=function(){exportCSV(c)};
+  $('bbClear').onclick=function(){S.clear();[].forEach.call(document.querySelectorAll('.billSel'),function(v){v.checked=false;v.closest('tr').classList.remove('bsel')});krnBulkUpdate()}};
+function cell(v){v=String(v==null?'':v);if(/^[=+\-@\t\r]/.test(v))v="'"+v;return '"'+v.replace(/"/g,'""')+'"'}
+function exportCSV(list){
+  var rows=[['Bill ID','Emp ID','Employee','Bill Date','Submission Date','Category','Vendor','Invoice','Amount','Status','Paid','Paid Date','Bill Type','Description']].concat(list.map(function(x){
+    return [x.id,x.empId,(emp(x.empId)||{}).name||'',x.date||'',x.submissionDate||'',x.category||'',x.vendor||'',x.invoice||'',x.amount,x.status||'Pending',krnBillPaid(x)?'Yes':'No',krnBillPaid(x)?(x.paidDate||''):'',billTypeOf(x),x.description||'']}));
+  var csv='\ufeff'+rows.map(function(r){return r.map(cell).join(',')}).join('\r\n');
+  var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download='bills_selected_'+new Date().toISOString().slice(0,10)+'.csv';document.body.appendChild(a);a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},500)}
+function payDialog(list){
+  var g={};list.forEach(function(x){(g[x.empId]=g[x.empId]||[]).push(x)});
+  var ids=Object.keys(g),rows=ids.map(function(id){
+    var e=emp(id)||{},amt=sum(g[id]),owed=Math.max(0,-totals(id).balance),warn=amt>owed+.005;
+    return '<tr><td>'+H(e.name||id)+'</td><td class="r">'+g[id].length+'</td><td class="r"><b>'+money(amt)+'</b>'+(warn?'<div class="warn">⚠ more than current balance due ('+money(owed)+')</div>':'')+'</td></tr>'}).join('');
+  var o=document.createElement('div');o.id='kxPay';
+  o.innerHTML='<div class="kx-card"><h3>Pay '+list.length+' approved bill(s)</h3><p>One “Pay to Employee” settlement entry is created per employee, and these bills are marked Paid.</p>'
+   +'<table><thead><tr><th>Employee</th><th class="r">Bills</th><th class="r">Amount</th></tr></thead><tbody>'+rows+'</tbody></table>'
+   +'<div style="text-align:right;font-weight:800">Total: '+money(sum(list))+'</div>'
+   +'<div class="row"><label>Payment date<input type="date" id="kxPayDate" value="'+new Date().toISOString().slice(0,10)+'"></label><label>Note (optional)<input type="text" id="kxPayNote" placeholder="e.g. Bank transfer / UPI ref"></label></div>'
+   +'<div class="acts"><button class="btn" id="kxPayNo">Cancel</button><button class="btn primary" id="kxPayYes">Confirm payment</button></div></div>';
+  document.body.appendChild(o);
+  o.onclick=function(e){if(e.target===o)o.remove()};$('kxPayNo').onclick=function(){o.remove()};
+  $('kxPayYes').onclick=function(){
+    var d=$('kxPayDate').value||new Date().toISOString().slice(0,10),note=$('kxPayNote').value.trim();
+    db.settlements=db.settlements||[];
+    ids.forEach(function(id){
+      var sid=nextSettlementId();
+      db.settlements.push({id:sid,empId:id,date:d,type:'Pay to Employee',amount:sum(g[id]),remark:('Bulk bill payment: '+g[id].map(function(x){return x.id}).join(', ')+(note?' — '+note:''))});
+      g[id].forEach(function(x){x.paid=true;x.paidDate=d;x.paidRef=sid})});
+    o.remove();sel().clear();save()}}
 })();
 </script>
 </body></html>
