@@ -8707,4 +8707,23 @@ function payDialog(list){
     o.remove();sel().clear();save()}}
 })();
 </script>
+<style id="mobile-account-menu-scroll-fix">
+/* Mobile: 100vh includes the area hidden behind the browser toolbar, so the menu's bottom
+   (Logout button) was cut off. dvh = actual visible height. Menu now scrolls fully to Logout. */
+@media(max-width:800px){
+  #accountMenu{
+    top:calc(64px + env(safe-area-inset-top,0px))!important;
+    bottom:auto!important;
+    max-height:calc(100vh - 64px - 16px)!important;
+    max-height:calc(100dvh - 64px - 16px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    -webkit-overflow-scrolling:touch;
+    touch-action:pan-y;
+    overscroll-behavior:contain;
+  }
+  #accountMenu .account-menu-body{padding-bottom:calc(28px + env(safe-area-inset-bottom,0px))!important}
+  #accountMenu .account-logout{margin-bottom:6px}
+}
+</style>
 </body></html>
